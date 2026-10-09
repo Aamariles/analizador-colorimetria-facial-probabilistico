@@ -1,0 +1,16 @@
+# Entornos virtuales
+venv/
+env/
+
+# Caché de Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Archivos de entorno y variables locales
+.env
+
+# Imágenes de prueba locales
+data/raw/*
+!data/raw/.gitkeep
