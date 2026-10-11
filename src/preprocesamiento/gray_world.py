@@ -1,8 +1,8 @@
 """Módulo de preprocesamiento para la corrección de balance de blancos.
 
 Implementa el algoritmo Gray World para neutralizar los sesgos de color
-introducidos por variaciones en la iluminación de la imagen. El algoritmo 
-se fundamenta en el principio de que, en una escena natural estándar, 
+introducidos por variaciones en la iluminación de la imagen. El algoritmo
+se fundamenta en el principio de que, en una escena natural estándar,
 el promedio global de las intensidades de color tiende a un gris neutral.
 """
 
@@ -19,11 +19,12 @@ def aplicar_gray_world(imagen: np.ndarray) -> np.ndarray:
 
     Args:
         imagen (np.ndarray): Imagen de entrada en formato BGR.
+
     Returns:
         np.ndarray: Imagen con el balance de blancos corregido en formato BGR.
 
     Raises:
-       ValueError: Si la imagen proporcionada está vacía o no es un arreglo válido.
+        ValueError: Si la imagen proporcionada está vacía o no es un arreglo válido.
     """
     if imagen is None or not isinstance(imagen, np.ndarray) or imagen.size == 0:
         raise ValueError("La imagen proporcionada no es válida o está vacía.")

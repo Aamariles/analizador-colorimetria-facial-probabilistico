@@ -24,11 +24,11 @@ def extraer_color_dominante_lab(imagen_roi: np.ndarray, k: int = 3) -> np.ndarra
         k (int): Número de clústeres objetivo para la partición espacial de los datos.
 
     Returns:
-        np.ndarray: Vector unidimensional con las coordenadas [L*, a*, b*] del color 
+        np.ndarray: Vector unidimensional con las coordenadas [L*, a*, b*] del color
         dominante estimado.
 
     Raises:
-        ValueError: Si la matriz de imagen no es válida, está vacía o carece de 
+        ValueError: Si la matriz de imagen no es válida, está vacía o carece de
             píxeles analizables.
     """
     if imagen_roi is None or not isinstance(imagen_roi, np.ndarray) or imagen_roi.size == 0:
@@ -75,13 +75,13 @@ if __name__ == "__main__":
 
     # Generación de matriz sintética (50x50) simulando un tono cálido
     imagen_prueba = np.full((50, 50, 3), (170, 200, 255), dtype=np.uint8)
-    
+
     # Insertar un bloque de fondo negro simulando la máscara
     imagen_prueba[0:20, 0:20] = [0, 0, 0]
 
     try:
         color_lab = extraer_color_dominante_lab(imagen_prueba)
-        print(f"Prueba local exitosa.")
+        print("Prueba local exitosa.")
         print(f"Vector CIELAB dominante calculado: L*={color_lab[0]:.2f}, a*={color_lab[1]:.2f}, b*={color_lab[2]:.2f}")
     except Exception as e:
         print(f"Error inesperado en la prueba: {e}")

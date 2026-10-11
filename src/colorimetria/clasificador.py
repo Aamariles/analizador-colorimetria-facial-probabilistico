@@ -1,8 +1,14 @@
 """Módulo de clasificación probabilística estacional basada en distancia perceptual.
 
-Utiliza el vector CIELAB dominante para estimar la probabilidad de que
-el tono de piel analizado pertenezca a cada una de las cuatro estaciones
+Utiliza el vector CIELAB dominante para estimar, vía un modelo bayesiano
+(distancia ΔE00 → verosimilitud gaussiana → posterior), la probabilidad de
+que el tono de piel analizado pertenezca a cada una de las cuatro estaciones
 cromáticas (Primavera, Verano, Otoño, Invierno).
+
+Nota de alcance: los centroides de referencia (`colorimetria.referencias.ESTACIONES`)
+son una primera aproximación razonada, no un dataset calibrado — ver el docstring
+de ese módulo. Las probabilidades que produce este clasificador deben leerse como
+ilustrativas hasta que se calibren contra el Ground Truth que exige el Acta (sección XII).
 """
 
 from typing import Dict, Optional
@@ -10,9 +16,10 @@ from typing import Dict, Optional
 import numpy as np
 from skimage.color import deltaE_ciede2000
 
+# Import relativo normal dentro del paquete `colorimetria`, con fallback para
+# ejecutar este archivo directamente como script (`python3 src/colorimetria/clasificador.py`),
+# igual que los demás módulos del proyecto.
 try:
-# Manejo de importaciones para soportar tanto la ejecución como script independiente
-# (pruebas locales) como la importación relativa dentro del paquete principal.
     from .referencias import ESTACIONES
 except ImportError:
     from referencias import ESTACIONES
@@ -20,15 +27,15 @@ except ImportError:
 
 def calcular_distancias_cie00(color_lab: np.ndarray) -> Dict[str, float]:
     """
-    Calcula la distancia perceptual CIEDE2000 entre el color de entrada 
+    Calcula la distancia perceptual CIEDE2000 entre el color de entrada
     y los centroides estacionales.
 
     Args:
         color_lab (np.ndarray): Vector [L*, a*, b*] del color dominante extraído.
 
     Returns:
-        Dict[str, float]: Diccionario con la distancia ΔE00 calculada para cada 
-        estación ("primavera", "verano", "otono", "invierno"). Un valor menor 
+        Dict[str, float]: Diccionario con la distancia ΔE00 calculada para cada
+        estación ("primavera", "verano", "otono", "invierno"). Un valor menor
         indica mayor similitud cromática perceptual.
 
     Raises:
@@ -50,14 +57,13 @@ def clasificar_estacion(
     color_lab: np.ndarray,
     prior: Optional[Dict[str, float]] = None,
 ) -> Dict[str, float]:
-    
     """Clasifica el color de piel en una distribución de probabilidad bayesiana
     sobre las cuatro estaciones cromáticas.
 
     Args:
         color_lab (np.ndarray): Vector [L*, a*, b*] del color dominante.
-        prior (Optional[Dict[str, float]]): Distribución de probabilidad a priori 
-            (debe sumar 1.0). Si es None, se asume una distribución uniforme (25% 
+        prior (Optional[Dict[str, float]]): Distribución de probabilidad a priori
+            (debe sumar 1.0). Si es None, se asume una distribución uniforme (25%
             por estación), indicando que a priori ninguna estación es más probable.
 
     Returns:

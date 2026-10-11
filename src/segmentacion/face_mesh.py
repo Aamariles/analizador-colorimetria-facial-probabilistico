@@ -1,9 +1,9 @@
 """Módulo de segmentación facial y extracción de la región de interés (ROI).
 
-Utiliza la API de MediaPipe Tasks (AI Edge) para detectar el rostro en la 
-imagen y aislar los píxeles correspondientes a la piel limpia. El proceso 
-construye una máscara poligonal que excluye dinámicamente elementos de ruido 
-como ojos, cejas, labios y zonas de oclusión, garantizando una muestra 
+Utiliza la API de MediaPipe Tasks (AI Edge) para detectar el rostro en la
+imagen y aislar los píxeles correspondientes a la piel limpia. El proceso
+construye una máscara poligonal que excluye dinámicamente elementos de ruido
+como ojos, cejas, labios y sombras faciales, garantizando una muestra
 cromática pura para el análisis.
 """
 
@@ -38,7 +38,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__fil
 MODEL_PATH = os.path.join(BASE_DIR, "data", "reference", "face_landmarker.task")
 
 # --------------------------------------------------------------------------- #
-# Instancia global del motor de inferencia. Se inicializa bajo el patrón 
+# Instancia global del motor de inferencia. Se inicializa bajo el patrón
 # Singleton para evitar la sobrecarga de I/O en disco en cada procesamiento.
 # --------------------------------------------------------------------------- #
 _landmarker: "vision.FaceLandmarker | None" = None
@@ -50,7 +50,7 @@ def _obtener_landmarker() -> "vision.FaceLandmarker":
     Returns:
         vision.FaceLandmarker: Motor de inferencia configurado en memoria.
 
-    Raises: 
+    Raises:
         FileNotFoundError: Si el archivo `.task` del modelo no se encuentra en el sistema.
     """
     global _landmarker
@@ -78,8 +78,8 @@ def _puntos_a_pixeles(landmarks: Sequence, indices: Sequence[int], ancho: int, a
         alto (int): Dimensión vertical de la imagen base.
 
     Returns:
-        np.ndarray: Matriz bidimensional Nx2 de enteros con coordenadas cartesianas (x, y).
-        listo para `cv2.fillPoly`.
+        np.ndarray: Matriz bidimensional Nx2 de enteros con coordenadas cartesianas
+        (x, y), lista para `cv2.fillPoly`.
     """
     return np.array(
         [[int(landmarks[idx].x * ancho), int(landmarks[idx].y * alto)] for idx in indices],
@@ -98,7 +98,8 @@ def _excluir_sombras(imagen: np.ndarray, mascara: np.ndarray, percentil: float =
 
     Args:
         imagen (np.ndarray): Imagen original de entrada en formato BGR.
-        mascara (np.ndarray): Matriz binaria (0/255) de piel pre-calculada por MediaPipe.
+        mascara (np.ndarray): Matriz binaria (0/255) de piel candidata, ya construida
+            a partir de los polígonos de landmarks de MediaPipe (ver `extraer_piel_limpia`).
         percentil (float): Límite de tolerancia inferior para considerar un píxel como sombra.
 
     Returns:
@@ -125,10 +126,11 @@ def _excluir_sombras(imagen: np.ndarray, mascara: np.ndarray, percentil: float =
 
 def extraer_piel_limpia(imagen: np.ndarray) -> np.ndarray:
     """
-    Detecta el rostro en la imagen y extrae el ROI absoluto de piel útil.
-    Aplica un flujo de procesamiento que incluye la inferencia de landmarks, 
-    la construcción geométrica convex hull excluyente (ojos, labios, cejas) 
-    y el filtrado posterior de sombras volumétricas.
+    Detecta el rostro en la imagen y extrae el ROI de piel limpia.
+    Aplica un flujo de procesamiento que incluye la inferencia de landmarks,
+    el recorte de los polígonos fijos de la malla facial (contorno menos ojos,
+    cejas y labios) y el filtrado posterior de sombras por luminancia
+    (percentil del canal V en HSV, ver `_excluir_sombras`).
 
     Args:
         imagen (np.ndarray): Imagen de entrada en formato BGR.
@@ -138,7 +140,7 @@ def extraer_piel_limpia(imagen: np.ndarray) -> np.ndarray:
         fuera del ROI de piel puestos en negro ([0, 0, 0]).
 
     Raises:
-        ValueError: Si la matriz de la imagen de entrada esta corrupta, no es válida o está vacía, o si
+        ValueError: Si la imagen de entrada no es válida o está vacía, o si
             MediaPipe no detecta ningún rostro.
         FileNotFoundError: Si el modelo `.task` no existe en `MODEL_PATH`.
     """
@@ -174,7 +176,7 @@ def extraer_piel_limpia(imagen: np.ndarray) -> np.ndarray:
     ]
     cv2.fillPoly(mascara, ruidos, 0)
 
-    # 4. Excluir sombras faciales 
+    # 4. Excluir sombras faciales
     mascara = _excluir_sombras(imagen, mascara)
 
     # 5. Aplicar compuerta lógica (Bitwise AND) para aislar los píxeles de piel verdaderos
@@ -182,10 +184,11 @@ def extraer_piel_limpia(imagen: np.ndarray) -> np.ndarray:
 
     return piel_extraida
 
+
 # Bloque de validación estructural local
 if __name__ == "__main__":
     print("Ejecutando prueba local del módulo Face Mesh (AI Edge)...")
-    
+
     # Generar una matriz vacía para probar el manejo de excepciones del motor
     imagen_prueba = np.zeros((500, 500, 3), dtype=np.uint8)
     try:

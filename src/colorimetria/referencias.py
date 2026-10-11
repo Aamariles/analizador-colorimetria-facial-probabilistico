@@ -1,9 +1,15 @@
 """Módulo de referencias cromáticas estacionales en el espacio CIELAB.
 
-Define los centroides matemáticos (L*a*b*) y la dispersión base para cada una 
+Define los centroides matemáticos (L*a*b*) y la dispersión base para cada una
 de las cuatro estaciones de la teoría del color (Primavera, Verano, Otoño, Invierno).
-Incluye herramientas de calibración estadística para ajustar iterativamente 
+Incluye herramientas de calibración estadística para ajustar iterativamente
 estos centroides a partir de conjuntos de datos empíricos supervisados.
+
+Estado de los valores: los centroides de `ESTACIONES` son una primera aproximación
+razonada (a partir de los ejes cualitativos de temperatura y claridad del análisis
+de color por estaciones), no un dataset calibrado. El Acta de Constitución (sección
+XII) exige construir un Ground Truth etiquetado manualmente; `calibrar_desde_ground_truth`
+existe para reemplazar estos valores por ese dataset en cuanto esté disponible.
 """
 
 from typing import Dict, List, NamedTuple, Tuple
@@ -17,10 +23,10 @@ class EstacionReferencia(NamedTuple):
     Attributes:
         nombre (str): Identificador formal de la estación.
         lab (Tuple[float, float, float]): Coordenadas del centroide en el espacio L*a*b*.
-        sigma (float): Dispersión esperada (tolerancia) alrededor del centroide, 
-            expresada en unidades ΔE00. Define la amplitud del kernel gaussiano 
-            en la clasificación bayesiana; un valor mayor admite más variación 
-            intra-clase
+        sigma (float): Dispersión esperada (tolerancia) alrededor del centroide,
+            expresada en unidades ΔE00. Define la amplitud del kernel gaussiano
+            en la clasificación bayesiana; un valor mayor admite más variación
+            intra-clase.
     """
 
     nombre: str
@@ -47,7 +53,7 @@ def calibrar_desde_ground_truth(
 ) -> Dict[str, EstacionReferencia]:
     """Recalibra los centroides estacionales y su dispersión a partir de muestras reales ya etiquetadas.
 
-    Sustituye los valores heurísticos iniciales calculando el promedio espacial 
+    Sustituye los valores heurísticos iniciales calculando el promedio espacial
     y la desviación estándar a partir de un conjunto de muestras reales (Ground Truth)
     previamente clasificadas y validadas.
 
@@ -55,12 +61,12 @@ def calibrar_desde_ground_truth(
         muestras_por_estacion: Para cada clave de estación ("primavera",
             "verano", "otono", "invierno"), una lista de tuplas (L*, a*, b*)
             correspondientes a muestras reales etiquetadas con esa estación.
-        sigma_minimo (float): Límite inferior de tolerancia para la dispersión. 
-            Previene el colapso del modelo de verosimilitud si la varianza de 
+        sigma_minimo (float): Límite inferior de tolerancia para la dispersión.
+            Previene el colapso del modelo de verosimilitud si la varianza de
             una muestra empírica es excesivamente baja.
 
     Returns:
-        Dict[str, EstacionReferencia]: Diccionario con las referencias estacionales 
+        Dict[str, EstacionReferencia]: Diccionario con las referencias estacionales
         actualizadas según la distribución probabilística real de los datos.
 
     Raises:
@@ -75,7 +81,7 @@ def calibrar_desde_ground_truth(
         datos = np.array(muestras, dtype=np.float64)
         centroide = tuple(datos.mean(axis=0))
 
-        # La dispersión base se estima utilizando la desviación estándar del canal 
+        # La dispersión base se estima utilizando la desviación estándar del canal
         # de luminosidad (L*), dado que la varianza intra-clase en muestras de piel
         # reales está predominantemente determinada por la exposición lumínica.
         sigma_observado = float(max(datos[:, 0].std(), sigma_minimo))
