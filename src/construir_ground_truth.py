@@ -1,8 +1,8 @@
 """Herramienta para construir el dataset_ground_truth (hito 10 del Acta de Constitución).
 
-Procesa las imágenes de referencia (rostros cuya estación cromática ya se conoce) con el
-mismo pipeline del orquestador (Gray World -> MediaPipe -> CIELAB/K-Means) y deja el
-resultado en CSV listos para calibrar los centroides de
+Procesa las imágenes de referencia (rostros cuya estación cromática ya se conoce) con la
+misma medición del orquestador (`medicion.medir_color_piel`: MediaPipe -> Gray World
+sobre la escena -> CIELAB/K-Means) y deja el resultado en CSV listos para calibrar los centroides de
 `colorimetria.referencias.calibrar_desde_ground_truth` y para medir la precisión.
 
 Subcomandos (se ejecutan desde la raíz del repositorio):
@@ -253,9 +253,7 @@ def cmd_extraer(args: argparse.Namespace) -> int:
         print(f"No hay imágenes válidas en {CARPETA_IMAGENES}. Corre primero 'preparar' y agrega imágenes.")
         return 1
 
-    from preprocesamiento.gray_world import aplicar_gray_world
-    from segmentacion.face_mesh import extraer_piel_limpia
-    from colorimetria.cielab_math import extraer_color_dominante_lab
+    from medicion import medir_color_piel
 
     registro = {f.get("archivo", ""): f for f in cargar_registro()[0]}
     filas = []
@@ -270,9 +268,8 @@ def cmd_extraer(args: argparse.Namespace) -> int:
             alto, ancho = imagen.shape[:2]
             fila.update(ancho=str(ancho), alto=str(alto))
             try:
-                corregida = aplicar_gray_world(imagen)
-                roi = extraer_piel_limpia(corregida)
-                lab = extraer_color_dominante_lab(roi)
+                medicion = medir_color_piel(imagen)
+                corregida, roi, lab = medicion.imagen_corregida, medicion.roi_piel, medicion.color_lab
             except FileNotFoundError as error:
                 print(f"ERROR: {error}")
                 return 1
@@ -288,6 +285,8 @@ def cmd_extraer(args: argparse.Namespace) -> int:
                     avisos.append(f"baja resolucion ({ancho}x{alto})")
                 if pixeles < MIN_PIXELES_PIEL:
                     avisos.append(f"poca piel detectada ({pixeles} px)")
+                if not medicion.balance_aplicado:
+                    avisos.append("fondo de color: se omitio la correccion de iluminacion")
                 fila.update(L=f"{lab[0]:.2f}", a=f"{lab[1]:.2f}", b=f"{lab[2]:.2f}", pixeles_piel=str(pixeles),
                             estado="ok", detalle="; ".join(avisos))
                 if args.previews:

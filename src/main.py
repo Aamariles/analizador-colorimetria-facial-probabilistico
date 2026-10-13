@@ -12,22 +12,19 @@ import os
 import sys
 
 # Importaciones de los módulos del core matemático y de visión
-from preprocesamiento.gray_world import aplicar_gray_world
-from segmentacion.face_mesh import extraer_piel_limpia
-from colorimetria.cielab_math import extraer_color_dominante_lab
 from colorimetria.clasificador import clasificar_estacion
 from colorimetria.referencias import ESTACIONES
+from medicion import medir_color_piel
 
 
 def procesar_imagen(ruta_imagen: str) -> None:
     """Ejecuta el pipeline secuencial de análisis sobre una imagen dada.
 
-    El orden de las etapas es deliberado: Gray World corrige el sesgo de
-    iluminación sobre la imagen completa antes de detectar el rostro y
-    aislar la piel, para que la extracción del color dominante en CIELAB
-    y la clasificación bayesiana final operen ya sobre un color libre de
-    la contaminación del iluminante (ver "Visión general del pipeline" en
-    el Marco Teórico del proyecto).
+    La medición del color de piel vive en `medicion.medir_color_piel`, la misma
+    función que usa la construcción del dataset_ground_truth: MediaPipe detecta
+    el rostro, Gray World estima la luz con la escena (sin la cabeza) y corrige
+    la imagen, y K-Means en CIELAB extrae el color dominante de la piel. Luego
+    el clasificador bayesiano compara ese color con los centroides estacionales.
 
     Args:
         ruta_imagen (str): Ruta en el disco hacia la imagen a analizar.
@@ -46,21 +43,16 @@ def procesar_imagen(ruta_imagen: str) -> None:
         sys.exit(1)
 
     try:
-        # Paso 1: Preprocesamiento Óptico
-        print("[1/4] Aplicando corrección de iluminación (Gray World)...")
-        imagen_gw = aplicar_gray_world(imagen_original)
-
-        # Paso 2: Segmentación y Geometría
-        print("[2/4] Extrayendo región de interés (MediaPipe AI Edge)...")
-        roi_piel = extraer_piel_limpia(imagen_gw)
-
-        # Paso 3: Transformación Matemática y Clustering
-        print("[3/4] Calculando moda estadística en espacio CIELAB (K-Means)...")
-        color_lab = extraer_color_dominante_lab(roi_piel)
+        # Paso 1: Medición del color de piel (MediaPipe -> Gray World sobre la escena -> CIELAB/K-Means)
+        print("[1/2] Midiendo el color de la piel (MediaPipe, Gray World sobre la escena y K-Means en CIELAB)...")
+        medicion = medir_color_piel(imagen_original)
+        color_lab = medicion.color_lab
         print(f"    -> Vector dominante estimado: L*={color_lab[0]:.1f}, a*={color_lab[1]:.1f}, b*={color_lab[2]:.1f}")
+        if not medicion.balance_aplicado:
+            print("    -> Aviso: el fondo tiene un color intenso; se omitió la corrección de iluminación.")
 
-        # Paso 4: Inferencia Bayesiana
-        print("[4/4] Ejecutando clasificador estacional (Métrica CIEDE2000)...")
+        # Paso 2: Inferencia Bayesiana
+        print("[2/2] Ejecutando clasificador estacional (Métrica CIEDE2000)...")
         resultados = clasificar_estacion(color_lab)
 
         # Extracción y formateo del resultado final
