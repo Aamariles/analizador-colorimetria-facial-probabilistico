@@ -11,6 +11,12 @@ estimado es en realidad el tono de la piel y la corrección la neutraliza
 (le quita a* y b*). Por eso `aplicar_gray_world` acepta una máscara con los
 píxeles de la escena (todo lo que no es la cabeza): el iluminante se estima
 solo con ellos y los factores de escala se aplican a toda la imagen.
+
+Aun sin la cabeza, la escena de un retrato no es gris: el cabello largo, la piel
+del cuello y los hombros y la ropa de color son cálidos y harían que la corrección
+enfriara la piel. `seleccionar_pixeles_neutros` se queda solo con los píxeles menos
+saturados de la escena (paredes, ropa blanca o gris), que son los que de verdad
+deberían ser grises.
 """
 
 from typing import Optional
@@ -25,6 +31,43 @@ _EPSILON = 1e-6
 # Si la cabeza llena prácticamente todo el encuadre no hay escena de la cual
 # estimar la luz, y la imagen se devuelve sin corregir.
 FRACCION_MINIMA_ESCENA = 0.01
+
+# Fracción de los píxeles de la escena, los menos saturados, que se toman como
+# referencia de gris.
+FRACCION_NEUTRA = 0.25
+
+# Rango de brillo (canal V de HSV, 0-255) de los píxeles candidatos a gris: los casi
+# negros no tienen información de color y los muy brillantes pueden estar recortados.
+BRILLO_MINIMO = 40
+BRILLO_MAXIMO = 250
+
+
+def seleccionar_pixeles_neutros(imagen: np.ndarray, mascara: np.ndarray,
+                                fraccion: float = FRACCION_NEUTRA) -> np.ndarray:
+    """Elige, dentro de una máscara, los píxeles que con más probabilidad son grises.
+
+    Descarta los píxeles casi negros o casi blancos y, de los restantes, conserva la
+    fracción indicada con la menor saturación (canal S de HSV). En un retrato eso deja
+    la pared del fondo o la ropa blanca y descarta el cabello y la piel del cuello o
+    los hombros, que son más saturados.
+
+    Args:
+        imagen (np.ndarray): Imagen BGR.
+        mascara (np.ndarray): Matriz booleana (alto x ancho) con los píxeles candidatos,
+            por ejemplo la escena de `segmentacion.face_mesh.construir_mascara_escena`.
+        fraccion (float): Fracción de los candidatos, los menos saturados, que se conserva.
+
+    Returns:
+        np.ndarray: Matriz booleana (alto x ancho) con los píxeles neutros seleccionados.
+    """
+    candidatos = np.asarray(mascara, dtype=bool).copy()
+    hsv = cv2.cvtColor(imagen, cv2.COLOR_BGR2HSV)
+    saturacion, brillo = hsv[:, :, 1], hsv[:, :, 2]
+    candidatos &= (brillo > BRILLO_MINIMO) & (brillo < BRILLO_MAXIMO)
+    if not candidatos.any():
+        return candidatos
+    umbral = np.percentile(saturacion[candidatos], fraccion * 100.0)
+    return candidatos & (saturacion <= umbral)
 
 
 def aplicar_gray_world(imagen: np.ndarray, mascara_escena: Optional[np.ndarray] = None) -> np.ndarray:
@@ -147,3 +190,25 @@ if __name__ == "__main__":
         "Con toda la imagen, Gray World debería reducir la diferencia R-B de la piel."
     )
     print("Prueba 3 (la piel no se neutraliza cuando se usa la escena) exitosa.")
+
+    # Caso 4: retrato con cabello largo cálido a los lados de la cara sobre una pared
+    # gris. Si se usa toda la escena, el cabello hace que la corrección enfríe la
+    # piel; con los píxeles neutros solo cuenta la pared y la piel no cambia.
+    retrato = np.full((100, 100, 3), 128, dtype=np.uint8)  # pared gris
+    retrato[10:100, 10:35] = (50, 90, 150)  # cabello castaño (BGR), mucho más saturado que la pared
+    retrato[10:100, 65:90] = (50, 90, 150)
+    retrato[20:80, 35:65] = (120, 150, 200)  # piel
+    escena = np.ones((100, 100), dtype=bool)
+    escena[20:80, 35:65] = False
+    neutros = seleccionar_pixeles_neutros(retrato, escena)
+    piel_original = retrato[50, 50].astype(int)
+    piel_escena = aplicar_gray_world(retrato, mascara_escena=escena)[50, 50].astype(int)
+    piel_neutros = aplicar_gray_world(retrato, mascara_escena=neutros)[50, 50].astype(int)
+    print(f"Prueba 4: piel original {piel_original} | Gray World con toda la escena {piel_escena} | "
+          f"Gray World con los píxeles neutros {piel_neutros}")
+    assert not neutros[50, 20], "El cabello no debe tomarse como referencia de gris."
+    assert np.array_equal(piel_neutros, piel_original), "Con la pared como referencia, la piel no debe cambiar."
+    assert piel_escena[2] - piel_escena[0] < piel_original[2] - piel_original[0], (
+        "Con el cabello en la referencia, Gray World debería enfriar la piel."
+    )
+    print("Prueba 4 (el cabello no enfría la piel cuando se usan los píxeles neutros) exitosa.")

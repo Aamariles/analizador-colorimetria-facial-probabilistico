@@ -3,10 +3,12 @@
 El orden de las etapas es deliberado:
 
 1. MediaPipe detecta el rostro sobre la imagen original (la geometría no depende del color).
-2. Gray World estima el iluminante solo con la escena (todo lo que no es la cabeza) y
-   corrige la imagen completa. Si lo estimara con toda la imagen, en un primer plano el
-   promedio sería la propia piel y la corrección la volvería gris, lo que empujaba casi
-   cualquier rostro claro hacia Verano (ver `preprocesamiento.gray_world`).
+2. Gray World estima el iluminante solo con los píxeles más neutros de la escena (lo
+   que no es la cabeza): la pared o la ropa blanca, no el cabello ni la piel del cuello
+   o los hombros. Luego corrige la imagen completa. Si lo estimara con toda la imagen,
+   en un primer plano el promedio sería la propia piel y la corrección la volvería gris;
+   si usara toda la escena, el cabello largo y los hombros la enfriarían. Las dos cosas
+   empujaban la piel hacia Verano (ver `preprocesamiento.gray_world`).
 3. Se aísla la piel limpia con los mismos landmarks.
 4. K-Means en CIELAB devuelve el color dominante de la piel.
 5. Control de plausibilidad: la piel humana siempre tiene a* y b* positivos (su matiz
@@ -24,7 +26,7 @@ from typing import NamedTuple
 import numpy as np
 
 from colorimetria.cielab_math import extraer_color_dominante_lab
-from preprocesamiento.gray_world import aplicar_gray_world
+from preprocesamiento.gray_world import aplicar_gray_world, seleccionar_pixeles_neutros
 from segmentacion.face_mesh import construir_mascara_escena, detectar_landmarks, extraer_piel_limpia
 
 
@@ -76,7 +78,8 @@ def medir_color_piel(imagen: np.ndarray) -> MedicionPiel:
     landmarks = detectar_landmarks(imagen)
     alto, ancho = imagen.shape[:2]
     escena = construir_mascara_escena(landmarks, ancho, alto)
-    imagen_corregida = aplicar_gray_world(imagen, mascara_escena=escena)
+    referencia_gris = seleccionar_pixeles_neutros(imagen, escena)
+    imagen_corregida = aplicar_gray_world(imagen, mascara_escena=referencia_gris)
     roi_piel = extraer_piel_limpia(imagen_corregida, landmarks=landmarks)
     color_lab = extraer_color_dominante_lab(roi_piel)
 
