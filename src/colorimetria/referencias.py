@@ -15,6 +15,7 @@ existe para reemplazar estos valores por ese dataset en cuanto esté disponible.
 from typing import Dict, List, NamedTuple, Tuple
 
 import numpy as np
+from skimage.color import deltaE_ciede2000
 
 
 class EstacionReferencia(NamedTuple):
@@ -49,21 +50,24 @@ ESTACIONES: Dict[str, EstacionReferencia] = {
 
 def calibrar_desde_ground_truth(
     muestras_por_estacion: Dict[str, List[Tuple[float, float, float]]],
-    sigma_minimo: float = 4.0,
+    sigma_minimo: float = 2.0,
 ) -> Dict[str, EstacionReferencia]:
     """Recalibra los centroides estacionales y su dispersión a partir de muestras reales ya etiquetadas.
 
     Sustituye los valores heurísticos iniciales calculando el promedio espacial
-    y la desviación estándar a partir de un conjunto de muestras reales (Ground Truth)
-    previamente clasificadas y validadas.
+    y la dispersión (en unidades ΔE00) a partir de un conjunto de muestras reales
+    (Ground Truth) previamente clasificadas y validadas. El resultado se pasa al
+    clasificador con el parámetro `referencias` de `clasificar_estacion`.
 
     Args:
         muestras_por_estacion: Para cada clave de estación ("primavera",
             "verano", "otono", "invierno"), una lista de tuplas (L*, a*, b*)
             correspondientes a muestras reales etiquetadas con esa estación.
-        sigma_minimo (float): Límite inferior de tolerancia para la dispersión.
-            Previene el colapso del modelo de verosimilitud si la varianza de
-            una muestra empírica es excesivamente baja.
+        sigma_minimo (float): Límite inferior de tolerancia para la dispersión,
+            en unidades ΔE00. Previene el colapso del modelo de verosimilitud si
+            la varianza de una muestra empírica es excesivamente baja. El valor
+            por defecto (2.0) equivale al límite anterior de 4 unidades de
+            desviación estándar en L*, expresado en la nueva escala.
 
     Returns:
         Dict[str, EstacionReferencia]: Diccionario con las referencias estacionales
@@ -79,12 +83,14 @@ def calibrar_desde_ground_truth(
             raise ValueError(f"No hay muestras de calibración (Ground Truth) para la estación '{clave}'.")
 
         datos = np.array(muestras, dtype=np.float64)
-        centroide = tuple(datos.mean(axis=0))
+        centroide = tuple(float(v) for v in datos.mean(axis=0))
 
-        # La dispersión base se estima utilizando la desviación estándar del canal
-        # de luminosidad (L*), dado que la varianza intra-clase en muestras de piel
-        # reales está predominantemente determinada por la exposición lumínica.
-        sigma_observado = float(max(datos[:, 0].std(), sigma_minimo))
+        # La dispersión se mide en las mismas unidades que usa el clasificador: la
+        # distancia ΔE00 de cada muestra a su centroide. Para una gaussiana isotrópica
+        # en 3 dimensiones E[d²] = 3σ², de donde σ = sqrt(media(d²) / 3). Así recoge la
+        # variación en L*, a* y b*, no solo la de la luminosidad.
+        distancias = deltaE_ciede2000(datos, np.tile(centroide, (len(datos), 1)))
+        sigma_observado = float(max(np.sqrt(np.mean(distancias ** 2) / 3.0), sigma_minimo))
 
         nuevas_referencias[clave] = EstacionReferencia(
             nombre=referencia_actual.nombre,

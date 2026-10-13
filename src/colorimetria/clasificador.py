@@ -9,6 +9,8 @@ Nota de alcance: los centroides de referencia (`colorimetria.referencias.ESTACIO
 son una primera aproximación razonada, no un dataset calibrado — ver el docstring
 de ese módulo. Las probabilidades que produce este clasificador deben leerse como
 ilustrativas hasta que se calibren contra el Ground Truth que exige el Acta (sección XII).
+Las referencias calibradas (`calibrar_desde_ground_truth`) se pasan con el parámetro
+`referencias` de las funciones de este módulo.
 """
 
 from typing import Dict, Optional
@@ -20,18 +22,23 @@ from skimage.color import deltaE_ciede2000
 # ejecutar este archivo directamente como script (`python3 src/colorimetria/clasificador.py`),
 # igual que los demás módulos del proyecto.
 try:
-    from .referencias import ESTACIONES
+    from .referencias import ESTACIONES, EstacionReferencia
 except ImportError:
-    from referencias import ESTACIONES
+    from referencias import ESTACIONES, EstacionReferencia
 
 
-def calcular_distancias_cie00(color_lab: np.ndarray) -> Dict[str, float]:
+def calcular_distancias_cie00(
+    color_lab: np.ndarray,
+    referencias: Optional[Dict[str, EstacionReferencia]] = None,
+) -> Dict[str, float]:
     """
     Calcula la distancia perceptual CIEDE2000 entre el color de entrada
     y los centroides estacionales.
 
     Args:
         color_lab (np.ndarray): Vector [L*, a*, b*] del color dominante extraído.
+        referencias (Optional[Dict[str, EstacionReferencia]]): Centroides contra los
+            que se compara. Si es None, se usan los de `referencias.ESTACIONES`.
 
     Returns:
         Dict[str, float]: Diccionario con la distancia ΔE00 calculada para cada
@@ -41,12 +48,13 @@ def calcular_distancias_cie00(color_lab: np.ndarray) -> Dict[str, float]:
     Raises:
         ValueError: Si el vector de color no tiene exactamente 3 componentes espaciales.
     """
+    referencias = ESTACIONES if referencias is None else referencias
     color_lab = np.asarray(color_lab, dtype=np.float64)
     if color_lab.shape != (3,):
         raise ValueError(f"Se esperaba un vector [L*, a*, b*] de 3 componentes; se recibió forma {color_lab.shape}.")
 
     distancias: Dict[str, float] = {}
-    for clave, referencia in ESTACIONES.items():
+    for clave, referencia in referencias.items():
         centroide = np.array(referencia.lab, dtype=np.float64)
         distancias[clave] = float(deltaE_ciede2000(color_lab, centroide))
 
@@ -56,6 +64,7 @@ def calcular_distancias_cie00(color_lab: np.ndarray) -> Dict[str, float]:
 def clasificar_estacion(
     color_lab: np.ndarray,
     prior: Optional[Dict[str, float]] = None,
+    referencias: Optional[Dict[str, EstacionReferencia]] = None,
 ) -> Dict[str, float]:
     """Clasifica el color de piel en una distribución de probabilidad bayesiana
     sobre las cuatro estaciones cromáticas.
@@ -65,6 +74,9 @@ def clasificar_estacion(
         prior (Optional[Dict[str, float]]): Distribución de probabilidad a priori
             (debe sumar 1.0). Si es None, se asume una distribución uniforme (25%
             por estación), indicando que a priori ninguna estación es más probable.
+        referencias (Optional[Dict[str, EstacionReferencia]]): Centroides y
+            dispersiones de cada estación, por ejemplo los que devuelve
+            `calibrar_desde_ground_truth`. Si es None, se usan los de `ESTACIONES`.
 
     Returns:
         Dict[str, float]: Probabilidad posterior (0.0 a 1.0) de pertenecer a
@@ -72,9 +84,10 @@ def clasificar_estacion(
         probabilidad para que la estación más probable quede primero.
 
     Raises:
-        ValueError: Si `prior` no cubre las cuatro estaciones o no suma 1.0.
+        ValueError: Si `prior` no cubre las estaciones de las referencias o no suma 1.0.
     """
-    claves = list(ESTACIONES.keys())
+    referencias = ESTACIONES if referencias is None else referencias
+    claves = list(referencias.keys())
 
     # Configuración de la distribución a priori por defecto (Uniforme)
     if prior is None:
@@ -85,16 +98,20 @@ def clasificar_estacion(
         if not np.isclose(sum(prior.values()), 1.0, atol=1e-6):
             raise ValueError(f"El prior debe sumar 1.0 (suma actual: {sum(prior.values())}).")
 
-    distancias = calcular_distancias_cie00(color_lab)
+    distancias = calcular_distancias_cie00(color_lab, referencias)
 
-    # Cálculo de la log-verosimilitud usando un kernel gaussiano sobre la distancia ΔE00.
+    # Log-verosimilitud de una gaussiana isotrópica en el espacio L*a*b* (3 dimensiones),
+    # medida con la distancia ΔE00: log p = -d² / (2σ²) - 3·ln(σ) + constante.
+    # El término -3·ln(σ) es la normalización de la densidad: no cambia nada mientras
+    # todas las estaciones tengan la misma σ, pero tras la calibración cada estación
+    # tiene la suya y, sin él, la estación más dispersa absorbería los casos dudosos.
     # Se aplica la técnica log-sum-exp antes de normalizar para garantizar la
     # estabilidad numérica frente a distancias atípicas muy grandes que podrían
     # generar un colapso a 0.0 al exponenciar prematuramente.
     log_pesos = {}
     for clave in claves:
-        sigma = ESTACIONES[clave].sigma
-        log_verosimilitud = -(distancias[clave] ** 2) / (2.0 * sigma ** 2)
+        sigma = referencias[clave].sigma
+        log_verosimilitud = -(distancias[clave] ** 2) / (2.0 * sigma ** 2) - 3.0 * np.log(sigma)
         log_pesos[clave] = log_verosimilitud + np.log(prior[clave])
 
     # Normalización log-sum-exp
@@ -141,3 +158,19 @@ if __name__ == "__main__":
     posterior_sesgado = clasificar_estacion(color_prueba, prior=prior_sesgado)
     ganadora_sesgada = next(iter(posterior_sesgado))
     print(f"\nPrueba 2 (prior sesgado hacia invierno): estación más probable = '{ganadora_sesgada}'.")
+
+    # Caso 3 (regresión de la normalización): dos estaciones con dispersiones distintas.
+    # El color queda a ΔE00 ≈ 2.2 de "compacta" (σ=4) y a ΔE00 ≈ 1.3 de "dispersa" (σ=12).
+    # La densidad de la estación compacta en ese punto es unas 23 veces mayor, así
+    # que debe ganar; sin el término -3·ln(σ) ganaba la estación dispersa.
+    referencias_prueba = {
+        "compacta": EstacionReferencia(nombre="Compacta", lab=(60.0, 15.0, 20.0), sigma=4.0),
+        "dispersa": EstacionReferencia(nombre="Dispersa", lab=(64.0, 15.0, 20.0), sigma=12.0),
+    }
+    color_intermedio = np.array([62.5, 15.0, 20.0])
+    d = calcular_distancias_cie00(color_intermedio, referencias_prueba)
+    posterior_3 = clasificar_estacion(color_intermedio, referencias=referencias_prueba)
+    print(f"\nPrueba 3: ΔE00 compacta = {d['compacta']:.2f}, ΔE00 dispersa = {d['dispersa']:.2f} -> "
+          + ", ".join(f"{k} {v * 100:.1f}%" for k, v in posterior_3.items()))
+    assert next(iter(posterior_3)) == "compacta", "La estación compacta debe ganar en un punto donde es más densa."
+    print("Prueba 3 (normalización por dispersión) exitosa.")
