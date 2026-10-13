@@ -57,7 +57,7 @@ def procesar_imagen(ruta_imagen: str) -> None:
         # Paso 3: Transformación Matemática y Clustering
         print("[3/4] Calculando moda estadística en espacio CIELAB (K-Means)...")
         color_lab = extraer_color_dominante_lab(roi_piel)
-        print(f"    ↳ Vector dominante estimado: L*={color_lab[0]:.1f}, a*={color_lab[1]:.1f}, b*={color_lab[2]:.1f}")
+        print(f"    -> Vector dominante estimado: L*={color_lab[0]:.1f}, a*={color_lab[1]:.1f}, b*={color_lab[2]:.1f}")
 
         # Paso 4: Inferencia Bayesiana
         print("[4/4] Ejecutando clasificador estacional (Métrica CIEDE2000)...")

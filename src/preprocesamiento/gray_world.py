@@ -75,8 +75,8 @@ if __name__ == "__main__":
 
     try:
         resultado = aplicar_gray_world(imagen_prueba)
-        print(f"Forma original: {imagen_prueba.shape} | Promedio Rojo original: {np.mean(imagen_prueba[:,:,2]):.2f}")
-        print(f"Forma corregida: {resultado.shape} | Promedio Rojo corregido: {np.mean(resultado[:,:,2]):.2f}")
+        print(f"Forma original: {imagen_prueba.shape} | Promedio Rojo original: {np.mean(imagen_prueba[:, :, 2]):.2f}")
+        print(f"Forma corregida: {resultado.shape} | Promedio Rojo corregido: {np.mean(resultado[:, :, 2]):.2f}")
         print("Prueba 1 (caso general) exitosa.")
     except Exception as e:
         print(f"Error en la prueba 1: {e}")

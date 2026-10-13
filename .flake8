@@ -1,0 +1,4 @@
+[flake8]
+# Límite de línea acordado para el proyecto (el valor por defecto de flake8 es 79).
+max-line-length = 120
+exclude = venv, env, .git, __pycache__

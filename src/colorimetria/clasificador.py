@@ -130,7 +130,9 @@ if __name__ == "__main__":
 
     estacion_ganadora = next(iter(posterior))
     assert abs(suma - 1.0) < 1e-9, "Las probabilidades deben sumar 1.0"
-    assert estacion_ganadora == "otono", "El color de prueba debería clasificar como 'otono' (es el centroide más cercano)"
+    assert estacion_ganadora == "otono", (
+        "El color de prueba debería clasificar como 'otono' (es el centroide más cercano)"
+    )
     print(f"\nPrueba 1 exitosa: suma = {suma:.6f}, estación más probable = '{estacion_ganadora}' (esperada: 'otono').")
 
     # Caso 2 (regresión del prior): mismo color, pero con un prior que favorece
