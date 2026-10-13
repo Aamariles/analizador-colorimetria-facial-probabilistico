@@ -27,15 +27,34 @@ CONTORNO_ROSTRO: List[int] = [
     10, 338, 297, 332, 284, 251, 389, 356, 454, 323, 361, 288, 397, 365, 379, 378, 400, 377,
     152, 148, 176, 149, 150, 136, 172, 58, 132, 93, 234, 127, 162, 21, 54, 103, 67, 109,
 ]
-OJO_IZQUIERDO: List[int] = [33, 160, 158, 133, 153, 144]
-OJO_DERECHO: List[int] = [362, 385, 387, 263, 373, 380]
-LABIOS: List[int] = [61, 146, 91, 181, 84, 17, 314, 405, 321, 375, 291, 308, 324, 318, 402, 317, 14, 87, 178, 88, 95]
+# Contorno completo de cada ojo (16 puntos, como FACEMESH_*_EYE de MediaPipe).
+OJO_IZQUIERDO: List[int] = [33, 7, 163, 144, 145, 153, 154, 155, 133, 173, 157, 158, 159, 160, 161, 246]
+OJO_DERECHO: List[int] = [263, 249, 390, 373, 374, 380, 381, 382, 362, 398, 384, 385, 386, 387, 388, 466]
+# Contorno exterior de los dos labios: el superior (61 -> 291) y el inferior de regreso
+# (291 -> 61). Cubre también la boca abierta y los dientes.
+LABIOS: List[int] = [61, 185, 40, 39, 37, 0, 267, 269, 270, 409, 291, 375, 321, 405, 314, 17, 84, 181, 91, 146]
 CEJA_IZQUIERDA: List[int] = [70, 63, 105, 66, 107, 55, 65, 52, 53, 46]
 CEJA_DERECHA: List[int] = [336, 296, 334, 293, 300, 276, 283, 282, 295, 285]
+
+# Márgenes de la máscara, como fracción del ancho del rostro (distancia entre los
+# landmarks 234 y 454), para que escalen igual en fotos grandes y pequeñas.
+# El borde del óvalo se recorta para quitar mechones de cabello en frente y sienes,
+# barba en el contorno de la mandíbula y fondo; ojos, cejas y labios se agrandan
+# para quitar pestañas, delineado, vello de las cejas y el borde del labio.
+EROSION_ROSTRO: float = 0.06
+DILATACION_RASGOS: float = 0.02
 
 # Umbral percentil de luminancia (canal V del espacio HSV).
 # Los píxeles por debajo de este valor se consideran sombras proyectadas y se excluyen del ROI.
 PERCENTIL_SOMBRA: float = 15.0
+
+# Filtro de color robusto: se descartan los píxeles cuyo L*, a* o b* se aleja de la
+# mediana de la piel más de Z_MAXIMO_COLOR desviaciones robustas (MAD). Atrapa mechones
+# que caen dentro de la cara, restos de labio y brillos. La desviación de cada canal
+# nunca se toma menor que DESVIACION_MINIMA_LAB, para no recortar de más una piel muy
+# uniforme ni el sombreado natural del rostro.
+Z_MAXIMO_COLOR: float = 3.0
+DESVIACION_MINIMA_LAB = (8.0, 2.0, 2.0)
 
 # Factor con el que se agranda el contorno del rostro para aproximar la cabeza
 # completa (cabello, orejas y parte del cuello). Lo que queda por fuera es la
@@ -133,6 +152,49 @@ def _excluir_sombras(imagen: np.ndarray, mascara: np.ndarray, percentil: float =
     return mascara_sin_sombras
 
 
+def _excluir_atipicos_de_color(imagen: np.ndarray, mascara: np.ndarray, z_maximo: float = Z_MAXIMO_COLOR) -> np.ndarray:
+    """Quita de la máscara los píxeles cuyo color no se parece al de la piel.
+
+    Calcula la mediana y la desviación robusta (MAD) de L*, a* y b* sobre los
+    píxeles de la máscara, y descarta los que se alejan más de `z_maximo`
+    desviaciones en cualquiera de los tres canales: mechones de cabello que
+    caen sobre la cara, restos del labio o de las cejas y brillos especulares.
+
+    Args:
+        imagen (np.ndarray): Imagen de entrada en formato BGR.
+        mascara (np.ndarray): Matriz binaria (0/255) de piel candidata.
+        z_maximo (float): Número de desviaciones robustas a partir del cual un píxel se descarta.
+
+    Returns:
+        np.ndarray: Nueva máscara binaria (0/255) sin los píxeles atípicos.
+    """
+    indices_piel = mascara > 0
+    if np.count_nonzero(indices_piel) < 50:
+        return mascara
+
+    lab = cv2.cvtColor(imagen.astype(np.float32) / 255.0, cv2.COLOR_BGR2Lab)[indices_piel]
+    mediana = np.median(lab, axis=0)
+    desviacion = np.median(np.abs(lab - mediana), axis=0) * 1.4826  # MAD escalada a desviación estándar
+    desviacion = np.maximum(desviacion, DESVIACION_MINIMA_LAB)
+    atipicos = (np.abs(lab - mediana) / desviacion > z_maximo).any(axis=1)
+
+    mascara_filtrada = mascara.copy()
+    filas, columnas = np.nonzero(indices_piel)
+    mascara_filtrada[filas[atipicos], columnas[atipicos]] = 0
+    return mascara_filtrada
+
+
+def _ancho_rostro(landmarks: Sequence, ancho: int, alto: int) -> float:
+    """Distancia en píxeles entre los extremos izquierdo (234) y derecho (454) del rostro."""
+    return float(np.hypot((landmarks[454].x - landmarks[234].x) * ancho, (landmarks[454].y - landmarks[234].y) * alto))
+
+
+def _disco(radio: float) -> np.ndarray:
+    """Elemento estructurante circular para erosionar o dilatar máscaras."""
+    radio_px = max(1, int(round(radio)))
+    return cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (2 * radio_px + 1, 2 * radio_px + 1))
+
+
 def detectar_landmarks(imagen: np.ndarray) -> Sequence:
     """Detecta el rostro en la imagen y devuelve sus landmarks.
 
@@ -197,8 +259,10 @@ def extraer_piel_limpia(imagen: np.ndarray, landmarks: Optional[Sequence] = None
     Extrae el ROI de piel limpia del rostro.
     Aplica un flujo de procesamiento que incluye la inferencia de landmarks
     (si no se reciben ya calculados), el recorte de los polígonos fijos de la
-    malla facial (contorno menos ojos, cejas y labios) y el filtrado posterior
-    de sombras por luminancia (percentil del canal V en HSV, ver `_excluir_sombras`).
+    malla facial (óvalo del rostro recortado en el borde, menos ojos, cejas y
+    labios agrandados), el filtrado de sombras por luminancia (percentil del
+    canal V en HSV, ver `_excluir_sombras`) y el de colores atípicos (ver
+    `_excluir_atipicos_de_color`).
 
     Args:
         imagen (np.ndarray): Imagen de entrada en formato BGR.
@@ -223,22 +287,29 @@ def extraer_piel_limpia(imagen: np.ndarray, landmarks: Optional[Sequence] = None
     # 1-2. Obtener los landmarks del rostro (detectándolos solo si no vienen dados)
     rostro = landmarks if landmarks is not None else detectar_landmarks(imagen)
 
-    # 3. Mapear y dibujar el polígono maestro del rostro (blanco)
+    ancho_cara = _ancho_rostro(rostro, ancho, alto)
+
+    # 3. Mapear y dibujar el polígono maestro del rostro (blanco) y recortar su borde,
+    # donde suelen colarse cabello, barba y fondo
     mascara = np.zeros((alto, ancho), dtype=np.uint8)
     cv2.fillPoly(mascara, [_puntos_a_pixeles(rostro, CONTORNO_ROSTRO, ancho, alto)], 255)
+    mascara = cv2.erode(mascara, _disco(EROSION_ROSTRO * ancho_cara))
 
-    # Construir los polígonos de ruido facial y restarlos de la máscara maestro (negro)
-    ruidos = [
+    # Construir los polígonos de ruido facial, agrandarlos un margen y restarlos de la máscara maestro
+    ruidos = np.zeros((alto, ancho), dtype=np.uint8)
+    cv2.fillPoly(ruidos, [
         _puntos_a_pixeles(rostro, OJO_IZQUIERDO, ancho, alto),
         _puntos_a_pixeles(rostro, OJO_DERECHO, ancho, alto),
         _puntos_a_pixeles(rostro, LABIOS, ancho, alto),
         _puntos_a_pixeles(rostro, CEJA_IZQUIERDA, ancho, alto),
         _puntos_a_pixeles(rostro, CEJA_DERECHA, ancho, alto),
-    ]
-    cv2.fillPoly(mascara, ruidos, 0)
+    ], 255)
+    ruidos = cv2.dilate(ruidos, _disco(DILATACION_RASGOS * ancho_cara))
+    mascara[ruidos > 0] = 0
 
-    # 4. Excluir sombras faciales
+    # 4. Excluir sombras faciales y colores que no son piel
     mascara = _excluir_sombras(imagen, mascara)
+    mascara = _excluir_atipicos_de_color(imagen, mascara)
 
     # 5. Aplicar compuerta lógica (Bitwise AND) para aislar los píxeles de piel verdaderos
     piel_extraida = cv2.bitwise_and(imagen, imagen, mask=mascara)
@@ -278,3 +349,15 @@ if __name__ == "__main__":
     assert not escena[50, 50] and escena[5, 5], "La cabeza debe quedar fuera de la escena y las esquinas dentro."
     assert abs(escena.mean() - 0.91) < 0.01, f"Fracción de escena inesperada: {escena.mean():.3f}"
     print(f" Prueba de la máscara de escena exitosa: la escena cubre el {escena.mean():.1%} de la imagen.")
+
+    # Filtro de color: una zona de piel con un mechón de cabello rubio y un resto de
+    # labio. Ambos deben salir de la máscara y la piel debe quedarse.
+    rng = np.random.default_rng(0)
+    parche = np.clip(rng.normal((150, 170, 215), 3, (100, 100, 3)), 0, 255).astype(np.uint8)  # piel (BGR)
+    parche[:, 10:16] = (80, 175, 220)   # mechón rubio: mucho más amarillo que la piel
+    parche[80:86, 40:60] = (110, 95, 200)  # resto de labio: mucho más rojo que la piel
+    filtrada = _excluir_atipicos_de_color(parche, np.full((100, 100), 255, dtype=np.uint8))
+    assert not filtrada[:, 10:16].any(), "El mechón de cabello debe salir de la máscara."
+    assert not filtrada[80:86, 40:60].any(), "El resto de labio debe salir de la máscara."
+    assert (filtrada[:, 30:] > 0).mean() > 0.95, "La piel debe quedarse en la máscara."
+    print(" Prueba del filtro de color exitosa: se quitaron el mechón y el labio, la piel se conservó.")

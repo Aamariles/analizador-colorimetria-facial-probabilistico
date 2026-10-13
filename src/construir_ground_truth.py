@@ -43,7 +43,9 @@ ILUMINACIONES = ("natural", "calida", "fria", "estudio", "desconocida")
 MINIMO_POR_ESTACION = 25
 MINIMO_VALIDACION = 5
 MIN_LADO_PX = 400            # imágenes con un lado menor se marcan como baja resolución
-MIN_PIXELES_PIEL = 5000      # ROI de piel más pequeño que esto se marca para revisar
+MIN_PIXELES_PIEL = 3500      # ROI de piel más pequeño que esto se marca para revisar
+#                              (la máscara recortada conserva ~70% de los píxeles de la anterior,
+#                              así que 3500 equivale al umbral previo de 5000)
 
 PATRON_NOMBRE = re.compile(r"^(primavera|verano|otono|otoño|invierno)[ _-]?(\d+)\.(jpe?g|png|webp)$",
                            re.IGNORECASE)
