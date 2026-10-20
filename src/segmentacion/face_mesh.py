@@ -13,8 +13,11 @@ from typing import List, Optional, Sequence
 import cv2
 import mediapipe as mp
 import numpy as np
-from mediapipe.tasks import python
-from mediapipe.tasks.python import vision
+# Las clases se importan desde el módulo donde se definen. `mediapipe.tasks.python.vision`
+# las reexporta con asignaciones (FaceLandmarker = face_landmarker.FaceLandmarker) que el
+# análisis estático no puede seguir, y Pylance las ve como variables de tipo desconocido.
+from mediapipe.tasks.python.core.base_options import BaseOptions
+from mediapipe.tasks.python.vision.face_landmarker import FaceLandmarker, FaceLandmarkerOptions
 
 import os
 
@@ -69,14 +72,14 @@ MODEL_PATH = os.path.join(BASE_DIR, "data", "reference", "face_landmarker.task")
 # Instancia global del motor de inferencia. Se inicializa bajo el patrón
 # Singleton para evitar la sobrecarga de I/O en disco en cada procesamiento.
 # --------------------------------------------------------------------------- #
-_landmarker: "vision.FaceLandmarker | None" = None
+_landmarker: Optional[FaceLandmarker] = None
 
 
-def _obtener_landmarker() -> "vision.FaceLandmarker":
+def _obtener_landmarker() -> FaceLandmarker:
     """Inicializa y retorna la instancia compartida del modelo FaceLandmarker.
 
     Returns:
-        vision.FaceLandmarker: Motor de inferencia configurado en memoria.
+        FaceLandmarker: Motor de inferencia configurado en memoria.
 
     Raises:
         FileNotFoundError: Si el archivo `.task` del modelo no se encuentra en el sistema.
@@ -85,14 +88,14 @@ def _obtener_landmarker() -> "vision.FaceLandmarker":
     if _landmarker is None:
         if not os.path.exists(MODEL_PATH):
             raise FileNotFoundError(f"No se encontró el modelo Face Landmarker en: {MODEL_PATH}")
-        base_options = python.BaseOptions(model_asset_path=MODEL_PATH)
-        options = vision.FaceLandmarkerOptions(
+        base_options = BaseOptions(model_asset_path=MODEL_PATH)
+        options = FaceLandmarkerOptions(
             base_options=base_options,
             output_face_blendshapes=False,
             output_facial_transformation_matrixes=False,
             num_faces=1,
         )
-        _landmarker = vision.FaceLandmarker.create_from_options(options)
+        _landmarker = FaceLandmarker.create_from_options(options)
     return _landmarker
 
 

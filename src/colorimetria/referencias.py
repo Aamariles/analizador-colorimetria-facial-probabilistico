@@ -83,7 +83,8 @@ def calibrar_desde_ground_truth(
             raise ValueError(f"No hay muestras de calibración (Ground Truth) para la estación '{clave}'.")
 
         datos = np.array(muestras, dtype=np.float64)
-        centroide = tuple(float(v) for v in datos.mean(axis=0))
+        promedio = datos.mean(axis=0)
+        centroide = (float(promedio[0]), float(promedio[1]), float(promedio[2]))
 
         # La dispersión se mide en las mismas unidades que usa el clasificador: la
         # distancia ΔE00 de cada muestra a su centroide. Para una gaussiana isotrópica
