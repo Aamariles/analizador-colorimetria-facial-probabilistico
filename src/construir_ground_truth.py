@@ -16,6 +16,10 @@ Subcomandos (se ejecutan desde la raíz del repositorio):
 Las imágenes van en data/raw/imagenes/ (carpeta que git ignora) y se nombran
 <estacion>_<numero>.<extension>, por ejemplo invierno_1.jpg; las extensiones válidas son
 .jpg, .jpeg, .png y .webp. También se aceptan nombres como "invierno 1.jpg" y "otoño_1.jpg".
+
+Todas las imágenes son fotos de internet (ninguna está generada con IA). El registro
+(registro_imagenes.csv) anota, para cada una, las dos fuentes que respaldan su estación y
+la iluminación de la foto; el subtipo de 12 estaciones y las notas son opcionales.
 """
 
 import argparse
@@ -39,7 +43,6 @@ ARCHIVO_REGISTRO = CARPETA_GT / "registro_imagenes.csv"
 ARCHIVO_MUESTRAS = CARPETA_GT / "muestras_lab.csv"
 
 ESTACIONES_VALIDAS = ("primavera", "verano", "otono", "invierno")
-ORIGENES = ("internet", "ia")
 ILUMINACIONES = ("natural", "calida", "fria", "estudio", "desconocida")
 MINIMO_POR_ESTACION = 25
 MINIMO_VALIDACION = 5
@@ -52,9 +55,13 @@ PATRON_NOMBRE = re.compile(r"^(primavera|verano|otono|otoño|invierno)[ _-]?(\d+
 EXTENSIONES = (".jpg", ".jpeg", ".png", ".webp")
 ARCHIVOS_DEL_SISTEMA = {"desktop.ini", "thumbs.db", ".ds_store"}
 
-COLUMNAS_REGISTRO = ["archivo", "estacion", "origen", "persona", "url_imagen", "fuente_estacion_1",
-                     "fuente_estacion_2", "herramienta_ia", "prompt_ia", "subtipo_12", "iluminacion", "notas"]
-COLUMNAS_MUESTRAS = ["archivo", "estacion", "origen", "L", "a", "b", "pixeles_piel", "ancho", "alto",
+COLUMNAS_REGISTRO = ["archivo", "estacion", "fuente_estacion_1", "fuente_estacion_2", "subtipo_12",
+                     "iluminacion", "notas"]
+# Columnas que toda fila del registro debe tener llenas, además de la iluminación
+CAMPOS_OBLIGATORIOS = ("fuente_estacion_1", "fuente_estacion_2")
+# Columnas de versiones anteriores del registro, que `preparar` quita si las encuentra
+COLUMNAS_RETIRADAS = ("origen", "persona", "url_imagen", "herramienta_ia", "prompt_ia")
+COLUMNAS_MUESTRAS = ["archivo", "estacion", "L", "a", "b", "pixeles_piel", "ancho", "alto",
                      "estado", "detalle", "subconjunto"]
 
 
@@ -166,15 +173,7 @@ def problemas_registro(fila: Dict[str, str]) -> List[str]:
         faltan.append("archivo (nombre no válido)")
     elif sin_tildes(fila.get("estacion", "")) != datos[0]:
         faltan.append(f"estacion (el nombre del archivo dice '{datos[0]}')")
-    origen = sin_tildes(fila.get("origen", ""))
-    if origen == "internet":
-        requeridos = ("persona", "url_imagen", "fuente_estacion_1", "fuente_estacion_2")
-    elif origen == "ia":
-        requeridos = ("herramienta_ia", "prompt_ia")
-    else:
-        requeridos = ()
-        faltan.append("origen (internet o ia)")
-    faltan += [campo for campo in requeridos if not fila.get(campo, "").strip()]
+    faltan += [campo for campo in CAMPOS_OBLIGATORIOS if not fila.get(campo, "").strip()]
     iluminacion = sin_tildes(fila.get("iluminacion", ""))
     if not iluminacion:
         faltan.append("iluminacion")
@@ -242,7 +241,11 @@ def cmd_preparar(args: argparse.Namespace) -> int:
     CARPETA_IMAGENES.mkdir(parents=True, exist_ok=True)
     CARPETA_GT.mkdir(parents=True, exist_ok=True)
     filas, separador = cargar_registro()
-    columnas = COLUMNAS_REGISTRO + [c for c in (filas[0].keys() if filas else []) if c not in COLUMNAS_REGISTRO]
+    # Se conservan las columnas extra que se hayan agregado a mano, salvo las que ya no se usan
+    anteriores = list(filas[0].keys()) if filas else []
+    retiradas = [c for c in anteriores if c in COLUMNAS_RETIRADAS]
+    columnas = COLUMNAS_REGISTRO + [c for c in anteriores
+                                    if c not in COLUMNAS_REGISTRO and c not in COLUMNAS_RETIRADAS]
     existentes = {f.get("archivo", "") for f in filas}
     imagenes = listar_imagenes()
     nuevas = 0
@@ -262,6 +265,8 @@ def cmd_preparar(args: argparse.Namespace) -> int:
     print(f"Carpeta de imágenes: {CARPETA_IMAGENES}")
     print(f"Registro: {ARCHIVO_REGISTRO}")
     print(f"Imágenes válidas en la carpeta: {len(imagenes)} | filas nuevas en el registro: {nuevas}")
+    if retiradas:
+        print(f"  [AVISO] se quitaron del registro las columnas que ya no se usan: {', '.join(retiradas)}")
     if huerfanas:
         print(f"  [AVISO] {len(huerfanas)} fila(s) del registro no tienen imagen: {', '.join(huerfanas[:10])}")
     return 0
@@ -276,12 +281,10 @@ def cmd_extraer(args: argparse.Namespace) -> int:
 
     from medicion import medir_color_piel
 
-    registro = {f.get("archivo", ""): f for f in cargar_registro()[0]}
     filas = []
     total = len(imagenes)
     for i, (ruta, estacion, _) in enumerate(imagenes, start=1):
-        fila = {"archivo": ruta.name, "estacion": estacion,
-                "origen": sin_tildes(registro.get(ruta.name, {}).get("origen", ""))}
+        fila = {"archivo": ruta.name, "estacion": estacion}
         imagen = leer_imagen(ruta)
         if imagen is None:
             fila.update(estado="error", detalle="no se pudo leer la imagen (formato no soportado o archivo dañado)")
@@ -331,27 +334,20 @@ def cmd_dividir(args: argparse.Namespace) -> int:
         print("No existe muestras_lab.csv. Corre primero: python src/construir_ground_truth.py extraer")
         return 1
     filas, _ = leer_csv(ARCHIVO_MUESTRAS)
-    registro = {f.get("archivo", ""): f for f in cargar_registro()[0]}
-    for fila in filas:   # el origen se toma del registro actual por si se completó después de extraer
-        fila["origen"] = sin_tildes(registro.get(fila["archivo"], {}).get("origen", fila.get("origen", "")))
+    for fila in filas:
         fila["subconjunto"] = ""
 
     generador = random.Random(args.semilla)
-    print(f"Proporción para validación: {args.proporcion:.0%} | semilla: {args.semilla} | "
-          f"IA en validación: {'sí' if args.validacion_incluye_ia else 'no'}")
+    print(f"Proporción para validación: {args.proporcion:.0%} | semilla: {args.semilla}")
     for estacion in ESTACIONES_VALIDAS:
         validas = sorted((f for f in filas if f["estacion"] == estacion and f["estado"] == "ok"),
                          key=lambda f: f["archivo"])
         objetivo = int(len(validas) * args.proporcion + 0.5)
-        candidatas = [f for f in validas if args.validacion_incluye_ia or f["origen"] == "internet"]
-        elegidas = {f["archivo"] for f in generador.sample(candidatas, min(objetivo, len(candidatas)))}
+        elegidas = {f["archivo"] for f in generador.sample(validas, min(objetivo, len(validas)))}
         for fila in validas:
             fila["subconjunto"] = "validacion" if fila["archivo"] in elegidas else "calibracion"
-        aviso = ""
-        if len(elegidas) < objetivo:
-            aviso = f"  [AVISO] faltan {objetivo - len(elegidas)} imágenes de internet para la validación"
         print(f"  {estacion:10s} válidas={len(validas):3d}  calibración={len(validas) - len(elegidas):3d}  "
-              f"validación={len(elegidas):3d}{aviso}")
+              f"validación={len(elegidas):3d}")
 
     escribir_csv(ARCHIVO_MUESTRAS, filas, COLUMNAS_MUESTRAS)
     print(f"\nColumna 'subconjunto' actualizada en {ARCHIVO_MUESTRAS}")
@@ -369,26 +365,23 @@ def cmd_resumen(args: argparse.Namespace) -> int:
     pendientes: List[str] = []
 
     print("\nIMÁGENES POR ESTACIÓN")
-    print(f"  {'estación':10s} {'carpeta':>7s} {'ok':>4s} {'fallas':>6s} {'internet':>8s} {'ia':>4s} "
-          f"{'calib.':>6s} {'valid.':>6s}")
+    print(f"  {'estación':10s} {'carpeta':>7s} {'ok':>4s} {'fallas':>6s} {'calib.':>6s} {'valid.':>6s}")
     for estacion in ESTACIONES_VALIDAS:
         en_carpeta = sum(1 for _, e, _ in imagenes if e == estacion)
         filas = [f for f in muestras if f.get("estacion") == estacion]
         ok = [f for f in filas if f.get("estado") == "ok"]
         conteo = {
             "fallas": len(filas) - len(ok),
-            "internet": sum(1 for f in ok if f.get("origen") == "internet"),
-            "ia": sum(1 for f in ok if f.get("origen") == "ia"),
             "calibracion": sum(1 for f in ok if f.get("subconjunto") == "calibracion"),
             "validacion": sum(1 for f in ok if f.get("subconjunto") == "validacion"),
         }
-        print(f"  {estacion:10s} {en_carpeta:7d} {len(ok):4d} {conteo['fallas']:6d} {conteo['internet']:8d} "
-              f"{conteo['ia']:4d} {conteo['calibracion']:6d} {conteo['validacion']:6d}")
+        print(f"  {estacion:10s} {en_carpeta:7d} {len(ok):4d} {conteo['fallas']:6d} "
+              f"{conteo['calibracion']:6d} {conteo['validacion']:6d}")
         if len(ok) < MINIMO_POR_ESTACION:
             pendientes.append(f"{estacion}: {len(ok)} imagen(es) válida(s) de {MINIMO_POR_ESTACION} requeridas")
         if muestras and conteo["validacion"] < MINIMO_VALIDACION:
             pendientes.append(f"{estacion}: {conteo['validacion']} imagen(es) en validación "
-                              f"(mínimo {MINIMO_VALIDACION}; corre 'dividir' o agrega imágenes de internet)")
+                              f"(mínimo {MINIMO_VALIDACION}; corre 'dividir' o agrega más imágenes)")
 
     print("\nPROMEDIO L*a*b* POR ESTACIÓN (imágenes ok) frente al centroide actual de referencias.py")
     for estacion in ESTACIONES_VALIDAS:
@@ -412,18 +405,14 @@ def cmd_resumen(args: argparse.Namespace) -> int:
                           f"{', '.join(sin_registro[:8])}")
     if sin_imagen:
         pendientes.append(f"{len(sin_imagen)} fila(s) del registro sin imagen: {', '.join(sin_imagen[:8])}")
+    sobrantes = [c for c in (registro[0].keys() if registro else []) if c in COLUMNAS_RETIRADAS]
+    if sobrantes:
+        pendientes.append(f"el registro todavía tiene columnas que ya no se usan ({', '.join(sobrantes)}); "
+                          "corre 'preparar' para quitarlas")
     for fila in registro:
         faltan = problemas_registro(fila)
         if faltan and fila.get("archivo") in nombres_carpeta:
             pendientes.append(f"registro {fila.get('archivo')}: falta o está mal {', '.join(faltan)}")
-
-    personas: Dict[str, List[str]] = {}
-    for fila in registro:
-        if sin_tildes(fila.get("origen", "")) == "internet" and fila.get("persona"):
-            personas.setdefault(sin_tildes(fila["persona"]), []).append(fila.get("archivo", ""))
-    for archivos in personas.values():
-        if len(archivos) > 1:
-            pendientes.append(f"la misma persona aparece en varias imágenes: {', '.join(archivos)}")
 
     huellas: Dict[str, List[str]] = {}
     for ruta, _, _ in imagenes:
@@ -469,8 +458,6 @@ def main(argv: Optional[List[str]] = None) -> int:
     p_dividir.add_argument("--proporcion", type=float, default=0.30,
                            help="Fracción de cada estación que va a validación (por defecto 0.30).")
     p_dividir.add_argument("--semilla", type=int, default=42, help="Semilla para que la división sea repetible.")
-    p_dividir.add_argument("--validacion-incluye-ia", action="store_true",
-                           help="Permite imágenes generadas con IA en validación (por defecto solo internet).")
     sub.add_parser("resumen", help="Control de calidad antes de entregar.")
     args = parser.parse_args(argv)
     comandos = {"preparar": cmd_preparar, "extraer": cmd_extraer, "dividir": cmd_dividir, "resumen": cmd_resumen}
