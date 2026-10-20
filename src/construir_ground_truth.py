@@ -1,20 +1,21 @@
 """Herramienta para construir el dataset_ground_truth (hito 10 del Acta de Constitución).
 
 Procesa las imágenes de referencia (rostros cuya estación cromática ya se conoce) con la
-misma medición del orquestador (`medicion.medir_color_piel`: MediaPipe -> Gray World
-sobre la escena -> CIELAB/K-Means) y deja el resultado en CSV listos para calibrar los centroides de
-`colorimetria.referencias.calibrar_desde_ground_truth` y para medir la precisión.
+misma medición que usa el orquestador (`medicion.medir_color_piel`: MediaPipe -> Gray
+World -> CIELAB/K-Means) y guarda los resultados en archivos CSV, listos para calibrar
+los centroides con `colorimetria.referencias.calibrar_desde_ground_truth` y para medir
+la precisión.
 
 Subcomandos (se ejecutan desde la raíz del repositorio):
 
     python src/construir_ground_truth.py preparar   # crea carpetas y sincroniza el registro
     python src/construir_ground_truth.py extraer    # calcula el L*a*b* de cada imagen
-    python src/construir_ground_truth.py dividir    # asigna calibracion / validacion
+    python src/construir_ground_truth.py dividir    # asigna calibración o validación
     python src/construir_ground_truth.py resumen    # control de calidad antes de entregar
 
 Las imágenes van en data/raw/imagenes/ (carpeta que git ignora) y se nombran
-<estacion>_<numero>.<extension>, por ejemplo invierno_1.jpg. También se aceptan
-"invierno 1.jpg" y "otoño_1.jpg".
+<estacion>_<numero>.<extension>, por ejemplo invierno_1.jpg; las extensiones válidas son
+.jpg, .jpeg, .png y .webp. También se aceptan nombres como "invierno 1.jpg" y "otoño_1.jpg".
 """
 
 import argparse
@@ -43,9 +44,8 @@ ILUMINACIONES = ("natural", "calida", "fria", "estudio", "desconocida")
 MINIMO_POR_ESTACION = 25
 MINIMO_VALIDACION = 5
 MIN_LADO_PX = 400            # imágenes con un lado menor se marcan como baja resolución
-MIN_PIXELES_PIEL = 3500      # ROI de piel más pequeño que esto se marca para revisar
-#                              (la máscara recortada conserva ~70% de los píxeles de la anterior,
-#                              así que 3500 equivale al umbral previo de 5000)
+MIN_PIXELES_PIEL = 3500      # una ROI de piel con menos píxeles se marca para revisar:
+#                              con tan poca piel, el color medido es poco confiable
 
 PATRON_NOMBRE = re.compile(r"^(primavera|verano|otono|otoño|invierno)[ _-]?(\d+)\.(jpe?g|png|webp)$",
                            re.IGNORECASE)
@@ -68,7 +68,7 @@ def sin_tildes(texto: str) -> str:
 
 
 def interpretar_nombre(nombre: str) -> Optional[Tuple[str, int]]:
-    """Devuelve (estacion, numero) a partir de nombres como 'invierno_1.jpg' u 'Otoño 3.png'."""
+    """Devuelve (estación, número), por ejemplo ('otono', 3) para 'Otoño 3.png'; None si el nombre no es válido."""
     coincidencia = PATRON_NOMBRE.match(unicodedata.normalize("NFC", nombre.strip()))
     if coincidencia is None:
         return None
@@ -76,6 +76,7 @@ def interpretar_nombre(nombre: str) -> Optional[Tuple[str, int]]:
 
 
 def orden_estacion(estacion: str) -> int:
+    """Posición de la estación en ESTACIONES_VALIDAS, para ordenar; las desconocidas van al final."""
     return ESTACIONES_VALIDAS.index(estacion) if estacion in ESTACIONES_VALIDAS else len(ESTACIONES_VALIDAS)
 
 
@@ -117,7 +118,17 @@ def escribir_csv(ruta: Path, filas: List[Dict[str, str]], columnas: List[str],
 
 
 def listar_imagenes(avisar: bool = True) -> List[Tuple[Path, str, int]]:
-    """Lista las imágenes válidas de la carpeta, ordenadas por estación y número."""
+    """Lista las imágenes válidas de la carpeta, ordenadas por estación y número.
+
+    Omite los archivos del sistema, los de nombre o extensión no válidos y los que
+    repiten el número de otra imagen de la misma estación.
+
+    Args:
+        avisar (bool): Si es True, muestra en consola por qué se omite cada archivo.
+
+    Returns:
+        List[Tuple[Path, str, int]]: Para cada imagen, su ruta, su estación y su número.
+    """
     if not CARPETA_IMAGENES.exists():
         return []
     validas, vistas = [], {}
@@ -127,7 +138,7 @@ def listar_imagenes(avisar: bool = True) -> List[Tuple[Path, str, int]]:
         datos = interpretar_nombre(ruta.name)
         if datos is None:
             if avisar:
-                motivo = ("extensión no soportada (usa .jpg o .png)" if ruta.suffix.lower() not in EXTENSIONES
+                motivo = ("extensión no soportada (usa .jpg, .png o .webp)" if ruta.suffix.lower() not in EXTENSIONES
                           else "nombre no válido (usa <estacion>_<numero>, por ejemplo invierno_1.jpg)")
                 print(f"  [AVISO] {ruta.name}: {motivo}; se omite.")
             continue
@@ -141,6 +152,7 @@ def listar_imagenes(avisar: bool = True) -> List[Tuple[Path, str, int]]:
 
 
 def cargar_registro() -> Tuple[List[Dict[str, str]], str]:
+    """Lee el registro de imágenes; si todavía no existe, devuelve una lista vacía y ';' como separador."""
     if not ARCHIVO_REGISTRO.exists():
         return [], ";"
     return leer_csv(ARCHIVO_REGISTRO)
@@ -171,8 +183,12 @@ def problemas_registro(fila: Dict[str, str]) -> List[str]:
     return faltan
 
 
-def leer_imagen(ruta: Path):
-    """Lee una imagen BGR aunque la ruta tenga tildes o eñes (cv2.imread falla con ellas en Windows)."""
+def leer_imagen(ruta: Path) -> Optional[np.ndarray]:
+    """Lee una imagen BGR aunque la ruta tenga tildes o eñes (cv2.imread falla con ellas en Windows).
+
+    Returns:
+        Optional[np.ndarray]: La imagen, o None si el archivo está vacío o no es una imagen válida.
+    """
     import cv2
     datos = np.fromfile(str(ruta), dtype=np.uint8)
     if datos.size == 0:
@@ -181,7 +197,10 @@ def leer_imagen(ruta: Path):
 
 
 def guardar_preview(ruta: Path, original: np.ndarray, corregida: np.ndarray, roi: np.ndarray) -> None:
-    """Guarda, lado a lado, la imagen original, la corregida por Gray World y la piel extraída."""
+    """Guarda, lado a lado, la imagen original, la corregida por Gray World y la piel extraída.
+
+    Si la corrección de iluminación se descartó, el panel del medio es igual al original.
+    """
     import cv2
     alto = 360
 
@@ -284,11 +303,11 @@ def cmd_extraer(args: argparse.Namespace) -> int:
                 pixeles = int(np.count_nonzero(np.any(roi != 0, axis=-1)))
                 avisos = []
                 if min(ancho, alto) < MIN_LADO_PX:
-                    avisos.append(f"baja resolucion ({ancho}x{alto})")
+                    avisos.append(f"baja resolución ({ancho}x{alto})")
                 if pixeles < MIN_PIXELES_PIEL:
                     avisos.append(f"poca piel detectada ({pixeles} px)")
                 if not medicion.balance_aplicado:
-                    avisos.append("fondo de color: se omitio la correccion de iluminacion")
+                    avisos.append("fondo de color: se omitió la corrección de iluminación")
                 fila.update(L=f"{lab[0]:.2f}", a=f"{lab[1]:.2f}", b=f"{lab[2]:.2f}", pixeles_piel=str(pixeles),
                             estado="ok", detalle="; ".join(avisos))
                 if args.previews:
@@ -331,8 +350,8 @@ def cmd_dividir(args: argparse.Namespace) -> int:
         aviso = ""
         if len(elegidas) < objetivo:
             aviso = f"  [AVISO] faltan {objetivo - len(elegidas)} imágenes de internet para la validación"
-        print(f"  {estacion:10s} válidas={len(validas):3d}  calibracion={len(validas) - len(elegidas):3d}  "
-              f"validacion={len(elegidas):3d}{aviso}")
+        print(f"  {estacion:10s} válidas={len(validas):3d}  calibración={len(validas) - len(elegidas):3d}  "
+              f"validación={len(elegidas):3d}{aviso}")
 
     escribir_csv(ARCHIVO_MUESTRAS, filas, COLUMNAS_MUESTRAS)
     print(f"\nColumna 'subconjunto' actualizada en {ARCHIVO_MUESTRAS}")
@@ -439,13 +458,14 @@ def cmd_resumen(args: argparse.Namespace) -> int:
 
 
 def main(argv: Optional[List[str]] = None) -> int:
+    """Interpreta el subcomando de la línea de comandos, lo ejecuta y devuelve el código de salida."""
     parser = argparse.ArgumentParser(description="Construcción del dataset_ground_truth (hito 10).")
     sub = parser.add_subparsers(dest="comando", required=True)
     sub.add_parser("preparar", help="Crea las carpetas y sincroniza el registro con las imágenes.")
     p_extraer = sub.add_parser("extraer", help="Calcula el L*a*b* de cada imagen con el pipeline.")
     p_extraer.add_argument("--previews", action="store_true",
                            help="Guarda en data/raw/previews la original, la corregida y la piel extraída.")
-    p_dividir = sub.add_parser("dividir", help="Asigna cada imagen a calibracion o validacion.")
+    p_dividir = sub.add_parser("dividir", help="Asigna cada imagen a calibración o validación.")
     p_dividir.add_argument("--proporcion", type=float, default=0.30,
                            help="Fracción de cada estación que va a validación (por defecto 0.30).")
     p_dividir.add_argument("--semilla", type=int, default=42, help="Semilla para que la división sea repetible.")

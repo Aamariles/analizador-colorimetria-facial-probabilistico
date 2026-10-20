@@ -7,8 +7,8 @@ El orden de las etapas es deliberado:
    que no es la cabeza): la pared o la ropa blanca, no el cabello ni la piel del cuello
    o los hombros. Luego corrige la imagen completa. Si lo estimara con toda la imagen,
    en un primer plano el promedio sería la propia piel y la corrección la volvería gris;
-   si usara toda la escena, el cabello largo y los hombros la enfriarían. Las dos cosas
-   empujaban la piel hacia Verano (ver `preprocesamiento.gray_world`).
+   si usara toda la escena, el cabello largo y los hombros la enfriarían. En ambos casos
+   la piel se desplazaría hacia Verano (ver `preprocesamiento.gray_world`).
 3. Se aísla la piel limpia con los mismos landmarks.
 4. K-Means en CIELAB devuelve el color dominante de la piel.
 5. Control de plausibilidad: la piel humana siempre tiene a* y b* positivos (su matiz
@@ -62,6 +62,8 @@ def es_piel_plausible(color_lab: np.ndarray) -> bool:
 
 def medir_color_piel(imagen: np.ndarray) -> MedicionPiel:
     """Mide el color dominante de la piel de una fotografía.
+
+    Sigue las etapas descritas en el docstring de este módulo.
 
     Args:
         imagen (np.ndarray): Imagen de entrada en formato BGR.

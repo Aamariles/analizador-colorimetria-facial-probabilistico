@@ -1,15 +1,14 @@
-"""Módulo de referencias cromáticas estacionales en el espacio CIELAB.
+"""Referencias de color de las cuatro estaciones en el espacio CIELAB.
 
-Define los centroides matemáticos (L*a*b*) y la dispersión base para cada una
-de las cuatro estaciones de la teoría del color (Primavera, Verano, Otoño, Invierno).
-Incluye herramientas de calibración estadística para ajustar iterativamente
-estos centroides a partir de conjuntos de datos empíricos supervisados.
+Define, para Primavera, Verano, Otoño e Invierno, el centroide L*a*b* y la dispersión
+(sigma) que usa el clasificador, y la función que recalcula ambos valores a partir de
+muestras etiquetadas (el dataset_ground_truth).
 
 Estado de los valores: los centroides de `ESTACIONES` son una primera aproximación
-razonada (a partir de los ejes cualitativos de temperatura y claridad del análisis
-de color por estaciones), no un dataset calibrado. El Acta de Constitución (sección
-XII) exige construir un Ground Truth etiquetado manualmente; `calibrar_desde_ground_truth`
-existe para reemplazar estos valores por ese dataset en cuanto esté disponible.
+razonada a partir de los ejes de temperatura (cálido/frío) y claridad del análisis de
+color por estaciones; no salen de datos medidos. El Acta de Constitución (sección XII)
+exige construir un Ground Truth etiquetado, y `calibrar_desde_ground_truth` reemplaza
+estos valores con ese dataset (hito 11).
 """
 
 from typing import Dict, List, NamedTuple, Tuple
@@ -19,15 +18,14 @@ from skimage.color import deltaE_ciede2000
 
 
 class EstacionReferencia(NamedTuple):
-    """Estructura de datos para los parámetros estadísticos de una estación cromática.
+    """Parámetros estadísticos de una estación cromática.
 
     Attributes:
-        nombre (str): Identificador formal de la estación.
-        lab (Tuple[float, float, float]): Coordenadas del centroide en el espacio L*a*b*.
-        sigma (float): Dispersión esperada (tolerancia) alrededor del centroide,
-            expresada en unidades ΔE00. Define la amplitud del kernel gaussiano
-            en la clasificación bayesiana; un valor mayor admite más variación
-            intra-clase.
+        nombre (str): Nombre de la estación para mostrar, con tildes (por ejemplo, "Otoño").
+        lab (Tuple[float, float, float]): Centroide de la estación en el espacio L*a*b*.
+        sigma (float): Dispersión esperada alrededor del centroide, en unidades ΔE00.
+            Es el ancho de la campana gaussiana del clasificador bayesiano: un valor
+            mayor admite más variación dentro de la estación.
     """
 
     nombre: str
@@ -35,11 +33,10 @@ class EstacionReferencia(NamedTuple):
     sigma: float
 
 
-# Definición heurística de los clústeres estacionales basada en los ejes de
-# temperatura (b* alto para cálidos, b* bajo para fríos) y luminosidad (L*).
-# Los valores de dispersión (sigma) se inicializan simétricamente en un umbral
-# perceptual estándar (12.0) y están diseñados para asimetrizarse de forma natural
-# tras la calibración con datos reales.
+# Centroides definidos a partir de los ejes de temperatura (b* alto en las estaciones
+# cálidas, bajo en las frías) y claridad (L*). Todas las estaciones empiezan con la
+# misma dispersión, amplia (12.0 ΔE00), para que ninguna quede favorecida; la
+# calibración le asigna a cada una la dispersión que muestren sus datos.
 ESTACIONES: Dict[str, EstacionReferencia] = {
     "primavera": EstacionReferencia(nombre="Primavera", lab=(72.0, 18.0, 28.0), sigma=12.0),
     "verano": EstacionReferencia(nombre="Verano", lab=(68.0, 14.0, 16.0), sigma=12.0),
@@ -52,29 +49,26 @@ def calibrar_desde_ground_truth(
     muestras_por_estacion: Dict[str, List[Tuple[float, float, float]]],
     sigma_minimo: float = 2.0,
 ) -> Dict[str, EstacionReferencia]:
-    """Recalibra los centroides estacionales y su dispersión a partir de muestras reales ya etiquetadas.
+    """Recalcula el centroide y la dispersión de cada estación a partir de muestras etiquetadas.
 
-    Sustituye los valores heurísticos iniciales calculando el promedio espacial
-    y la dispersión (en unidades ΔE00) a partir de un conjunto de muestras reales
-    (Ground Truth) previamente clasificadas y validadas. El resultado se pasa al
-    clasificador con el parámetro `referencias` de `clasificar_estacion`.
+    El centroide es el promedio L*a*b* de las muestras de la estación, y la dispersión
+    se mide en unidades ΔE00, las mismas que usa el clasificador. El resultado se pasa
+    a `clasificar_estacion` con su parámetro `referencias`.
 
     Args:
-        muestras_por_estacion: Para cada clave de estación ("primavera",
-            "verano", "otono", "invierno"), una lista de tuplas (L*, a*, b*)
-            correspondientes a muestras reales etiquetadas con esa estación.
-        sigma_minimo (float): Límite inferior de tolerancia para la dispersión,
-            en unidades ΔE00. Previene el colapso del modelo de verosimilitud si
-            la varianza de una muestra empírica es excesivamente baja. El valor
-            por defecto (2.0) equivale al límite anterior de 4 unidades de
-            desviación estándar en L*, expresado en la nueva escala.
+        muestras_por_estacion (Dict[str, List[Tuple[float, float, float]]]): Para cada
+            clave de estación ("primavera", "verano", "otono", "invierno"), la lista de
+            colores (L*, a*, b*) de las muestras etiquetadas con esa estación.
+        sigma_minimo (float): Dispersión mínima, en unidades ΔE00. Evita que una
+            estación con pocas muestras muy parecidas quede con una campana tan
+            estrecha que el clasificador se vuelva demasiado seguro.
 
     Returns:
-        Dict[str, EstacionReferencia]: Diccionario con las referencias estacionales
-        actualizadas según la distribución probabilística real de los datos.
+        Dict[str, EstacionReferencia]: Las referencias recalculadas, con las mismas
+        claves y nombres que `ESTACIONES`.
 
     Raises:
-        ValueError: Si una o más estaciones carecen de muestras en el dataset de entrada.
+        ValueError: Si alguna estación no tiene muestras.
     """
     nuevas_referencias: Dict[str, EstacionReferencia] = {}
     for clave, referencia_actual in ESTACIONES.items():

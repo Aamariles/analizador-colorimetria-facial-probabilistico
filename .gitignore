@@ -11,6 +11,7 @@ __pycache__/
 # Archivos de entorno y variables locales
 .env
 
-# Imágenes de prueba locales
+# Imágenes del dataset y vistas previas: son fotos de personas y no se suben al
+# repositorio público (en data/ground_truth/ solo quedan los CSV)
 data/raw/*
 !data/raw/.gitkeep

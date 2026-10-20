@@ -1,14 +1,14 @@
-"""Módulo de clasificación probabilística estacional basada en distancia perceptual.
+"""Clasificación probabilística de la estación cromática a partir de la distancia perceptual.
 
-Utiliza el vector CIELAB dominante para estimar, vía un modelo bayesiano
-(distancia ΔE00 → verosimilitud gaussiana → posterior), la probabilidad de
-que el tono de piel analizado pertenezca a cada una de las cuatro estaciones
-cromáticas (Primavera, Verano, Otoño, Invierno).
+A partir del color dominante de la piel en CIELAB, estima la probabilidad de que el
+tono de piel pertenezca a cada una de las cuatro estaciones cromáticas (Primavera,
+Verano, Otoño, Invierno) con un modelo bayesiano: distancia ΔE00 → verosimilitud
+gaussiana → probabilidad posterior.
 
 Nota de alcance: los centroides de referencia (`colorimetria.referencias.ESTACIONES`)
-son una primera aproximación razonada, no un dataset calibrado — ver el docstring
-de ese módulo. Las probabilidades que produce este clasificador deben leerse como
-ilustrativas hasta que se calibren contra el Ground Truth que exige el Acta (sección XII).
+son una primera aproximación razonada, no un dataset calibrado (ver el docstring de
+ese módulo). Las probabilidades que produce este clasificador deben leerse como
+ilustrativas hasta que se calibren con el Ground Truth que exige el Acta (sección XII).
 Las referencias calibradas (`calibrar_desde_ground_truth`) se pasan con el parámetro
 `referencias` de las funciones de este módulo.
 """
@@ -18,9 +18,9 @@ from typing import Dict, Optional
 import numpy as np
 from skimage.color import deltaE_ciede2000
 
-# Import relativo normal dentro del paquete `colorimetria`, con fallback para
-# ejecutar este archivo directamente como script (`python3 src/colorimetria/clasificador.py`),
-# igual que los demás módulos del proyecto.
+# Import relativo dentro del paquete `colorimetria`. Si el archivo se ejecuta
+# directamente (python src/colorimetria/clasificador.py) no hay paquete, así que
+# `referencias` se importa como módulo suelto.
 try:
     from .referencias import ESTACIONES, EstacionReferencia
 except ImportError:
@@ -31,27 +31,26 @@ def calcular_distancias_cie00(
     color_lab: np.ndarray,
     referencias: Optional[Dict[str, EstacionReferencia]] = None,
 ) -> Dict[str, float]:
-    """
-    Calcula la distancia perceptual CIEDE2000 entre el color de entrada
-    y los centroides estacionales.
+    """Calcula la distancia perceptual CIEDE2000 entre un color y cada centroide estacional.
 
     Args:
-        color_lab (np.ndarray): Vector [L*, a*, b*] del color dominante extraído.
-        referencias (Optional[Dict[str, EstacionReferencia]]): Centroides contra los
-            que se compara. Si es None, se usan los de `referencias.ESTACIONES`.
+        color_lab (np.ndarray): Vector [L*, a*, b*] del color dominante de la piel.
+        referencias (Optional[Dict[str, EstacionReferencia]]): Centroides con los que
+            se compara. Si es None, se usan los de `referencias.ESTACIONES`.
 
     Returns:
-        Dict[str, float]: Diccionario con la distancia ΔE00 calculada para cada
-        estación ("primavera", "verano", "otono", "invierno"). Un valor menor
-        indica mayor similitud cromática perceptual.
+        Dict[str, float]: Distancia ΔE00 a cada estación ("primavera", "verano",
+        "otono", "invierno"). Un valor menor indica un color más parecido.
 
     Raises:
-        ValueError: Si el vector de color no tiene exactamente 3 componentes espaciales.
+        ValueError: Si el vector de color no tiene exactamente 3 componentes.
     """
     referencias = ESTACIONES if referencias is None else referencias
     color_lab = np.asarray(color_lab, dtype=np.float64)
     if color_lab.shape != (3,):
-        raise ValueError(f"Se esperaba un vector [L*, a*, b*] de 3 componentes; se recibió forma {color_lab.shape}.")
+        raise ValueError(
+            f"Se esperaba un vector [L*, a*, b*] de 3 componentes; se recibió uno de forma {color_lab.shape}."
+        )
 
     distancias: Dict[str, float] = {}
     for clave, referencia in referencias.items():
@@ -66,22 +65,21 @@ def clasificar_estacion(
     prior: Optional[Dict[str, float]] = None,
     referencias: Optional[Dict[str, EstacionReferencia]] = None,
 ) -> Dict[str, float]:
-    """Clasifica el color de piel en una distribución de probabilidad bayesiana
-    sobre las cuatro estaciones cromáticas.
+    """Calcula la probabilidad posterior de cada estación para un color de piel.
 
     Args:
-        color_lab (np.ndarray): Vector [L*, a*, b*] del color dominante.
+        color_lab (np.ndarray): Vector [L*, a*, b*] del color dominante de la piel.
         prior (Optional[Dict[str, float]]): Distribución de probabilidad a priori
-            (debe sumar 1.0). Si es None, se asume una distribución uniforme (25%
-            por estación), indicando que a priori ninguna estación es más probable.
+            (debe sumar 1.0). Si es None, se usa una distribución uniforme (25% por
+            estación): a priori ninguna estación es más probable que otra.
         referencias (Optional[Dict[str, EstacionReferencia]]): Centroides y
             dispersiones de cada estación, por ejemplo los que devuelve
             `calibrar_desde_ground_truth`. Si es None, se usan los de `ESTACIONES`.
 
     Returns:
-        Dict[str, float]: Probabilidad posterior (0.0 a 1.0) de pertenecer a
-        cada estación; las cuatro suman 1.0. Ordenado de mayor a menor
-        probabilidad para que la estación más probable quede primero.
+        Dict[str, float]: Probabilidad posterior (de 0.0 a 1.0) de cada estación; las
+        probabilidades suman 1.0 y están ordenadas de mayor a menor, de modo que la
+        estación más probable queda primero.
 
     Raises:
         ValueError: Si `prior` no cubre las estaciones de las referencias o no suma 1.0.
@@ -89,7 +87,7 @@ def clasificar_estacion(
     referencias = ESTACIONES if referencias is None else referencias
     claves = list(referencias.keys())
 
-    # Configuración de la distribución a priori por defecto (Uniforme)
+    # Distribución a priori: uniforme si no se indica otra
     if prior is None:
         prior = {clave: 1.0 / len(claves) for clave in claves}
     else:
@@ -105,9 +103,9 @@ def clasificar_estacion(
     # El término -3·ln(σ) es la normalización de la densidad: no cambia nada mientras
     # todas las estaciones tengan la misma σ, pero tras la calibración cada estación
     # tiene la suya y, sin él, la estación más dispersa absorbería los casos dudosos.
-    # Se aplica la técnica log-sum-exp antes de normalizar para garantizar la
-    # estabilidad numérica frente a distancias atípicas muy grandes que podrían
-    # generar un colapso a 0.0 al exponenciar prematuramente.
+    # Se trabaja en logaritmos y se normaliza con la técnica log-sum-exp: con
+    # distancias muy grandes, exponenciar directamente daría 0.0 para todas las
+    # estaciones y la división posterior no tendría sentido.
     log_pesos = {}
     for clave in claves:
         sigma = referencias[clave].sigma
@@ -121,15 +119,15 @@ def clasificar_estacion(
 
     posterior = {clave: float(peso / suma_pesos) for clave, peso in pesos_normalizados.items()}
 
-    # Ordenar el resultado para posicionar la estación con mayor probabilidad al inicio
+    # Ordenar de mayor a menor probabilidad
     return dict(sorted(posterior.items(), key=lambda item: item[1], reverse=True))
 
 
-# Bloque de validación estructural local
+# Prueba local: python src/colorimetria/clasificador.py
 if __name__ == "__main__":
     print("Ejecutando prueba local del clasificador bayesiano de estación cromática...")
 
-    # Caso 1: un color cercano al centroide de "Otono" (L*=58, a*=20, b*=30)
+    # Caso 1: un color cercano al centroide de Otoño (L*=58, a*=20, b*=30)
     color_prueba = np.array([59.0, 19.0, 29.0])
     posterior = clasificar_estacion(color_prueba)
     distancias = calcular_distancias_cie00(color_prueba)
@@ -152,12 +150,13 @@ if __name__ == "__main__":
     )
     print(f"\nPrueba 1 exitosa: suma = {suma:.6f}, estación más probable = '{estacion_ganadora}' (esperada: 'otono').")
 
-    # Caso 2 (regresión del prior): mismo color, pero con un prior que favorece
+    # Caso 2 (regresión del prior): con el mismo color, un prior que favorece
     # fuertemente a "invierno" debe poder cambiar la estación ganadora.
     prior_sesgado = {"primavera": 0.05, "verano": 0.05, "otono": 0.05, "invierno": 0.85}
     posterior_sesgado = clasificar_estacion(color_prueba, prior=prior_sesgado)
     ganadora_sesgada = next(iter(posterior_sesgado))
-    print(f"\nPrueba 2 (prior sesgado hacia invierno): estación más probable = '{ganadora_sesgada}'.")
+    assert ganadora_sesgada == "invierno", "Un prior fuertemente sesgado debe poder cambiar la estación ganadora."
+    print(f"\nPrueba 2 exitosa (prior sesgado hacia invierno): estación más probable = '{ganadora_sesgada}'.")
 
     # Caso 3 (regresión de la normalización): dos estaciones con dispersiones distintas.
     # El color queda a ΔE00 ≈ 2.2 de "compacta" (σ=4) y a ΔE00 ≈ 1.3 de "dispersa" (σ=12).

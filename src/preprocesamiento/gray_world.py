@@ -1,9 +1,9 @@
-"""Módulo de preprocesamiento para la corrección de balance de blancos.
+"""Preprocesamiento: corrección del balance de blancos con el algoritmo Gray World.
 
-Implementa el algoritmo Gray World para neutralizar los sesgos de color
-introducidos por variaciones en la iluminación de la imagen. El algoritmo
-se fundamenta en el principio de que, en una escena natural estándar,
-el promedio global de las intensidades de color tiende a un gris neutral.
+Gray World compensa el tinte que la iluminación le da a una foto. Se basa en el
+supuesto de que, en una escena natural típica, el promedio de los colores es un gris
+neutro: si ese promedio sale, por ejemplo, amarillento, la luz era cálida, y cada
+canal se escala para que el promedio vuelva a ser gris.
 
 En un retrato ese supuesto deja de cumplirse si el promedio se calcula sobre
 toda la imagen: la piel ocupa buena parte de los píxeles, así que el "gris"
@@ -71,8 +71,7 @@ def seleccionar_pixeles_neutros(imagen: np.ndarray, mascara: np.ndarray,
 
 
 def aplicar_gray_world(imagen: np.ndarray, mascara_escena: Optional[np.ndarray] = None) -> np.ndarray:
-    """
-    Aplica el algoritmo Gray World a una imagen para corregir el balance de blancos.
+    """Corrige el balance de blancos de una imagen con el algoritmo Gray World.
 
     Los promedios por canal (la estimación del iluminante) se calculan sobre los
     píxeles indicados por `mascara_escena`; los factores de escala resultantes
@@ -82,13 +81,14 @@ def aplicar_gray_world(imagen: np.ndarray, mascara_escena: Optional[np.ndarray] 
         imagen (np.ndarray): Imagen de entrada en formato BGR.
         mascara_escena (Optional[np.ndarray]): Matriz booleana (alto x ancho) con
             los píxeles que se usan para estimar el iluminante. En retratos debe
-            excluir la cabeza (ver `segmentacion.face_mesh.construir_mascara_escena`).
-            Si es None se usan todos los píxeles (Gray World clásico).
+            excluir la cabeza (ver `segmentacion.face_mesh.construir_mascara_escena`)
+            y conviene limitarla a los píxeles neutros (ver `seleccionar_pixeles_neutros`).
+            Si es None, se usan todos los píxeles (Gray World clásico).
 
     Returns:
-        np.ndarray: Imagen con el balance de blancos corregido en formato BGR. Si la
-        escena cubre menos de `FRACCION_MINIMA_ESCENA` de la imagen, se devuelve la
-        imagen sin modificar.
+        np.ndarray: Imagen BGR con el balance de blancos corregido. Si la escena cubre
+        menos de `FRACCION_MINIMA_ESCENA` de la imagen o es completamente negra, se
+        devuelve la imagen sin modificar.
 
     Raises:
         ValueError: Si la imagen proporcionada está vacía o no es un arreglo válido,
@@ -97,7 +97,7 @@ def aplicar_gray_world(imagen: np.ndarray, mascara_escena: Optional[np.ndarray] 
     if imagen is None or not isinstance(imagen, np.ndarray) or imagen.size == 0:
         raise ValueError("La imagen proporcionada no es válida o está vacía.")
 
-    # Separar la imagen en sus tres canales (Azul, Verde, Rojo)
+    # Separar la imagen en sus tres canales (azul, verde y rojo, en el orden de OpenCV)
     b, g, r = cv2.split(imagen)
 
     # 1. Calcular los promedios de cada canal (B_avg, G_avg, R_avg) sobre la escena
@@ -113,24 +113,23 @@ def aplicar_gray_world(imagen: np.ndarray, mascara_escena: Optional[np.ndarray] 
             return imagen
         b_avg, g_avg, r_avg = (float(np.mean(canal[mascara])) for canal in (b, g, r))
 
-    # Si los tres canales están agotados (escena completamente negra) no hay
+    # Si los tres canales están en cero (escena completamente negra) no hay
     # información de color que corregir: se devuelve la imagen sin modificar.
     if b_avg < _EPSILON and g_avg < _EPSILON and r_avg < _EPSILON:
         return imagen
 
-    # 2. Calcular el promedio global (Gray_global)
+    # 2. Gris de referencia: el promedio de los tres canales
     gray_global = (b_avg + g_avg + r_avg) / 3.0
 
-    # Asignar un valor mínimo a los promedios nulos para garantizar la estabilidad
-    # matemática durante el cálculo de los factores de escala
+    # Un canal con promedio cero tendría un factor de escala infinito: se le asigna
+    # un valor mínimo para que la división sea estable
     b_avg_seguro = b_avg if b_avg >= _EPSILON else _EPSILON
     g_avg_seguro = g_avg if g_avg >= _EPSILON else _EPSILON
     r_avg_seguro = r_avg if r_avg >= _EPSILON else _EPSILON
 
     # 3. Calcular los factores de escala y aplicarlos a los canales de toda la imagen
-    # Se convierte explícitamente a float32 antes de escalar para evitar
-    # cualquier ambigüedad de tipo, y np.clip asegura que los valores de los
-    # píxeles no superen el rango válido [0, 255] antes de volver a uint8.
+    # Se pasa a float32 antes de escalar para que la multiplicación no se desborde en
+    # enteros de 8 bits, y np.clip mantiene los valores en [0, 255] antes de volver a uint8.
     b_new = np.clip(b.astype(np.float32) * (gray_global / b_avg_seguro), 0, 255).astype(np.uint8)
     g_new = np.clip(g.astype(np.float32) * (gray_global / g_avg_seguro), 0, 255).astype(np.uint8)
     r_new = np.clip(r.astype(np.float32) * (gray_global / r_avg_seguro), 0, 255).astype(np.uint8)
@@ -141,32 +140,35 @@ def aplicar_gray_world(imagen: np.ndarray, mascara_escena: Optional[np.ndarray] 
     return imagen_corregida
 
 
-# Bloque de prueba local
+# Prueba local: python src/preprocesamiento/gray_world.py
 if __name__ == "__main__":
     print("Ejecutando prueba local del módulo Gray World...")
 
-    # Caso 1: imagen con sesgo rojo en los tres canales (caso general)
+    # Caso 1: imagen con un fuerte sesgo rojo (caso general)
     imagen_prueba = np.random.randint(0, 150, (100, 100, 3), dtype=np.uint8)
     imagen_prueba[:, :, 2] = 250  # Saturar intencionalmente el canal R (índice 2)
 
     try:
         resultado = aplicar_gray_world(imagen_prueba)
-        print(f"Forma original: {imagen_prueba.shape} | Promedio Rojo original: {np.mean(imagen_prueba[:, :, 2]):.2f}")
-        print(f"Forma corregida: {resultado.shape} | Promedio Rojo corregido: {np.mean(resultado[:, :, 2]):.2f}")
+        print(f"Forma original: {imagen_prueba.shape} | "
+              f"Promedio original del canal rojo: {np.mean(imagen_prueba[:, :, 2]):.2f}")
+        print(f"Forma corregida: {resultado.shape} | "
+              f"Promedio corregido del canal rojo: {np.mean(resultado[:, :, 2]):.2f}")
         print("Prueba 1 (caso general) exitosa.")
     except Exception as e:
         print(f"Error en la prueba 1: {e}")
 
-    # Caso 2 (regresión): un único canal completamente agotado (B_avg == 0)
-    # mientras los otros dos sí tienen señal. Antes de la corrección esto
-    # generaba una división por cero silenciosa (NaN -> 0 al castear a uint8).
+    # Caso 2 (regresión): un único canal en cero (B_avg == 0) mientras los otros dos
+    # sí tienen señal. El valor mínimo _EPSILON evita que el factor de escala de ese
+    # canal sea una división por cero.
     imagen_canal_cero = np.zeros((10, 10, 3), dtype=np.uint8)
-    imagen_canal_cero[:, :, 1] = 100  # Canal Verde activo
-    imagen_canal_cero[:, :, 2] = 150  # Canal Rojo activo
+    imagen_canal_cero[:, :, 1] = 100  # Canal verde activo
+    imagen_canal_cero[:, :, 2] = 150  # Canal rojo activo
     try:
         with np.errstate(divide="raise", invalid="raise"):
             resultado_cero = aplicar_gray_world(imagen_canal_cero)
-        print(f"Prueba 2 (canal B en cero) exitosa, sin warnings de división. Pixel ejemplo: {resultado_cero[0, 0]}")
+        print(f"Prueba 2 (canal B en cero) exitosa, sin avisos de división por cero. "
+              f"Píxel de ejemplo: {resultado_cero[0, 0]}")
     except FloatingPointError as e:
         print(f"Prueba 2 FALLÓ: aún ocurre una operación inválida en punto flotante ({e}).")
     except Exception as e:

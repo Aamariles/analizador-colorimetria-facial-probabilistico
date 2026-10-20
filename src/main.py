@@ -1,69 +1,76 @@
-"""Orquestador principal del pipeline de Colorimetría Facial Probabilística.
+"""Orquestador del pipeline de Colorimetría Facial Probabilística.
 
-Este script integra todos los módulos del sistema (preprocesamiento,
-segmentación geométrica, transformación espacial y clasificación bayesiana)
-para procesar una imagen fotográfica desde cero y emitir un diagnóstico
-estacional probabilístico.
+Integra los módulos del sistema (preprocesamiento, segmentación facial, transformación
+de color y clasificación bayesiana) para analizar una fotografía y emitir un
+diagnóstico estacional probabilístico.
+
+Uso, desde la raíz del repositorio:
+
+    python src/main.py ruta/a/la_foto.jpg
 """
 
 import argparse
-import cv2
 import os
 import sys
 
-# Importaciones de los módulos del core matemático y de visión
+import cv2
+
+# Módulos del proyecto
 from colorimetria.clasificador import clasificar_estacion
 from colorimetria.referencias import ESTACIONES
 from medicion import medir_color_piel
 
 
 def procesar_imagen(ruta_imagen: str) -> None:
-    """Ejecuta el pipeline secuencial de análisis sobre una imagen dada.
+    """Analiza una imagen y muestra en consola la estación más probable y sus probabilidades.
 
-    La medición del color de piel vive en `medicion.medir_color_piel`, la misma
-    función que usa la construcción del dataset_ground_truth: MediaPipe detecta
-    el rostro, Gray World estima la luz con la escena (sin la cabeza) y corrige
-    la imagen, y K-Means en CIELAB extrae el color dominante de la piel. Luego
-    el clasificador bayesiano compara ese color con los centroides estacionales.
+    La medición del color de piel está en `medicion.medir_color_piel`, la misma
+    función que usa la construcción del dataset_ground_truth: MediaPipe detecta el
+    rostro, Gray World estima la luz con los píxeles más neutros de la escena y
+    corrige la imagen, y K-Means en CIELAB extrae el color dominante de la piel.
+    Luego el clasificador bayesiano compara ese color con los centroides estacionales.
+
+    Si la ruta no existe, la imagen no se puede leer o el análisis falla, muestra el
+    error y termina el programa con código de salida 1.
 
     Args:
-        ruta_imagen (str): Ruta en el disco hacia la imagen a analizar.
+        ruta_imagen (str): Ruta en el disco de la imagen a analizar.
     """
     # Validación inicial de la ruta
     if not os.path.exists(ruta_imagen):
-        print(f"Error: No se encontró el archivo en la ruta especificada: {ruta_imagen}")
+        print(f"Error: no se encontró el archivo: {ruta_imagen}")
         sys.exit(1)
 
-    print(f"\nIniciando análisis de imagen: {os.path.basename(ruta_imagen)}")
+    print(f"\nAnalizando la imagen: {os.path.basename(ruta_imagen)}")
 
-    # Cargar la matriz de imagen en formato BGR
+    # Cargar la imagen en formato BGR
     imagen_original = cv2.imread(ruta_imagen)
     if imagen_original is None:
-        print("Error: El archivo no es una imagen válida o está corrupto.")
+        print("Error: el archivo no es una imagen válida o está dañado.")
         sys.exit(1)
 
     try:
-        # Paso 1: Medición del color de piel (MediaPipe -> Gray World sobre la escena -> CIELAB/K-Means)
-        print("[1/2] Midiendo el color de la piel (MediaPipe, Gray World sobre la escena y K-Means en CIELAB)...")
+        # Paso 1: medición del color de piel (ver medicion.medir_color_piel)
+        print("[1/2] Midiendo el color de la piel (MediaPipe, Gray World y K-Means en CIELAB)...")
         medicion = medir_color_piel(imagen_original)
         color_lab = medicion.color_lab
-        print(f"    -> Vector dominante estimado: L*={color_lab[0]:.1f}, a*={color_lab[1]:.1f}, b*={color_lab[2]:.1f}")
+        print(f"    -> Color dominante de la piel: L*={color_lab[0]:.1f}, a*={color_lab[1]:.1f}, b*={color_lab[2]:.1f}")
         if not medicion.balance_aplicado:
             print("    -> Aviso: el fondo tiene un color intenso; se omitió la corrección de iluminación.")
 
-        # Paso 2: Inferencia Bayesiana
-        print("[2/2] Ejecutando clasificador estacional (Métrica CIEDE2000)...")
+        # Paso 2: clasificación bayesiana
+        print("[2/2] Clasificando la estación (distancia CIEDE2000)...")
         resultados = clasificar_estacion(color_lab)
 
-        # Extracción y formateo del resultado final
+        # Presentación del resultado
         estacion_ganadora = next(iter(resultados))
 
         print("\n" + "=" * 50)
         print("RESULTADO DEL ANÁLISIS COLORIMÉTRICO")
         print("=" * 50)
-        print(f" DIAGNÓSTICO PRINCIPAL : {ESTACIONES[estacion_ganadora].nombre.upper()}")
+        print(f" DIAGNÓSTICO PRINCIPAL: {ESTACIONES[estacion_ganadora].nombre.upper()}")
         print("-" * 50)
-        print(" Probabilidades Posteriores:")
+        print(" Probabilidades posteriores:")
         for estacion, prob in resultados.items():
             # Nombre ya acentuado correctamente, tomado de referencias.py
             # (evita mantener aquí una segunda copia del nombre mostrado).
@@ -84,7 +91,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "imagen",
         type=str,
-        help="Ruta relativa o absoluta hacia el archivo de imagen (.jpg, .png) a analizar.",
+        help="Ruta relativa o absoluta de la imagen que se va a analizar (por ejemplo, .jpg o .png).",
     )
 
     args = parser.parse_args()

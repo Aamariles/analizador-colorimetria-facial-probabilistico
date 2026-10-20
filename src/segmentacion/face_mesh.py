@@ -1,13 +1,14 @@
-"""Módulo de segmentación facial y extracción de la región de interés (ROI).
+"""Segmentación facial y extracción de la región de interés (ROI) de piel.
 
-Utiliza la API de MediaPipe Tasks (AI Edge) para detectar el rostro en la
-imagen y aislar los píxeles correspondientes a la piel limpia. El proceso
-construye una máscara poligonal que excluye dinámicamente elementos de ruido
-como ojos, cejas, labios y sombras faciales, garantizando una muestra
-cromática pura para el análisis. También delimita la escena (todo lo que no
-es la cabeza), que el balance de blancos usa para estimar la iluminación.
+Usa la API de MediaPipe Tasks (AI Edge) para detectar el rostro y sus landmarks, y con
+ellos arma una máscara de la piel: el óvalo del rostro, recortado en el borde, menos los
+ojos, las cejas y los labios, y sin sombras ni píxeles de color atípico (cabello, restos
+de labio, brillos). Así la muestra de color queda lo más limpia posible. También delimita
+la escena (todo lo que no es la cabeza), que el balance de blancos usa para estimar la
+iluminación.
 """
 
+import os
 from typing import List, Optional, Sequence
 
 import cv2
@@ -19,13 +20,13 @@ import numpy as np
 from mediapipe.tasks.python.core.base_options import BaseOptions
 from mediapipe.tasks.python.vision.face_landmarker import FaceLandmarker, FaceLandmarkerOptions
 
-import os
-
 # --------------------------------------------------------------------------- #
-# Índices topológicos de la malla facial canónica de MediaPipe (468 puntos).
-# Definen los vértices exactos para trazar el polígono principal del rostro y
-# los recortes internos de exclusión cromática.
+# Índices de los landmarks de MediaPipe que trazan el contorno del rostro y los
+# rasgos que se excluyen de la piel. El modelo devuelve 478 puntos: los 468 de la
+# malla facial y 10 del iris. "Izquierdo" y "derecho" se refieren a la imagen, no
+# a la persona: OJO_IZQUIERDO es el que aparece a la izquierda de la foto.
 # --------------------------------------------------------------------------- #
+# Óvalo del rostro (FACEMESH_FACE_OVAL de MediaPipe), desde la parte alta de la frente (10).
 CONTORNO_ROSTRO: List[int] = [
     10, 338, 297, 332, 284, 251, 389, 356, 454, 323, 361, 288, 397, 365, 379, 378, 400, 377,
     152, 148, 176, 149, 150, 136, 172, 58, 132, 93, 234, 127, 162, 21, 54, 103, 67, 109,
@@ -47,8 +48,8 @@ CEJA_DERECHA: List[int] = [336, 296, 334, 293, 300, 276, 283, 282, 295, 285]
 EROSION_ROSTRO: float = 0.06
 DILATACION_RASGOS: float = 0.02
 
-# Umbral percentil de luminancia (canal V del espacio HSV).
-# Los píxeles por debajo de este valor se consideran sombras proyectadas y se excluyen del ROI.
+# Percentil de brillo (canal V de HSV) que separa las sombras: el 15% más oscuro de la
+# máscara (sombras de la nariz, el mentón o el borde del rostro) se excluye de la ROI.
 PERCENTIL_SOMBRA: float = 15.0
 
 # Filtro de color robusto: se descartan los píxeles cuyo L*, a* o b* se aleja de la
@@ -64,22 +65,23 @@ DESVIACION_MINIMA_LAB = (8.0, 2.0, 2.0)
 # escena con la que Gray World estima el iluminante (ver `construir_mascara_escena`).
 ESCALA_CABEZA: float = 1.6
 
-# Cálculo dinámico de la ruta del modelo binario de inferencia.
+# Ruta del modelo de MediaPipe, calculada desde la ubicación de este archivo para que
+# funcione sin importar desde qué carpeta se ejecute el programa.
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 MODEL_PATH = os.path.join(BASE_DIR, "data", "reference", "face_landmarker.task")
 
 # --------------------------------------------------------------------------- #
-# Instancia global del motor de inferencia. Se inicializa bajo el patrón
-# Singleton para evitar la sobrecarga de I/O en disco en cada procesamiento.
+# Instancia global del motor de inferencia. Se crea una sola vez (patrón
+# Singleton) para no volver a cargar el modelo desde el disco en cada imagen.
 # --------------------------------------------------------------------------- #
 _landmarker: Optional[FaceLandmarker] = None
 
 
 def _obtener_landmarker() -> FaceLandmarker:
-    """Inicializa y retorna la instancia compartida del modelo FaceLandmarker.
+    """Devuelve la instancia compartida del modelo FaceLandmarker; la crea la primera vez.
 
     Returns:
-        FaceLandmarker: Motor de inferencia configurado en memoria.
+        FaceLandmarker: Motor de inferencia cargado en memoria.
 
     Raises:
         FileNotFoundError: Si el archivo `.task` del modelo no se encuentra en el sistema.
@@ -103,14 +105,14 @@ def _puntos_a_pixeles(landmarks: Sequence, indices: Sequence[int], ancho: int, a
     """Convierte landmarks normalizados (0-1) de MediaPipe a coordenadas de píxel.
 
     Args:
-        landmarks (Sequence): Lista de hitos espaciales del rostro detectado.
-        indices (Sequence[int]): Subconjunto de índices que forman un polígono específico.
-        ancho (int): Dimensión horizontal de la imagen base.
-        alto (int): Dimensión vertical de la imagen base.
+        landmarks (Sequence): Landmarks del rostro detectado.
+        indices (Sequence[int]): Índices de los landmarks que forman el polígono.
+        ancho (int): Ancho de la imagen en píxeles.
+        alto (int): Alto de la imagen en píxeles.
 
     Returns:
-        np.ndarray: Matriz bidimensional Nx2 de enteros con coordenadas cartesianas
-        (x, y), lista para `cv2.fillPoly`.
+        np.ndarray: Matriz N x 2 de enteros con las coordenadas (x, y) de cada punto,
+        lista para `cv2.fillPoly`.
     """
     return np.array(
         [[int(landmarks[idx].x * ancho), int(landmarks[idx].y * alto)] for idx in indices],
@@ -119,36 +121,34 @@ def _puntos_a_pixeles(landmarks: Sequence, indices: Sequence[int], ancho: int, a
 
 
 def _excluir_sombras(imagen: np.ndarray, mascara: np.ndarray, percentil: float = PERCENTIL_SOMBRA) -> np.ndarray:
-    """Depura la máscara de piel quitando los píxeles más oscuros (sombras).
+    """Quita de la máscara de piel los píxeles más oscuros (sombras).
 
-    Calcula la luminancia (canal V de HSV) únicamente sobre los píxeles ya
-    incluidos en `mascara` y descarta los que caen por debajo del percentil
-    indicado, ya que corresponden típicamente a sombras proyectadas por la
-    nariz, el mentón o el borde del rostro en lugar de piel iluminada de forma
-    uniforme.
+    Calcula el brillo (canal V de HSV) solo sobre los píxeles de `mascara` y descarta
+    los que quedan por debajo del percentil indicado: suelen ser sombras de la nariz,
+    el mentón o el borde del rostro, no piel bien iluminada.
 
     Args:
-        imagen (np.ndarray): Imagen original de entrada en formato BGR.
-        mascara (np.ndarray): Matriz binaria (0/255) de piel candidata, ya construida
-            a partir de los polígonos de landmarks de MediaPipe (ver `extraer_piel_limpia`).
-        percentil (float): Límite de tolerancia inferior para considerar un píxel como sombra.
+        imagen (np.ndarray): Imagen BGR de la que se toma el brillo.
+        mascara (np.ndarray): Matriz binaria (0/255) de piel candidata, construida con
+            los polígonos de landmarks de MediaPipe (ver `extraer_piel_limpia`).
+        percentil (float): Percentil de brillo por debajo del cual un píxel se considera sombra.
 
     Returns:
-        np.ndarray: Nueva máscara binaria (0/255) ajustada espacialmente.
+        np.ndarray: Nueva máscara binaria (0/255) sin las sombras.
     """
     indices_piel = mascara > 0
 
-    # Si la máscara de entrada está vacía, se retorna intacta para evitar cálculos redundantes
+    # Si la máscara está vacía, no hay nada que filtrar
     if not np.any(indices_piel):
         return mascara
 
-    # Extraer el canal de Valor (V) del espacio HSV
+    # Brillo de cada píxel: canal V del espacio HSV
     valor_v = cv2.cvtColor(imagen, cv2.COLOR_BGR2HSV)[:, :, 2]
 
-    # Calcular el umbral dinámico de sombra en base a la densidad de la imagen
+    # Umbral de sombra calculado solo con los píxeles de la máscara
     umbral = np.percentile(valor_v[indices_piel], percentil)
 
-    # Restar lógicamente las áreas de sombra de la máscara original
+    # Quitar de la máscara los píxeles más oscuros que el umbral
     mascara_sin_sombras = mascara.copy()
     mascara_sin_sombras[(valor_v < umbral) & indices_piel] = 0
 
@@ -234,9 +234,10 @@ def construir_mascara_escena(landmarks: Sequence, ancho: int, alto: int,
 
     La cabeza se aproxima con la envolvente convexa de todos los landmarks del
     rostro, agrandada `escala` veces alrededor de su centro para cubrir también
-    el cabello, las orejas y parte del cuello. Gray World estima el iluminante
-    solo con la escena: si incluyera la piel, en un primer plano el promedio de
-    la imagen sería la propia piel y la corrección la volvería gris.
+    el cabello, las orejas y parte del cuello. Gray World estima el iluminante con
+    los píxeles más neutros de esta escena (ver
+    `preprocesamiento.gray_world.seleccionar_pixeles_neutros`): si incluyera la piel,
+    en un primer plano el promedio sería la propia piel y la corrección la volvería gris.
 
     Args:
         landmarks (Sequence): Landmarks normalizados (0-1) devueltos por `detectar_landmarks`.
@@ -258,13 +259,11 @@ def construir_mascara_escena(landmarks: Sequence, ancho: int, alto: int,
 
 
 def extraer_piel_limpia(imagen: np.ndarray, landmarks: Optional[Sequence] = None) -> np.ndarray:
-    """
-    Extrae el ROI de piel limpia del rostro.
-    Aplica un flujo de procesamiento que incluye la inferencia de landmarks
-    (si no se reciben ya calculados), el recorte de los polígonos fijos de la
-    malla facial (óvalo del rostro recortado en el borde, menos ojos, cejas y
-    labios agrandados), el filtrado de sombras por luminancia (percentil del
-    canal V en HSV, ver `_excluir_sombras`) y el de colores atípicos (ver
+    """Extrae la región de interés (ROI) de piel limpia del rostro.
+
+    Detecta los landmarks si no se reciben ya calculados, dibuja el óvalo del rostro
+    recortado en el borde, le resta los ojos, las cejas y los labios agrandados, y luego
+    quita las sombras (ver `_excluir_sombras`) y los píxeles de color atípico (ver
     `_excluir_atipicos_de_color`).
 
     Args:
@@ -287,18 +286,18 @@ def extraer_piel_limpia(imagen: np.ndarray, landmarks: Optional[Sequence] = None
 
     alto, ancho = imagen.shape[:2]
 
-    # 1-2. Obtener los landmarks del rostro (detectándolos solo si no vienen dados)
+    # 1. Landmarks del rostro (se detectan solo si no vienen dados)
     rostro = landmarks if landmarks is not None else detectar_landmarks(imagen)
 
     ancho_cara = _ancho_rostro(rostro, ancho, alto)
 
-    # 3. Mapear y dibujar el polígono maestro del rostro (blanco) y recortar su borde,
-    # donde suelen colarse cabello, barba y fondo
+    # 2. Óvalo del rostro (en blanco), recortado en el borde, donde suelen colarse
+    # cabello, barba y fondo
     mascara = np.zeros((alto, ancho), dtype=np.uint8)
     cv2.fillPoly(mascara, [_puntos_a_pixeles(rostro, CONTORNO_ROSTRO, ancho, alto)], 255)
     mascara = cv2.erode(mascara, _disco(EROSION_ROSTRO * ancho_cara))
 
-    # Construir los polígonos de ruido facial, agrandarlos un margen y restarlos de la máscara maestro
+    # 3. Ojos, cejas y labios, agrandados un margen, se restan del óvalo
     ruidos = np.zeros((alto, ancho), dtype=np.uint8)
     cv2.fillPoly(ruidos, [
         _puntos_a_pixeles(rostro, OJO_IZQUIERDO, ancho, alto),
@@ -314,47 +313,44 @@ def extraer_piel_limpia(imagen: np.ndarray, landmarks: Optional[Sequence] = None
     mascara = _excluir_sombras(imagen, mascara)
     mascara = _excluir_atipicos_de_color(imagen, mascara)
 
-    # 5. Aplicar compuerta lógica (Bitwise AND) para aislar los píxeles de piel verdaderos
+    # 5. Dejar en la imagen solo los píxeles de la máscara; el resto queda en negro
     piel_extraida = cv2.bitwise_and(imagen, imagen, mask=mascara)
 
     return piel_extraida
 
 
-# Bloque de validación estructural local
+# Prueba local: python src/segmentacion/face_mesh.py
 if __name__ == "__main__":
     print("Ejecutando prueba local del módulo Face Mesh (AI Edge)...")
 
-    # Generar una matriz vacía para probar el manejo de excepciones del motor
+    # Prueba 1: una imagen negra no tiene rostro y debe rechazarse con el error esperado
     imagen_prueba = np.zeros((500, 500, 3), dtype=np.uint8)
     try:
-        resultado = extraer_piel_limpia(imagen_prueba)
-    except ValueError as e:
-        if "ningún rostro" in str(e):
-            print(" Prueba local exitosa: el modelo .task cargó correctamente y el sistema manejó la imagen de ruido.")
-        else:
-            print(f" Error inesperado: {e}")
-
-    # Segunda llamada: debe reutilizar el landmarker ya creado (sin recargar
-    # el modelo desde disco) en lugar de reconstruirlo.
-    try:
         extraer_piel_limpia(imagen_prueba)
-        print(" Prueba de reutilización: el landmarker se reutilizó sin recrearse.")
-    except ValueError:
-        print(" Prueba de reutilización: el landmarker se reutilizó sin recrearse.")
+        raise AssertionError("Una imagen sin rostro debería producir un ValueError.")
+    except ValueError as e:
+        assert "ningún rostro" in str(e), f"Error inesperado: {e}"
+    print("Prueba 1 exitosa: el modelo se cargó y la imagen sin rostro se rechazó.")
 
-    # Máscara de escena con landmarks sintéticos: un cuadrado de 20x20 px en el
-    # centro de una imagen de 100x100. Agrandado 1.5 veces cubre unos 30x30 px,
-    # así que la escena debe ser cerca del 91% de la imagen y no incluir el centro.
+    # Prueba 2: las llamadas siguientes deben reutilizar el mismo motor de inferencia
+    # en lugar de volver a cargar el modelo desde el disco
+    motor = _obtener_landmarker()
+    assert _obtener_landmarker() is motor, "El motor de inferencia debería reutilizarse."
+    print("Prueba 2 exitosa: el motor de inferencia se reutiliza entre llamadas.")
+
+    # Prueba 3: máscara de escena con landmarks sintéticos, un cuadrado de 20x20 px en
+    # el centro de una imagen de 100x100. Agrandado 1.5 veces cubre unos 30x30 px, así
+    # que la escena debe ser cerca del 91% de la imagen y no incluir el centro.
     from types import SimpleNamespace
 
     cuadrado = [SimpleNamespace(x=x, y=y) for x, y in [(0.4, 0.4), (0.6, 0.4), (0.6, 0.6), (0.4, 0.6)]]
     escena = construir_mascara_escena(cuadrado, 100, 100, escala=1.5)
     assert not escena[50, 50] and escena[5, 5], "La cabeza debe quedar fuera de la escena y las esquinas dentro."
     assert abs(escena.mean() - 0.91) < 0.01, f"Fracción de escena inesperada: {escena.mean():.3f}"
-    print(f" Prueba de la máscara de escena exitosa: la escena cubre el {escena.mean():.1%} de la imagen.")
+    print(f"Prueba 3 exitosa: la escena cubre el {escena.mean():.1%} de la imagen.")
 
-    # Filtro de color: una zona de piel con un mechón de cabello rubio y un resto de
-    # labio. Ambos deben salir de la máscara y la piel debe quedarse.
+    # Prueba 4: filtro de color sobre una zona de piel con un mechón de cabello rubio
+    # y un resto de labio. Ambos deben salir de la máscara y la piel debe quedarse.
     rng = np.random.default_rng(0)
     parche = np.clip(rng.normal((150, 170, 215), 3, (100, 100, 3)), 0, 255).astype(np.uint8)  # piel (BGR)
     parche[:, 10:16] = (80, 175, 220)   # mechón rubio: mucho más amarillo que la piel
@@ -363,4 +359,4 @@ if __name__ == "__main__":
     assert not filtrada[:, 10:16].any(), "El mechón de cabello debe salir de la máscara."
     assert not filtrada[80:86, 40:60].any(), "El resto de labio debe salir de la máscara."
     assert (filtrada[:, 30:] > 0).mean() > 0.95, "La piel debe quedarse en la máscara."
-    print(" Prueba del filtro de color exitosa: se quitaron el mechón y el labio, la piel se conservó.")
+    print("Prueba 4 exitosa: el filtro de color quitó el mechón y el labio y conservó la piel.")
