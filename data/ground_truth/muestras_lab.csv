@@ -1,0 +1,311 @@
+archivo,estacion,L,a,b,pixeles_piel,ancho,alto,estado,detalle,subconjunto
+primavera_1.jpg,primavera,79.50,12.05,22.23,78077,828,1104,ok,,calibracion
+primavera_2.jpg,primavera,77.47,12.56,26.08,5357,231,250,ok,baja resolución (231x250),calibracion
+primavera_3.jpg,primavera,68.06,12.18,27.68,38739,564,763,ok,,calibracion
+primavera_4.jpg,primavera,73.43,16.07,30.89,11146,273,352,ok,baja resolución (273x352),calibracion
+primavera_5.png,primavera,76.08,8.86,15.81,127503,1149,1369,ok,,calibracion
+primavera_6.jpg,primavera,66.16,17.05,33.38,104631,978,1200,ok,,calibracion
+primavera_7.jpg,primavera,84.10,6.07,8.54,76619,800,1064,ok,,calibracion
+primavera_8.jpg,primavera,82.30,12.49,17.35,2439382,3744,5656,ok,,calibracion
+primavera_9.jpg,primavera,74.14,12.95,21.66,81940,880,1197,ok,,calibracion
+primavera_10.jpg,primavera,82.55,4.86,6.70,229918,1792,2400,ok,,calibracion
+primavera_11.jpg,primavera,78.08,9.54,13.01,194968,1440,1800,ok,,calibracion
+primavera_12.jpg,primavera,79.25,14.46,18.91,78080,800,1200,ok,,calibracion
+primavera_13.png,primavera,72.53,12.86,20.96,77961,848,1264,ok,,calibracion
+primavera_14.png,primavera,77.16,12.66,20.79,75500,1024,1024,ok,,calibracion
+primavera_15.png,primavera,71.61,13.26,21.00,11015,500,500,ok,,calibracion
+primavera_16.jpg,primavera,74.24,13.14,24.34,99187,832,1251,ok,,calibracion
+primavera_17.png,primavera,69.64,14.88,24.96,88236,1024,1024,ok,,calibracion
+primavera_18.jpg,primavera,87.96,8.22,10.58,85375,736,1104,ok,,calibracion
+primavera_19.jpg,primavera,62.48,16.96,26.34,92513,800,1064,ok,,calibracion
+primavera_20.jpg,primavera,62.20,8.92,17.73,267271,1792,2400,ok,,calibracion
+primavera_21.png,primavera,66.22,16.47,24.24,128090,1086,1448,ok,,calibracion
+primavera_22.jpg,primavera,66.84,18.90,24.34,166211,1024,1024,ok,,calibracion
+primavera_23.png,primavera,71.81,13.24,14.45,63196,1024,1024,ok,,calibracion
+primavera_24.jpg,primavera,68.87,14.00,19.03,230695,1080,1814,ok,,calibracion
+primavera_25.jpg,primavera,63.04,13.96,22.02,85220,675,1200,ok,,calibracion
+primavera_26.png,primavera,67.73,15.80,22.50,86664,959,1280,ok,,calibracion
+primavera_27.jpg,primavera,62.99,19.45,30.38,33678,736,736,ok,,calibracion
+primavera_28.png,primavera,65.32,13.86,21.42,129072,1023,1537,ok,,calibracion
+primavera_29.png,primavera,66.70,9.81,13.78,278765,1200,1500,ok,,calibracion
+primavera_30.jpg,primavera,63.75,21.67,27.76,83803,849,1200,ok,,calibracion
+primavera_31.png,primavera,69.19,7.68,13.08,22804,602,526,ok,,calibracion
+primavera_32.jpg,primavera,77.84,11.79,16.30,22131,350,500,ok,baja resolución (350x500),calibracion
+primavera_33.jpg,primavera,83.62,9.36,18.11,36101,535,616,ok,,calibracion
+primavera_34.jpg,primavera,84.54,10.60,22.44,109525,1080,1350,ok,,calibracion
+primavera_35.jpg,primavera,87.15,7.94,15.78,4749,242,293,ok,baja resolución (242x293),calibracion
+primavera_36.jpg,primavera,80.81,11.42,17.98,14673,457,471,ok,,calibracion
+primavera_37.jpg,primavera,81.46,7.87,13.84,25145,556,557,ok,,calibracion
+primavera_38.jpg,primavera,73.38,12.78,20.79,483880,1792,2400,ok,,calibracion
+primavera_39.jpg,primavera,75.96,9.16,16.99,22867,524,519,ok,,calibracion
+primavera_40.jpg,primavera,81.35,12.60,17.44,75822,901,1300,ok,,calibracion
+primavera_41.jpg,primavera,87.70,7.74,10.24,83405,1104,977,ok,,calibracion
+primavera_42.png,primavera,83.50,8.10,14.50,15374,476,456,ok,,calibracion
+primavera_43.jpg,primavera,69.88,18.87,28.38,10525,340,343,ok,baja resolución (340x343),calibracion
+primavera_44.jpg,primavera,84.89,10.04,13.00,3143628,4386,6579,ok,,calibracion
+primavera_45.jpg,primavera,81.71,10.18,16.23,7612,312,312,ok,baja resolución (312x312),calibracion
+primavera_46.jpg,primavera,68.05,17.66,26.51,939755,1792,2400,ok,,calibracion
+primavera_47.jpg,primavera,76.71,13.41,20.51,24344,514,548,ok,,calibracion
+primavera_48.jpg,primavera,73.47,11.34,22.04,57744,688,693,ok,,calibracion
+primavera_49.jpg,primavera,68.82,11.72,18.52,26431,510,473,ok,,calibracion
+primavera_50.png,primavera,78.24,10.07,13.18,16170,468,461,ok,,calibracion
+primavera_51.jpg,primavera,74.36,13.20,20.96,135473,1168,1752,ok,,calibracion
+primavera_52.jpg,primavera,70.58,10.44,18.27,10660,385,363,ok,baja resolución (385x363),calibracion
+primavera_53.jpg,primavera,69.16,13.20,19.67,337403,1080,1920,ok,,calibracion
+primavera_54.jpg,primavera,84.70,11.26,16.16,189219,1280,1920,ok,,calibracion
+primavera_55.jpg,primavera,65.95,15.25,27.69,34101,517,568,ok,,calibracion
+primavera_56.jpg,primavera,65.91,21.69,32.45,24449,538,535,ok,,calibracion
+primavera_57.jpg,primavera,70.25,10.09,17.41,5920,280,246,ok,baja resolución (280x246),calibracion
+primavera_58.png,primavera,69.59,8.76,18.07,7998,290,293,ok,baja resolución (290x293),calibracion
+primavera_59.jpg,primavera,72.22,14.74,21.18,29153,506,540,ok,,calibracion
+primavera_60.jpg,primavera,76.00,12.90,16.92,10729,275,295,ok,baja resolución (275x295),calibracion
+primavera_61.jpg,primavera,80.66,8.88,14.34,19958,487,518,ok,,calibracion
+primavera_62.jpg,primavera,70.85,13.51,18.79,1056974,2304,4096,ok,,calibracion
+primavera_63.jpg,primavera,70.65,15.42,25.55,57118,720,860,ok,,calibracion
+primavera_64.jpg,primavera,79.41,10.95,14.60,7134,241,256,ok,baja resolución (241x256),calibracion
+primavera_65.jpg,primavera,68.35,14.01,22.78,76929,993,901,ok,,calibracion
+primavera_66.png,primavera,60.66,11.17,21.10,8030,303,288,ok,baja resolución (303x288),calibracion
+primavera_67.jpg,primavera,62.87,15.12,23.76,92828,675,1200,ok,,calibracion
+primavera_68.jpg,primavera,65.66,9.81,20.31,15809,521,439,ok,,calibracion
+primavera_69.jpg,primavera,66.07,17.72,26.79,35180,352,694,ok,baja resolución (352x694),calibracion
+primavera_70.png,primavera,67.15,13.50,17.54,9383,400,350,ok,baja resolución (400x350),calibracion
+primavera_71.jpg,primavera,66.88,15.63,21.80,42611,456,690,ok,,calibracion
+primavera_72.jpg,primavera,61.54,14.34,26.00,35379,388,566,ok,baja resolución (388x566),calibracion
+primavera_73.jpg,primavera,64.40,15.84,20.89,52722,851,1280,ok,,calibracion
+primavera_74.jpg,primavera,60.51,19.30,29.01,106012,720,897,ok,,calibracion
+primavera_75.jpg,primavera,65.60,15.37,22.26,83908,972,944,ok,,calibracion
+primavera_76.jpg,primavera,70.06,14.39,18.20,19294,537,536,ok,,calibracion
+primavera_77.png,primavera,57.27,17.22,27.00,658943,1696,2528,ok,,calibracion
+primavera_78.jpg,primavera,58.67,17.90,25.84,88883,1080,1500,ok,,calibracion
+primavera_79.jpg,primavera,86.20,8.07,12.99,59230,537,701,ok,fondo de color: se omitió la corrección de iluminación,calibracion
+primavera_80.jpg,primavera,70.14,16.38,22.11,12446,600,600,ok,,calibracion
+primavera_81.jpg,primavera,80.94,8.58,12.18,18784,385,389,ok,baja resolución (385x389),calibracion
+primavera_82.jpg,primavera,83.24,14.02,18.87,117835,1156,1229,ok,,calibracion
+primavera_83.jpg,primavera,74.60,15.04,39.45,174968,1280,1684,ok,,validacion
+primavera_84.jpg,primavera,78.98,9.53,2.64,98761,1000,1200,ok,,validacion
+primavera_85.jpg,primavera,68.05,5.32,11.69,105956,1280,1660,ok,,validacion
+primavera_86.jpg,primavera,65.42,14.42,38.41,100098,949,1362,ok,,validacion
+primavera_87.jpg,primavera,56.15,7.58,13.55,137296,1280,1503,ok,,validacion
+primavera_88.jpg,primavera,69.84,15.24,23.28,123899,1280,1707,ok,,validacion
+primavera_89.jpg,primavera,59.89,17.15,39.53,199739,1280,1907,ok,,validacion
+primavera_90.jpg,primavera,80.57,14.12,17.83,241618,1592,2591,ok,,validacion
+primavera_91.jpg,primavera,64.44,25.66,31.40,161415,1280,1924,ok,,validacion
+primavera_92.jpg,primavera,80.35,8.36,14.74,192495,1280,1924,ok,,validacion
+primavera_93.jpg,primavera,74.82,12.49,11.98,64120,1280,1395,ok,,validacion
+primavera_94.jpg,primavera,71.73,13.82,29.80,90389,1280,1831,ok,,validacion
+primavera_95.jpg,primavera,84.71,12.23,1.48,174413,1577,1971,ok,,validacion
+primavera_96.jpg,primavera,79.74,10.94,32.25,30946,496,638,ok,,validacion
+primavera_97.jpg,primavera,66.55,23.44,27.59,61491,812,1327,ok,,validacion
+primavera_98.jpg,primavera,81.12,16.84,20.99,130054,1280,1924,ok,,validacion
+primavera_99.jpg,primavera,74.44,22.18,32.78,85219,1280,1577,ok,fondo de color: se omitió la corrección de iluminación,validacion
+primavera_100.jpg,primavera,84.06,5.01,5.16,166540,1415,2122,ok,,validacion
+primavera_101.jpg,primavera,65.25,15.27,15.51,161904,1208,1488,ok,,validacion
+primavera_102.jpg,primavera,42.88,21.01,24.82,36092,1024,943,ok,,validacion
+primavera_103.jpg,primavera,63.74,16.76,25.43,114358,1280,1707,ok,,validacion
+primavera_104.jpg,primavera,74.73,16.62,21.48,7012,600,750,ok,,validacion
+primavera_105.jpg,primavera,70.84,17.45,19.50,184859,1387,1792,ok,,validacion
+primavera_106.jpg,primavera,70.13,6.84,4.75,144403,1600,2000,ok,,validacion
+primavera_107.jpg,primavera,71.10,19.54,23.62,218555,1280,1924,ok,,validacion
+verano_1.jpg,verano,74.07,11.24,10.44,31016,450,600,ok,,calibracion
+verano_2.jpg,verano,66.97,11.56,9.64,21426,563,750,ok,,calibracion
+verano_3.jpg,verano,77.40,11.17,9.60,93635,800,1120,ok,,calibracion
+verano_4.jpg,verano,76.50,16.87,15.33,147870,1080,1311,ok,,calibracion
+verano_5.jpg,verano,63.78,22.47,18.56,35811,500,667,ok,,calibracion
+verano_6.jpg,verano,79.15,8.68,8.44,34266,500,665,ok,,calibracion
+verano_7.jpg,verano,72.19,19.63,21.09,34847,500,667,ok,,calibracion
+verano_8.jpg,verano,85.46,11.81,7.09,59473,960,960,ok,,calibracion
+verano_9.png,verano,62.34,17.32,12.39,149253,1024,1536,ok,,calibracion
+verano_10.jpg,verano,81.10,7.98,6.76,108839,736,1308,ok,,calibracion
+verano_11.jpg,verano,79.77,14.44,16.48,167954,1000,1500,ok,,calibracion
+verano_12.jpg,verano,73.21,9.99,11.57,32801,500,665,ok,,calibracion
+verano_13.jpg,verano,78.46,10.29,12.32,157988,1124,1681,ok,,calibracion
+verano_14.jpg,verano,84.92,9.64,4.59,5846,217,233,ok,baja resolución (217x233),calibracion
+verano_15.jpg,verano,75.74,16.63,15.09,20510,338,503,ok,baja resolución (338x503),calibracion
+verano_16.jpg,verano,91.43,6.80,3.21,27079,429,505,ok,,calibracion
+verano_17.jpg,verano,89.22,4.89,3.54,26340,456,477,ok,,calibracion
+verano_18.jpg,verano,71.17,7.54,4.61,339533,1536,2752,ok,,calibracion
+verano_19.jpg,verano,82.62,9.65,11.47,8304,335,355,ok,baja resolución (335x355),calibracion
+verano_20.jpg,verano,88.33,9.25,3.13,6512,222,239,ok,baja resolución (222x239),calibracion
+verano_21.jpg,verano,74.04,9.39,8.95,11761,334,359,ok,baja resolución (334x359),calibracion
+verano_22.jpg,verano,78.14,9.71,11.70,364617,1792,2400,ok,,calibracion
+verano_23.jpg,verano,81.25,8.23,6.38,247995,1305,1944,ok,,calibracion
+verano_24.jpg,verano,37.70,15.63,10.85,7818,283,316,ok,baja resolución (283x316),calibracion
+verano_25.jpg,verano,68.24,8.19,6.99,14909,600,600,ok,,calibracion
+verano_26.jpg,verano,84.02,7.91,9.22,32620,680,624,ok,,calibracion
+verano_27.jpg,verano,73.33,18.05,17.11,8548,381,355,ok,baja resolución (381x355),calibracion
+verano_28.jpg,verano,70.62,7.97,6.83,41627,533,800,ok,,calibracion
+verano_29.jpg,verano,78.42,13.92,15.43,19231,550,490,ok,,calibracion
+verano_30.jpg,verano,71.79,16.72,16.06,1006791,2287,4097,ok,,calibracion
+verano_31.jpg,verano,60.49,17.95,19.79,19955,412,532,ok,,calibracion
+verano_32.jpg,verano,65.81,19.23,20.36,10391,323,371,ok,baja resolución (323x371),calibracion
+verano_33.jpg,verano,68.12,18.54,20.01,36969,524,774,ok,,calibracion
+verano_34.jpg,verano,84.40,7.96,9.75,16994,322,473,ok,baja resolución (322x473),calibracion
+verano_35.jpg,verano,68.69,10.51,11.96,208762,1080,1920,ok,,calibracion
+verano_36.jpg,verano,35.22,11.44,7.85,29709,500,700,ok,,calibracion
+verano_37.jpg,verano,72.23,8.95,3.52,129644,1280,1600,ok,,validacion
+verano_38.jpg,verano,50.34,15.16,20.84,45020,716,754,ok,,validacion
+verano_39.jpg,verano,77.37,9.70,16.90,116555,1280,1727,ok,,validacion
+verano_40.jpg,verano,67.41,10.76,6.40,88634,1280,1709,ok,,validacion
+verano_41.jpg,verano,48.56,14.75,11.60,139028,1050,1400,ok,,validacion
+verano_42.jpg,verano,73.36,9.81,21.48,53206,1102,1149,ok,,validacion
+verano_43.jpg,verano,66.13,4.76,5.78,107660,1280,1761,ok,,validacion
+verano_44.jpg,verano,70.17,6.42,9.31,119523,1280,1677,ok,,validacion
+verano_45.jpg,verano,76.03,5.69,14.50,102521,1074,1074,ok,,validacion
+verano_46.jpg,verano,69.51,21.75,16.13,247842,1600,2000,ok,,validacion
+verano_47.jpg,verano,85.83,10.96,23.18,260214,1384,1731,ok,,validacion
+verano_48.jpg,verano,46.93,21.44,13.93,19133,583,792,ok,,validacion
+verano_49.jpg,verano,67.87,2.25,2.49,165784,1280,1875,ok,,validacion
+verano_50.jpg,verano,70.03,26.19,26.16,146818,1280,1924,ok,,validacion
+verano_51.jpg,verano,68.60,32.91,19.92,93098,1280,1658,ok,,validacion
+verano_52.jpg,verano,76.66,14.94,22.90,152508,1327,1773,ok,,validacion
+verano_53.jpg,verano,71.71,20.13,25.48,137218,1280,1599,ok,,validacion
+verano_54.jpg,verano,56.50,19.81,26.66,164320,1228,1628,ok,,validacion
+verano_55.jpg,verano,71.21,20.35,24.39,173524,1069,1331,ok,,validacion
+verano_56.jpg,verano,66.55,15.68,18.04,204233,1280,1706,ok,,validacion
+verano_57.jpg,verano,65.68,14.08,8.31,50406,565,800,ok,,validacion
+verano_58.jpg,verano,65.14,22.61,34.42,33218,1280,1928,ok,,validacion
+verano_59.jpg,verano,65.07,22.31,32.77,120322,1053,1402,ok,,validacion
+verano_60.jpg,verano,63.08,18.44,18.03,97623,768,1024,ok,,validacion
+verano_61.jpg,verano,68.57,14.73,25.35,259545,1413,1749,ok,,validacion
+otono_1.jpg,otono,17.70,3.59,5.56,76873,658,949,ok,,calibracion
+otono_2.png,otono,33.88,13.48,16.71,132183,1122,1402,ok,,calibracion
+otono_3.jpg,otono,48.85,14.88,23.86,62565,896,1200,ok,,calibracion
+otono_4.jpg,otono,42.84,7.41,16.77,287481,1792,2400,ok,,calibracion
+otono_5.jpg,otono,37.17,14.39,19.49,308806,1667,2500,ok,,calibracion
+otono_6.jpg,otono,50.92,19.30,30.41,27148,500,738,ok,,calibracion
+otono_7.jpg,otono,54.27,18.56,26.86,174828,1024,1024,ok,,calibracion
+otono_8.png,otono,48.40,11.85,15.35,177799,1082,1453,ok,,calibracion
+otono_9.png,otono,52.94,20.68,30.00,64646,619,1238,ok,,calibracion
+otono_10.jpg,otono,52.80,18.74,28.48,268067,1428,1920,ok,,calibracion
+otono_11.jpg,otono,45.98,17.62,23.60,100614,824,1201,ok,,calibracion
+otono_12.jpg,otono,46.91,19.58,25.37,22647,475,692,ok,,calibracion
+otono_13.jpg,otono,52.40,18.91,24.89,73535,640,800,ok,,calibracion
+otono_14.jpg,otono,55.48,16.95,23.13,650791,2329,3105,ok,,calibracion
+otono_15.jpg,otono,64.83,6.51,11.31,26588,333,500,ok,baja resolución (333x500),calibracion
+otono_16.png,otono,64.66,14.50,27.73,59095,1024,1024,ok,,calibracion
+otono_17.jpg,otono,59.19,19.27,27.16,79088,735,1009,ok,,calibracion
+otono_18.png,otono,56.12,22.53,31.23,74314,621,1239,ok,,calibracion
+otono_19.jpg,otono,57.60,13.45,17.67,219218,1170,1355,ok,,calibracion
+otono_20.jpg,otono,60.22,19.25,26.94,156416,1080,1350,ok,,calibracion
+otono_21.png,otono,63.53,13.36,21.53,53155,1024,1024,ok,,calibracion
+otono_22.jpg,otono,73.39,9.18,16.23,37141,586,585,ok,,calibracion
+otono_23.jpg,otono,72.73,8.55,14.31,42517,571,800,ok,,calibracion
+otono_24.png,otono,69.34,12.93,18.82,75732,1024,1024,ok,,calibracion
+otono_25.jpg,otono,54.93,18.04,23.48,50146,736,1035,ok,,calibracion
+otono_26.jpg,otono,54.26,18.47,22.92,76759,1080,1350,ok,,calibracion
+otono_27.jpg,otono,53.42,20.95,26.10,94664,800,1064,ok,,calibracion
+otono_28.jpg,otono,79.66,8.64,12.63,20120,333,500,ok,baja resolución (333x500),calibracion
+otono_29.jpg,otono,75.23,6.61,6.40,99687,763,981,ok,,calibracion
+otono_30.png,otono,40.02,8.78,18.23,19988,588,411,ok,,calibracion
+otono_31.jpg,otono,25.42,11.80,15.80,153437,1080,1395,ok,,calibracion
+otono_32.jpg,otono,33.89,14.52,21.14,9169,234,305,ok,baja resolución (234x305),calibracion
+otono_33.jpg,otono,30.58,15.26,21.91,64978,768,1024,ok,,calibracion
+otono_34.png,otono,52.97,14.51,21.47,9721,311,329,ok,baja resolución (311x329),calibracion
+otono_35.jpg,otono,46.74,11.44,15.32,245380,1224,1632,ok,,calibracion
+otono_36.jpg,otono,58.91,14.27,20.90,9187,251,315,ok,baja resolución (251x315),calibracion
+otono_37.jpg,otono,59.61,10.45,14.71,155169,1200,1336,ok,,calibracion
+otono_38.jpg,otono,46.81,23.09,29.47,55882,705,669,ok,,calibracion
+otono_39.jpg,otono,54.98,20.26,28.17,33435,657,987,ok,,calibracion
+otono_40.jpg,otono,43.34,8.64,10.96,6863,270,261,ok,baja resolución (270x261),calibracion
+otono_41.jpg,otono,55.69,18.32,26.01,80750,768,1365,ok,,calibracion
+otono_42.jpg,otono,56.13,21.40,29.15,214115,1344,1792,ok,,calibracion
+otono_43.jpg,otono,52.86,16.08,21.17,85902,675,1200,ok,,calibracion
+otono_44.jpg,otono,56.92,17.57,29.37,19867,491,444,ok,,calibracion
+otono_45.jpg,otono,52.64,21.24,32.48,35872,600,600,ok,,calibracion
+otono_46.jpg,otono,68.77,11.19,16.39,9422,600,600,ok,,calibracion
+otono_47.jpg,otono,63.54,14.50,19.79,183301,1080,1920,ok,,calibracion
+otono_48.jpg,otono,53.72,20.95,26.91,56485,736,1104,ok,,calibracion
+otono_49.jpg,otono,78.81,11.64,16.78,17977,528,498,ok,,calibracion
+otono_50.jpg,otono,77.21,13.58,18.40,7839,320,410,ok,baja resolución (320x410),calibracion
+otono_51.jpg,otono,69.25,16.42,20.93,603628,1440,1920,ok,,calibracion
+otono_52.jpg,otono,70.16,20.14,21.81,123967,1280,1707,ok,,validacion
+otono_53.jpg,otono,64.71,21.16,19.37,19634,734,900,ok,fondo de color: se omitió la corrección de iluminación,validacion
+otono_54.jpg,otono,51.67,21.10,24.33,106045,1280,1794,ok,,validacion
+otono_55.jpg,otono,53.60,13.15,14.37,103750,1447,1682,ok,,validacion
+otono_56.jpg,otono,73.00,14.56,18.28,89923,1019,1443,ok,,validacion
+otono_57.jpg,otono,61.93,16.12,19.31,89467,1280,1627,ok,,validacion
+otono_58.jpg,otono,73.52,6.82,10.92,42963,600,800,ok,,validacion
+otono_59.jpg,otono,73.76,17.02,23.03,75172,956,1286,ok,,validacion
+otono_60.jpg,otono,67.41,7.46,11.95,152103,1280,1708,ok,,validacion
+otono_61.jpg,otono,68.02,22.64,23.88,107593,1280,1924,ok,,validacion
+otono_62.jpg,otono,75.77,10.88,17.93,110804,1280,1711,ok,,validacion
+otono_63.jpg,otono,80.57,10.10,13.84,147428,1280,1793,ok,,validacion
+otono_64.jpg,otono,72.69,7.32,16.93,56479,1280,1920,ok,,validacion
+otono_65.jpg,otono,74.26,24.78,27.51,44057,946,900,ok,,validacion
+otono_66.jpg,otono,80.35,18.15,34.72,160288,1573,1888,ok,,validacion
+otono_67.jpg,otono,63.04,20.63,18.61,77612,1280,1716,ok,,validacion
+otono_68.jpg,otono,64.14,20.43,17.94,196088,1280,1920,ok,,validacion
+otono_69.jpg,otono,68.86,8.50,18.94,26937,629,784,ok,,validacion
+otono_70.jpg,otono,55.69,7.19,15.68,102277,850,1050,ok,,validacion
+otono_71.jpg,otono,74.81,13.44,27.30,231893,1582,2373,ok,,validacion
+otono_72.jpg,otono,74.88,1.33,23.60,72893,1280,1920,ok,,validacion
+otono_73.jpg,otono,69.04,12.08,19.61,282396,1600,2400,ok,,validacion
+otono_74.jpg,otono,68.42,19.50,13.33,164031,1280,1919,ok,,validacion
+otono_75.jpg,otono,65.38,15.78,27.33,123795,1280,1503,ok,,validacion
+otono_76.jpg,otono,57.06,21.35,33.29,81687,1280,1571,ok,,validacion
+invierno_1.jpg,invierno,31.06,3.24,1.76,175936,1200,1465,ok,,calibracion
+invierno_2.jpg,invierno,64.58,18.92,14.74,183147,1024,1536,ok,,calibracion
+invierno_3.jpg,invierno,58.32,20.31,16.65,28143,442,589,ok,,calibracion
+invierno_4.jpg,invierno,57.30,20.20,23.86,160248,1024,1024,ok,,calibracion
+invierno_5.jpg,invierno,64.90,18.89,19.29,166733,1024,1024,ok,,calibracion
+invierno_6.jpg,invierno,31.97,12.54,10.24,35341,500,840,ok,,calibracion
+invierno_7.jpg,invierno,55.10,11.45,10.30,140612,1196,1794,ok,,calibracion
+invierno_8.jpg,invierno,62.24,18.75,17.84,231416,886,1242,ok,,calibracion
+invierno_9.jpg,invierno,55.60,21.01,24.86,165144,1024,1024,ok,,calibracion
+invierno_10.jpg,invierno,56.59,19.35,22.47,32606,540,721,ok,,calibracion
+invierno_11.jpg,invierno,59.31,19.37,22.59,121051,800,929,ok,,calibracion
+invierno_12.jpg,invierno,45.13,17.42,19.21,168207,1024,1024,ok,,calibracion
+invierno_13.jpg,invierno,28.95,14.27,12.89,524468,1656,2209,ok,,calibracion
+invierno_14.jpg,invierno,49.42,16.50,16.87,16722,300,441,ok,baja resolución (300x441),calibracion
+invierno_15.jpg,invierno,47.06,13.95,15.62,1060345,3024,4032,ok,,calibracion
+invierno_16.jpg,invierno,43.46,22.18,21.63,83616,666,1000,ok,,calibracion
+invierno_17.jpg,invierno,70.76,16.06,17.06,17357,430,488,ok,,calibracion
+invierno_18.jpg,invierno,67.37,15.32,18.14,161635,1024,1024,ok,,calibracion
+invierno_19.jpg,invierno,64.49,17.32,18.96,347037,895,1464,ok,,calibracion
+invierno_20.jpg,invierno,34.36,13.35,12.66,77141,735,978,ok,,calibracion
+invierno_21.jpg,invierno,25.11,8.15,5.26,185441,1208,1812,ok,,calibracion
+invierno_22.jpg,invierno,69.59,19.39,23.31,152749,1024,1024,ok,,calibracion
+invierno_23.jpg,invierno,30.57,14.03,13.08,117881,842,1200,ok,,calibracion
+invierno_24.jpg,invierno,38.67,14.41,12.45,11030,353,350,ok,baja resolución (353x350),calibracion
+invierno_25.jpg,invierno,41.38,18.47,17.78,50401,427,602,ok,,calibracion
+invierno_26.jpg,invierno,39.11,11.23,13.36,1019984,3024,4032,ok,,calibracion
+invierno_27.jpg,invierno,45.01,16.01,17.03,176453,809,1115,ok,,calibracion
+invierno_28.jpg,invierno,81.54,11.15,11.26,32731,500,665,ok,,calibracion
+invierno_29.jpg,invierno,78.26,5.63,6.50,7380,285,355,ok,baja resolución (285x355),calibracion
+invierno_30.jpg,invierno,27.15,9.28,9.90,58597,843,1264,ok,,calibracion
+invierno_31.jpg,invierno,75.50,18.84,16.51,42331,684,712,ok,,calibracion
+invierno_32.jpg,invierno,70.95,12.49,10.14,20614,525,548,ok,,calibracion
+invierno_33.jpg,invierno,68.27,15.31,16.38,14878,350,347,ok,baja resolución (350x347),calibracion
+invierno_34.png,invierno,77.63,13.03,12.01,49690,487,668,ok,,calibracion
+invierno_35.jpg,invierno,52.87,22.22,24.60,22727,414,464,ok,,calibracion
+invierno_36.png,invierno,61.31,16.26,19.01,35020,642,646,ok,,calibracion
+invierno_37.jpg,invierno,75.35,9.82,11.08,28885,542,724,ok,,calibracion
+invierno_38.jpg,invierno,72.00,14.58,17.90,109531,800,1200,ok,,calibracion
+invierno_39.jpg,invierno,83.72,7.64,8.92,22089,398,446,ok,baja resolución (398x446),calibracion
+invierno_40.jpg,invierno,30.54,11.78,12.13,408933,1284,2075,ok,,calibracion
+invierno_41.jpg,invierno,15.39,6.39,7.84,43563,508,613,ok,,calibracion
+invierno_42.jpg,invierno,82.54,6.62,16.46,104946,1058,1425,ok,,validacion
+invierno_43.jpg,invierno,46.93,17.00,21.27,81097,1351,1774,ok,,validacion
+invierno_44.jpg,invierno,76.48,19.06,23.99,81484,708,1024,ok,,validacion
+invierno_45.jpg,invierno,70.17,12.63,11.44,69469,968,1338,ok,,validacion
+invierno_46.jpg,invierno,82.80,2.10,14.83,121930,783,921,ok,,validacion
+invierno_47.jpg,invierno,68.58,9.98,31.19,175982,1280,1968,ok,,validacion
+invierno_48.jpg,invierno,87.88,7.92,20.42,80417,1280,1708,ok,,validacion
+invierno_49.jpg,invierno,70.88,17.32,20.14,186077,1280,1708,ok,,validacion
+invierno_50.jpg,invierno,62.54,11.41,12.28,85444,1280,1924,ok,,validacion
+invierno_51.jpg,invierno,78.21,7.03,11.36,102953,1280,1528,ok,,validacion
+invierno_52.jpg,invierno,43.92,19.70,27.47,182118,1469,2204,ok,,validacion
+invierno_53.jpg,invierno,65.47,24.08,11.89,226221,1401,1710,ok,,validacion
+invierno_54.jpg,invierno,63.11,13.71,28.80,225039,1280,1650,ok,,validacion
+invierno_55.jpg,invierno,74.74,12.96,15.66,90521,1280,1719,ok,,validacion
+invierno_56.jpg,invierno,66.67,21.60,23.54,138331,1280,1780,ok,,validacion
+invierno_57.jpg,invierno,65.11,21.69,36.75,113390,1280,1364,ok,,validacion
+invierno_58.jpg,invierno,68.22,24.85,30.38,304963,1280,1925,ok,,validacion
+invierno_59.jpg,invierno,56.90,23.95,25.01,81898,1280,1761,ok,,validacion
+invierno_60.jpg,invierno,67.50,8.79,9.69,29234,792,831,ok,,validacion
+invierno_61.jpg,invierno,60.34,3.74,3.73,75125,905,1139,ok,,validacion
+invierno_62.jpg,invierno,69.04,19.96,28.62,86187,1280,1705,ok,,validacion
+invierno_63.jpg,invierno,57.88,14.96,23.74,23429,679,960,ok,,validacion
+invierno_64.jpg,invierno,68.64,10.38,20.39,159287,1551,2090,ok,,validacion
+invierno_65.jpg,invierno,26.61,11.81,16.86,116620,1280,1629,ok,,validacion
+invierno_66.jpg,invierno,75.33,21.33,22.75,141487,1280,1920,ok,,validacion
