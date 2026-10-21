@@ -19,7 +19,10 @@ Las imágenes van en data/raw/imagenes/ (carpeta que git ignora) y se nombran
 
 Todas las imágenes son fotos de internet (ninguna está generada con IA). El registro
 (registro_imagenes.csv) anota, para cada una, las dos fuentes que respaldan su estación y
-la iluminación de la foto; el subtipo de 12 estaciones y las notas son opcionales.
+la iluminación de la foto; el subtipo de 12 estaciones y las notas son opcionales. Si una
+imagen tiene un aviso para revisar a ojo (baja resolución, poca piel o fondo de color) y al
+mirar su vista de control se acepta, se escribe "revisada" en sus notas y el resumen deja de
+contarla como pendiente.
 """
 
 import argparse
@@ -64,6 +67,10 @@ COLUMNAS_RETIRADAS = ("origen", "persona", "url_imagen", "herramienta_ia", "prom
 COLUMNAS_MUESTRAS = ["archivo", "estacion", "L", "a", "b", "pixeles_piel", "ancho", "alto",
                      "estado", "detalle", "subconjunto"]
 
+# Marca que, escrita en la columna `notas` del registro, acepta una imagen con aviso después de
+# revisarla a ojo (por ejemplo, "revisada: la piel se ve natural"). "no revisada" no cuenta.
+PATRON_REVISADA = re.compile(r"(?<!\bno )\brevisad[ao]\b")
+
 
 # --------------------------------------------------------------------------- #
 # Utilidades
@@ -80,6 +87,11 @@ def interpretar_nombre(nombre: str) -> Optional[Tuple[str, int]]:
     if coincidencia is None:
         return None
     return sin_tildes(coincidencia.group(1)), int(coincidencia.group(2))
+
+
+def marcada_como_revisada(notas: str) -> bool:
+    """Indica si las notas de una imagen dicen "revisada", sin importar mayúsculas ni tildes."""
+    return PATRON_REVISADA.search(sin_tildes(notas)) is not None
 
 
 def orden_estacion(estacion: str) -> int:
@@ -422,6 +434,11 @@ def cmd_resumen(args: argparse.Namespace) -> int:
             pendientes.append(f"imágenes idénticas: {', '.join(archivos)}")
 
     # ---- muestras ---------------------------------------------------------- #
+    # Las imágenes con aviso que ya se revisaron a ojo y se aceptaron ("revisada" en sus notas)
+    # se listan aparte y no cuentan como pendientes
+    revisadas = {f.get("archivo", "") for f in registro if marcada_como_revisada(f.get("notas", ""))}
+    aceptadas: List[str] = []
+    por_revisar = 0
     if not muestras:
         pendientes.append("aún no existe muestras_lab.csv (corre 'extraer')")
     else:
@@ -433,13 +450,24 @@ def cmd_resumen(args: argparse.Namespace) -> int:
             if fila.get("estado") != "ok":
                 pendientes.append(f"{fila.get('archivo')}: {fila.get('estado')} ({fila.get('detalle')}); "
                                   "reemplázala o retírala")
+            elif fila.get("detalle") and fila.get("archivo") in revisadas:
+                aceptadas.append(f"{fila.get('archivo')}: {fila.get('detalle')}")
             elif fila.get("detalle"):
                 pendientes.append(f"{fila.get('archivo')}: revisar a ojo -> {fila.get('detalle')}")
+                por_revisar += 1
+
+    if aceptadas:
+        print("\nREVISADAS A OJO Y ACEPTADAS (dicen 'revisada' en sus notas; no cuentan como pendientes)")
+        for linea in aceptadas:
+            print(f"  - {linea}")
 
     print("\nPENDIENTES")
     if pendientes:
         for linea in pendientes:
             print(f"  - {linea}")
+        if por_revisar:
+            print("\n  Si al mirar su vista de control una imagen de 'revisar a ojo' se ve bien, escribe 'revisada'\n"
+                  "  en la columna notas de su fila del registro y dejará de contar como pendiente.")
         print(f"\n{len(pendientes)} pendiente(s). Corrígelos y vuelve a correr el resumen.")
     else:
         print("  Ninguno. El dataset_ground_truth está listo para entregar.")
