@@ -19,22 +19,27 @@ Las imágenes van en data/raw/imagenes/ (carpeta que git ignora) y se nombran
 
 Todas las imágenes son fotos de internet (ninguna está generada con IA). El registro
 (registro_imagenes.csv) anota, para cada una, las dos fuentes que respaldan su estación y
-la iluminación de la foto; el subtipo de 12 estaciones y las notas son opcionales. Si una
-imagen tiene un aviso para revisar a ojo (baja resolución, poca piel o fondo de color) y al
-mirar su vista de control se acepta, se escribe "revisada" en sus notas y el resumen deja de
-contarla como pendiente.
+la iluminación de la foto; el subtipo de 12 estaciones y las notas son opcionales.
+
+La estación puede venir de un análisis interno del equipo o de dos fuentes externas, con sus
+URL en fuente_estacion_1 y fuente_estacion_2. `dividir` pone en validación solo las imágenes
+con dos URL distintas y deja las demás para calibrar: la precisión que exige el Acta tiene
+que medirse con etiquetas que no salgan de las medidas del propio sistema.
+
+Si una imagen tiene un aviso para revisar a ojo (baja resolución, poca piel o fondo de color)
+y al mirar su vista de control se acepta, se escribe "revisada" en sus notas y el resumen deja
+de contarla como pendiente.
 """
 
 import argparse
 import csv
 import hashlib
 import io
-import random
 import re
 import sys
 import unicodedata
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Set, Tuple
 
 import numpy as np
 
@@ -92,6 +97,33 @@ def interpretar_nombre(nombre: str) -> Optional[Tuple[str, int]]:
 def marcada_como_revisada(notas: str) -> bool:
     """Indica si las notas de una imagen dicen "revisada", sin importar mayúsculas ni tildes."""
     return PATRON_REVISADA.search(sin_tildes(notas)) is not None
+
+
+def es_url(texto: str) -> bool:
+    """Indica si un texto es una dirección web (empieza por http:// o https://)."""
+    return texto.strip().lower().startswith(("http://", "https://"))
+
+
+def _normalizar_url(url: str) -> str:
+    """Quita el protocolo, el 'www.' y la barra final para comparar dos URL."""
+    return re.sub(r"^https?://(www\.)?", "", url.strip().lower()).rstrip("/")
+
+
+def tiene_fuentes_externas(fila: Dict[str, str]) -> bool:
+    """Indica si la estación de una fila del registro la respaldan dos fuentes externas: dos URL distintas."""
+    fuente_1, fuente_2 = fila.get("fuente_estacion_1", ""), fila.get("fuente_estacion_2", "")
+    return es_url(fuente_1) and es_url(fuente_2) and _normalizar_url(fuente_1) != _normalizar_url(fuente_2)
+
+
+def subconjunto_esperado(muestra: Dict[str, str], externas: Set[str]) -> str:
+    """Subconjunto que le corresponde a una fila de muestras_lab.csv.
+
+    Es 'validacion' si su imagen tiene fuentes externas, 'calibracion' si no, y vacío si la
+    imagen no se pudo medir.
+    """
+    if muestra.get("estado") != "ok":
+        return ""
+    return "validacion" if muestra.get("archivo", "") in externas else "calibracion"
 
 
 def orden_estacion(estacion: str) -> int:
@@ -186,6 +218,9 @@ def problemas_registro(fila: Dict[str, str]) -> List[str]:
     elif sin_tildes(fila.get("estacion", "")) != datos[0]:
         faltan.append(f"estacion (el nombre del archivo dice '{datos[0]}')")
     faltan += [campo for campo in CAMPOS_OBLIGATORIOS if not fila.get(campo, "").strip()]
+    if es_url(fila.get("fuente_estacion_1", "")) and es_url(fila.get("fuente_estacion_2", "")) \
+            and not tiene_fuentes_externas(fila):
+        faltan.append("fuente_estacion_2 (es la misma URL que fuente_estacion_1)")
     iluminacion = sin_tildes(fila.get("iluminacion", ""))
     if not iluminacion:
         faltan.append("iluminacion")
@@ -341,25 +376,22 @@ def cmd_extraer(args: argparse.Namespace) -> int:
 
 
 def cmd_dividir(args: argparse.Namespace) -> int:
-    """Separa, por estación, las imágenes válidas en calibración y validación."""
+    """Pone en validación las imágenes con dos fuentes externas y en calibración las demás."""
     if not ARCHIVO_MUESTRAS.exists():
         print("No existe muestras_lab.csv. Corre primero: python src/construir_ground_truth.py extraer")
         return 1
     filas, _ = leer_csv(ARCHIVO_MUESTRAS)
+    externas = {f.get("archivo", "") for f in cargar_registro()[0] if tiene_fuentes_externas(f)}
     for fila in filas:
-        fila["subconjunto"] = ""
+        fila["subconjunto"] = subconjunto_esperado(fila, externas)
 
-    generador = random.Random(args.semilla)
-    print(f"Proporción para validación: {args.proporcion:.0%} | semilla: {args.semilla}")
+    print("Validación: imágenes con dos fuentes externas (dos URL distintas en el registro). "
+          "Calibración: las demás.")
     for estacion in ESTACIONES_VALIDAS:
-        validas = sorted((f for f in filas if f["estacion"] == estacion and f["estado"] == "ok"),
-                         key=lambda f: f["archivo"])
-        objetivo = int(len(validas) * args.proporcion + 0.5)
-        elegidas = {f["archivo"] for f in generador.sample(validas, min(objetivo, len(validas)))}
-        for fila in validas:
-            fila["subconjunto"] = "validacion" if fila["archivo"] in elegidas else "calibracion"
-        print(f"  {estacion:10s} válidas={len(validas):3d}  calibración={len(validas) - len(elegidas):3d}  "
-              f"validación={len(elegidas):3d}")
+        validas = [f for f in filas if f["estacion"] == estacion and f["estado"] == "ok"]
+        en_validacion = sum(1 for f in validas if f["subconjunto"] == "validacion")
+        print(f"  {estacion:10s} válidas={len(validas):3d}  calibración={len(validas) - en_validacion:3d}  "
+              f"validación={en_validacion:3d}")
 
     escribir_csv(ARCHIVO_MUESTRAS, filas, COLUMNAS_MUESTRAS)
     print(f"\nColumna 'subconjunto' actualizada en {ARCHIVO_MUESTRAS}")
@@ -393,7 +425,8 @@ def cmd_resumen(args: argparse.Namespace) -> int:
             pendientes.append(f"{estacion}: {len(ok)} imagen(es) válida(s) de {MINIMO_POR_ESTACION} requeridas")
         if muestras and conteo["validacion"] < MINIMO_VALIDACION:
             pendientes.append(f"{estacion}: {conteo['validacion']} imagen(es) en validación "
-                              f"(mínimo {MINIMO_VALIDACION}; corre 'dividir' o agrega más imágenes)")
+                              f"(mínimo {MINIMO_VALIDACION}; agrega imágenes con dos fuentes externas y "
+                              "corre 'dividir')")
 
     print("\nPROMEDIO L*a*b* POR ESTACIÓN (imágenes ok) frente al centroide actual de referencias.py")
     for estacion in ESTACIONES_VALIDAS:
@@ -446,6 +479,12 @@ def cmd_resumen(args: argparse.Namespace) -> int:
         if procesadas != nombres_carpeta:
             pendientes.append("muestras_lab.csv no coincide con la carpeta de imágenes (corre 'extraer' y "
                               "luego 'dividir' de nuevo)")
+        externas = {f.get("archivo", "") for f in registro if tiene_fuentes_externas(f)}
+        desfasadas = [f.get("archivo", "") for f in muestras
+                      if f.get("subconjunto", "") != subconjunto_esperado(f, externas)]
+        if desfasadas:
+            pendientes.append(f"{len(desfasadas)} imagen(es) con el subconjunto desactualizado (corre 'dividir'): "
+                              f"{', '.join(desfasadas[:8])}")
         for fila in muestras:
             if fila.get("estado") != "ok":
                 pendientes.append(f"{fila.get('archivo')}: {fila.get('estado')} ({fila.get('detalle')}); "
@@ -482,10 +521,8 @@ def main(argv: Optional[List[str]] = None) -> int:
     p_extraer = sub.add_parser("extraer", help="Calcula el L*a*b* de cada imagen con el pipeline.")
     p_extraer.add_argument("--previews", action="store_true",
                            help="Guarda en data/raw/previews la original, la corregida y la piel extraída.")
-    p_dividir = sub.add_parser("dividir", help="Asigna cada imagen a calibración o validación.")
-    p_dividir.add_argument("--proporcion", type=float, default=0.30,
-                           help="Fracción de cada estación que va a validación (por defecto 0.30).")
-    p_dividir.add_argument("--semilla", type=int, default=42, help="Semilla para que la división sea repetible.")
+    sub.add_parser("dividir", help="Pone en validación las imágenes con dos fuentes externas y en "
+                                   "calibración las demás.")
     sub.add_parser("resumen", help="Control de calidad antes de entregar.")
     args = parser.parse_args(argv)
     comandos = {"preparar": cmd_preparar, "extraer": cmd_extraer, "dividir": cmd_dividir, "resumen": cmd_resumen}
