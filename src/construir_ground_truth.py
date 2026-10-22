@@ -39,9 +39,12 @@ import re
 import sys
 import unicodedata
 from pathlib import Path
-from typing import Dict, List, Optional, Set, Tuple
+from typing import TYPE_CHECKING, Dict, List, Optional, Set, Tuple
 
 import numpy as np
+
+if TYPE_CHECKING:  # solo para las anotaciones: medicion carga MediaPipe, que preparar y resumen no necesitan
+    from medicion import MedicionPiel
 
 RAIZ = Path(__file__).resolve().parent.parent
 CARPETA_IMAGENES = RAIZ / "data" / "raw" / "imagenes"
@@ -242,20 +245,17 @@ def leer_imagen(ruta: Path) -> Optional[np.ndarray]:
     return cv2.imdecode(datos, cv2.IMREAD_COLOR)
 
 
-def guardar_preview(ruta: Path, original: np.ndarray, corregida: np.ndarray, roi: np.ndarray) -> None:
-    """Guarda, lado a lado, la imagen original, la corregida por Gray World y la piel extraída.
+def guardar_preview(ruta: Path, original: np.ndarray, medicion: "MedicionPiel") -> None:
+    """Guarda la vista de control de una imagen (ver `medicion.componer_vista`).
 
-    Si la corrección de iluminación se descartó, el panel del medio es igual al original.
+    Muestra, lado a lado, la imagen original, la corregida por Gray World y la piel
+    extraída. Si la corrección de iluminación se descartó, el panel del medio es igual a
+    la original y su título lo indica.
     """
     import cv2
-    alto = 360
+    from medicion import componer_vista
 
-    def escalar(imagen: np.ndarray) -> np.ndarray:
-        h, w = imagen.shape[:2]
-        return cv2.resize(imagen, (max(1, round(w * alto / h)), alto))
-
-    lado_a_lado = np.hstack([escalar(original), escalar(corregida), escalar(roi)])
-    ok, buffer = cv2.imencode(".jpg", lado_a_lado)
+    ok, buffer = cv2.imencode(".jpg", componer_vista(original, medicion))
     if ok:
         ruta.parent.mkdir(parents=True, exist_ok=True)
         buffer.tofile(str(ruta))
@@ -340,7 +340,7 @@ def cmd_extraer(args: argparse.Namespace) -> int:
             fila.update(ancho=str(ancho), alto=str(alto))
             try:
                 medicion = medir_color_piel(imagen)
-                corregida, roi, lab = medicion.imagen_corregida, medicion.roi_piel, medicion.color_lab
+                roi, lab = medicion.roi_piel, medicion.color_lab
             except FileNotFoundError as error:
                 print(f"ERROR: {error}")
                 return 1
@@ -361,7 +361,7 @@ def cmd_extraer(args: argparse.Namespace) -> int:
                 fila.update(L=f"{lab[0]:.2f}", a=f"{lab[1]:.2f}", b=f"{lab[2]:.2f}", pixeles_piel=str(pixeles),
                             estado="ok", detalle="; ".join(avisos))
                 if args.previews:
-                    guardar_preview(CARPETA_PREVIEWS / f"{ruta.stem}.jpg", imagen, corregida, roi)
+                    guardar_preview(CARPETA_PREVIEWS / f"{ruta.stem}.jpg", imagen, medicion)
         filas.append(fila)
         valores = f"L={fila['L']} a={fila['a']} b={fila['b']}" if fila["estado"] == "ok" else fila["detalle"]
         print(f"[{i:3d}/{total}] {ruta.name:28s} {fila['estado']:10s} {valores}")

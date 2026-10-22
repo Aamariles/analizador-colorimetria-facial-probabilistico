@@ -19,10 +19,15 @@ El orden de las etapas es deliberado:
 `main.py` y `construir_ground_truth.py` usan `medir_color_piel` para que la aplicación y
 el dataset_ground_truth se midan exactamente igual: unos centroides calibrados con una
 medición distinta de la que usa la aplicación no servirían para clasificar.
+
+`componer_vista` arma la vista de control de una medición (la original, la corregida por
+Gray World y la piel analizada), la misma que muestra `main.py --vista` y que guarda
+`construir_ground_truth.py extraer --previews`.
 """
 
-from typing import NamedTuple
+from typing import NamedTuple, Optional
 
+import cv2
 import numpy as np
 
 from colorimetria.cielab_math import extraer_color_dominante_lab
@@ -92,3 +97,76 @@ def medir_color_piel(imagen: np.ndarray) -> MedicionPiel:
             return MedicionPiel(imagen, roi_original, color_original, balance_aplicado=False)
 
     return MedicionPiel(imagen_corregida, roi_piel, color_lab, balance_aplicado=True)
+
+
+# --------------------------------------------------------------------------- #
+# Vista de control
+# --------------------------------------------------------------------------- #
+ALTO_TITULO = 32               # alto en píxeles de la barra con el título de cada panel
+SEPARACION = 6                 # ancho de la franja que separa los paneles
+COLOR_FONDO = (45, 45, 45)     # gris oscuro (BGR) de las barras y las franjas
+
+
+def _con_titulo(panel: np.ndarray, titulo: str) -> np.ndarray:
+    """Agrega encima del panel una barra con su título centrado.
+
+    La fuente de OpenCV no tiene tildes ni eñes, así que los títulos se escriben sin ellas.
+    """
+    ancho = panel.shape[1]
+    barra = np.full((ALTO_TITULO, ancho, 3), COLOR_FONDO, dtype=np.uint8)
+    fuente, escala, grosor = cv2.FONT_HERSHEY_SIMPLEX, 0.6, 1
+    (ancho_texto, alto_texto), _ = cv2.getTextSize(titulo, fuente, escala, grosor)
+    if ancho_texto > ancho - 12:  # en un panel angosto el título se achica para caber
+        escala = max(0.3, escala * (ancho - 12) / ancho_texto)
+        (ancho_texto, alto_texto), _ = cv2.getTextSize(titulo, fuente, escala, grosor)
+    origen = (max(0, (ancho - ancho_texto) // 2), (ALTO_TITULO + alto_texto) // 2)
+    cv2.putText(barra, titulo, origen, fuente, escala, (255, 255, 255), grosor, cv2.LINE_AA)
+    return np.vstack([barra, panel])
+
+
+def componer_vista(imagen: np.ndarray, medicion: MedicionPiel, alto: int = 360,
+                   ancho_maximo: Optional[int] = None) -> np.ndarray:
+    """Arma la vista de control de una medición: tres paneles lado a lado, cada uno con su título.
+
+    1. La imagen original.
+    2. La imagen con el balance de blancos de Gray World. Si la corrección se descartó
+       por un fondo de color, es igual a la original y el título lo indica.
+    3. La piel analizada (lo demás en negro), con un cuadro en la esquina inferior
+       derecha del color dominante que se usa para clasificar.
+
+    Args:
+        imagen (np.ndarray): Imagen BGR original, la misma que se le pasó a `medir_color_piel`.
+        medicion (MedicionPiel): Resultado de `medir_color_piel` para esa imagen.
+        alto (int): Alto de cada panel en píxeles, sin contar el título.
+        ancho_maximo (Optional[int]): Si se indica, los paneles se achican para que la
+            vista no sea más ancha que esto (por ejemplo, para que quepa en la pantalla).
+
+    Returns:
+        np.ndarray: Imagen BGR con la vista de control.
+    """
+    alto_original, ancho_original = imagen.shape[:2]
+    alto = max(1, alto)
+    ancho = max(1, round(ancho_original * alto / alto_original))
+    if ancho_maximo and 3 * ancho + 2 * SEPARACION > ancho_maximo:
+        ancho = max(1, (ancho_maximo - 2 * SEPARACION) // 3)
+        alto = max(1, round(alto_original * ancho / ancho_original))
+    interpolacion = cv2.INTER_AREA if alto < alto_original else cv2.INTER_LINEAR
+
+    def escalar(panel: np.ndarray) -> np.ndarray:
+        return cv2.resize(panel, (ancho, alto), interpolation=interpolacion)
+
+    piel = escalar(medicion.roi_piel)
+    lado = max(16, min(ancho, alto) // 5)
+    margen = max(4, lado // 6)
+    x, y = ancho - margen - lado, alto - margen - lado
+    # El color dominante está en L*a*b* real (L* de 0 a 100): se pasa a BGR para dibujarlo
+    color = cv2.cvtColor(np.array([[medicion.color_lab]], dtype=np.float32), cv2.COLOR_Lab2BGR)[0, 0]
+    color_bgr = tuple(int(c) for c in np.clip(np.round(color * 255), 0, 255))
+    cv2.rectangle(piel, (x, y), (x + lado, y + lado), color_bgr, cv2.FILLED)
+    cv2.rectangle(piel, (x, y), (x + lado, y + lado), (255, 255, 255), 1)
+
+    titulo_balance = "2. Balance de blancos" if medicion.balance_aplicado else "2. Sin balance (fondo de color)"
+    separador = np.full((ALTO_TITULO + alto, SEPARACION, 3), COLOR_FONDO, dtype=np.uint8)
+    return np.hstack([_con_titulo(escalar(imagen), "1. Original"), separador,
+                      _con_titulo(escalar(medicion.imagen_corregida), titulo_balance), separador,
+                      _con_titulo(piel, "3. Piel analizada")])
