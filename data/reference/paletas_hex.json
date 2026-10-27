@@ -1,0 +1,4674 @@
+{
+ "version": 1,
+ "metodo": "reglas en CIELAB/LCh (ver src/recomendador/generar_paletas.py)",
+ "subtipos": {
+  "primavera_clara": {
+   "clave": "primavera_clara",
+   "nombre": "Primavera Clara",
+   "estacion": "primavera",
+   "lema": "Luz dorada y pasteles cálidos",
+   "tema": [
+    "#f0a64a",
+    "#ee8a7c"
+   ],
+   "parametros": {
+    "calidez": 0.55,
+    "profundidad": 0.12,
+    "claridad": 0.55,
+    "contraste": 0.3
+   },
+   "favorecedores": [
+    {
+     "hex": "#ffb0c1",
+     "nombre": "Rosa pastel",
+     "lab": [
+      81.76,
+      37.49,
+      6.21
+     ]
+    },
+    {
+     "hex": "#ffbdb4",
+     "nombre": "Rojo pastel",
+     "lab": [
+      85.36,
+      33.11,
+      18.65
+     ]
+    },
+    {
+     "hex": "#ffb094",
+     "nombre": "Coral pastel",
+     "lab": [
+      79.06,
+      27.15,
+      26.59
+     ]
+    },
+    {
+     "hex": "#ffbf99",
+     "nombre": "Terracota pastel",
+     "lab": [
+      83.56,
+      23.19,
+      30.11
+     ],
+     "estrella": true
+    },
+    {
+     "hex": "#faaf6f",
+     "nombre": "Naranja",
+     "lab": [
+      77.26,
+      20.78,
+      43.38
+     ],
+     "estrella": true
+    },
+    {
+     "hex": "#f7d390",
+     "nombre": "Mostaza pastel",
+     "lab": [
+      86.26,
+      3.71,
+      37.82
+     ]
+    },
+    {
+     "hex": "#ddcb84",
+     "nombre": "Oliva pastel",
+     "lab": [
+      81.76,
+      -3.71,
+      37.82
+     ]
+    },
+    {
+     "hex": "#c7de96",
+     "nombre": "Lima pastel",
+     "lab": [
+      85.36,
+      -19.34,
+      32.71
+     ]
+    },
+    {
+     "hex": "#9ad296",
+     "nombre": "Verde pastel",
+     "lab": [
+      79.06,
+      -29.36,
+      24.12
+     ]
+    },
+    {
+     "hex": "#7ce3c3",
+     "nombre": "Verde azulado pastel",
+     "lab": [
+      83.56,
+      -37.49,
+      6.21
+     ]
+    },
+    {
+     "hex": "#00d6ce",
+     "nombre": "Turquesa",
+     "lab": [
+      77.26,
+      -47.28,
+      -8.85
+     ],
+     "estrella": true
+    },
+    {
+     "hex": "#68e7ff",
+     "nombre": "Azul cielo pastel",
+     "lab": [
+      86.26,
+      -24.12,
+      -29.36
+     ]
+    }
+   ],
+   "neutros": [
+    {
+     "hex": "#fff1e2",
+     "nombre": "Marfil",
+     "lab": [
+      96.0,
+      3.41,
+      9.36
+     ]
+    },
+    {
+     "hex": "#e1d0c2",
+     "nombre": "Arena",
+     "lab": [
+      84.56,
+      3.41,
+      9.36
+     ]
+    },
+    {
+     "hex": "#b69e87",
+     "nombre": "Camel",
+     "lab": [
+      66.56,
+      5.44,
+      14.94
+     ]
+    },
+    {
+     "hex": "#76614c",
+     "nombre": "Chocolate",
+     "lab": [
+      42.56,
+      5.44,
+      14.94
+     ]
+    },
+    {
+     "hex": "#45382c",
+     "nombre": "Espresso",
+     "lab": [
+      24.56,
+      3.41,
+      9.36
+     ]
+    }
+   ],
+   "evitar": [
+    {
+     "hex": "#313349",
+     "nombre": "Índigo apagado",
+     "lab": [
+      22.0,
+      5.28,
+      -14.04
+     ]
+    },
+    {
+     "hex": "#433a50",
+     "nombre": "Violeta apagado",
+     "lab": [
+      26.0,
+      9.15,
+      -11.88
+     ]
+    },
+    {
+     "hex": "#593f4f",
+     "nombre": "Fucsia apagado",
+     "lab": [
+      30.0,
+      14.15,
+      -4.98
+     ]
+    },
+    {
+     "hex": "#475067",
+     "nombre": "Azul apagado",
+     "lab": [
+      34.0,
+      2.45,
+      -14.8
+     ]
+    },
+    {
+     "hex": "#675368",
+     "nombre": "Malva apagado",
+     "lab": [
+      38.0,
+      12.07,
+      -8.9
+     ]
+    },
+    {
+     "hex": "#7b5a63",
+     "nombre": "Rosa apagado",
+     "lab": [
+      42.0,
+      15.0,
+      0.16
+     ]
+    }
+   ],
+   "maquillaje": {
+    "labial": [
+     {
+      "hex": "#db6f56",
+      "nombre": "Coral",
+      "lab": [
+       59.12,
+       39.83,
+       33.42
+      ]
+     },
+     {
+      "hex": "#d5744c",
+      "nombre": "Terracota",
+      "lab": [
+       59.12,
+       34.79,
+       38.64
+      ]
+     },
+     {
+      "hex": "#df6c60",
+      "nombre": "Rojo tomate",
+      "lab": [
+       59.12,
+       44.1,
+       27.56
+      ]
+     }
+    ],
+    "rubor": [
+     {
+      "hex": "#f69d86",
+      "nombre": "Coral suave",
+      "lab": [
+       73.12,
+       30.64,
+       25.71
+      ]
+     },
+     {
+      "hex": "#f1a07f",
+      "nombre": "Terracota suave",
+      "lab": [
+       73.12,
+       26.77,
+       29.73
+      ]
+     }
+    ],
+    "sombras": [
+     {
+      "hex": "#e1d0c2",
+      "nombre": "Arena",
+      "lab": [
+       84.56,
+       3.41,
+       9.36
+      ]
+     },
+     {
+      "hex": "#b69e87",
+      "nombre": "Camel",
+      "lab": [
+       66.56,
+       5.44,
+       14.94
+      ]
+     },
+     {
+      "hex": "#76614c",
+      "nombre": "Chocolate",
+      "lab": [
+       42.56,
+       5.44,
+       14.94
+      ]
+     },
+     {
+      "hex": "#ddcb84",
+      "nombre": "Oliva pastel",
+      "lab": [
+       81.76,
+       -3.71,
+       37.82
+      ]
+     }
+    ]
+   },
+   "cabello": {
+    "tonos": [
+     {
+      "hex": "#8a6246",
+      "nombre": "Castaño chocolate",
+      "lab": [
+       45.0,
+       13.0,
+       22.52
+      ]
+     },
+     {
+      "hex": "#ac7765",
+      "nombre": "Castaño caoba",
+      "lab": [
+       55.0,
+       18.38,
+       18.38
+      ]
+     },
+     {
+      "hex": "#bc9773",
+      "nombre": "Castaño miel",
+      "lab": [
+       65.0,
+       8.89,
+       24.43
+      ]
+     },
+     {
+      "hex": "#e1ae92",
+      "nombre": "Cobrizo suave",
+      "lab": [
+       75.0,
+       14.91,
+       21.3
+      ]
+     }
+    ],
+    "consejos": [
+     "rubio dorado o miel claro",
+     "reflejos sutiles y naturales"
+    ]
+   },
+   "metales": [
+    {
+     "nombre": "Oro amarillo",
+     "degradado": [
+      "#f6dc8a",
+      "#c9972b"
+     ]
+    },
+    {
+     "nombre": "Cobre",
+     "degradado": [
+      "#f0b08a",
+      "#b8602f"
+     ]
+    },
+    {
+     "nombre": "Bronce",
+     "degradado": [
+      "#d9a86c",
+      "#8f5f2a"
+     ]
+    }
+   ],
+   "consejo": "En vez de negro puro, usa espresso o chocolate intenso."
+  },
+  "primavera_calida": {
+   "clave": "primavera_calida",
+   "nombre": "Primavera Cálida",
+   "estacion": "primavera",
+   "lema": "Oro, coral y verdes de sol",
+   "tema": [
+    "#e9a23b",
+    "#e0663f"
+   ],
+   "parametros": {
+    "calidez": 0.95,
+    "profundidad": 0.4,
+    "claridad": 0.65,
+    "contraste": 0.45
+   },
+   "favorecedores": [
+    {
+     "hex": "#ff748f",
+     "nombre": "Rosa",
+     "lab": [
+      67.2,
+      56.9,
+      12.72
+     ]
+    },
+    {
+     "hex": "#ff8374",
+     "nombre": "Rojo",
+     "lab": [
+      70.8,
+      51.81,
+      33.13
+     ]
+    },
+    {
+     "hex": "#ea7f54",
+     "nombre": "Coral",
+     "lab": [
+      64.5,
+      37.69,
+      41.28
+     ]
+    },
+    {
+     "hex": "#f58e4f",
+     "nombre": "Terracota",
+     "lab": [
+      69.0,
+      33.84,
+      49.42
+     ]
+    },
+    {
+     "hex": "#cf883c",
+     "nombre": "Naranja",
+     "lab": [
+      62.7,
+      20.69,
+      50.2
+     ]
+    },
+    {
+     "hex": "#d2ab36",
+     "nombre": "Mostaza intenso",
+     "lab": [
+      71.7,
+      2.61,
+      62.25
+     ],
+     "estrella": true
+    },
+    {
+     "hex": "#bca233",
+     "nombre": "Oliva",
+     "lab": [
+      67.2,
+      -2.44,
+      58.25
+     ]
+    },
+    {
+     "hex": "#99b943",
+     "nombre": "Lima",
+     "lab": [
+      70.8,
+      -28.3,
+      54.6
+     ],
+     "estrella": true
+    },
+    {
+     "hex": "#62ae56",
+     "nombre": "Verde",
+     "lab": [
+      64.5,
+      -41.15,
+      37.84
+     ]
+    },
+    {
+     "hex": "#00c28f",
+     "nombre": "Verde azulado",
+     "lab": [
+      69.0,
+      -58.46,
+      13.07
+     ]
+    },
+    {
+     "hex": "#00afa3",
+     "nombre": "Turquesa",
+     "lab": [
+      62.7,
+      -53.85,
+      -6.99
+     ]
+    },
+    {
+     "hex": "#00c8ff",
+     "nombre": "Azul cielo intenso",
+     "lab": [
+      71.7,
+      -42.17,
+      -45.86
+     ],
+     "estrella": true
+    }
+   ],
+   "neutros": [
+    {
+     "hex": "#ffeeda",
+     "nombre": "Marfil",
+     "lab": [
+      95.2,
+      4.39,
+      12.07
+     ]
+    },
+    {
+     "hex": "#dbc6b3",
+     "nombre": "Arena",
+     "lab": [
+      81.2,
+      4.39,
+      12.07
+     ]
+    },
+    {
+     "hex": "#b49373",
+     "nombre": "Camel",
+     "lab": [
+      63.2,
+      7.9,
+      21.71
+     ]
+    },
+    {
+     "hex": "#745739",
+     "nombre": "Chocolate",
+     "lab": [
+      39.2,
+      7.9,
+      21.71
+     ]
+    },
+    {
+     "hex": "#3f3021",
+     "nombre": "Espresso",
+     "lab": [
+      21.2,
+      4.39,
+      12.07
+     ]
+    }
+   ],
+   "evitar": [
+    {
+     "hex": "#2f334a",
+     "nombre": "Índigo apagado",
+     "lab": [
+      22.0,
+      4.49,
+      -14.31
+     ]
+    },
+    {
+     "hex": "#413a50",
+     "nombre": "Violeta apagado",
+     "lab": [
+      26.0,
+      8.47,
+      -12.38
+     ]
+    },
+    {
+     "hex": "#583f50",
+     "nombre": "Fucsia apagado",
+     "lab": [
+      30.0,
+      13.85,
+      -5.76
+     ]
+    },
+    {
+     "hex": "#475067",
+     "nombre": "Azul apagado",
+     "lab": [
+      34.0,
+      2.6,
+      -14.77
+     ]
+    },
+    {
+     "hex": "#655469",
+     "nombre": "Malva apagado",
+     "lab": [
+      38.0,
+      11.56,
+      -9.56
+     ]
+    },
+    {
+     "hex": "#7b5a65",
+     "nombre": "Rosa apagado",
+     "lab": [
+      42.0,
+      14.98,
+      -0.68
+     ]
+    }
+   ],
+   "maquillaje": {
+    "labial": [
+     {
+      "hex": "#cb5b41",
+      "nombre": "Coral",
+      "lab": [
+       52.4,
+       42.9,
+       36.0
+      ]
+     },
+     {
+      "hex": "#c56037",
+      "nombre": "Terracota",
+      "lab": [
+       52.4,
+       37.47,
+       41.62
+      ]
+     },
+     {
+      "hex": "#cf564d",
+      "nombre": "Rojo tomate",
+      "lab": [
+       52.4,
+       47.49,
+       29.68
+      ]
+     }
+    ],
+    "rubor": [
+     {
+      "hex": "#e78871",
+      "nombre": "Coral suave",
+      "lab": [
+       66.4,
+       33.71,
+       28.28
+      ]
+     },
+     {
+      "hex": "#e28c68",
+      "nombre": "Terracota suave",
+      "lab": [
+       66.4,
+       29.44,
+       32.7
+      ]
+     }
+    ],
+    "sombras": [
+     {
+      "hex": "#dbc6b3",
+      "nombre": "Arena",
+      "lab": [
+       81.2,
+       4.39,
+       12.07
+      ]
+     },
+     {
+      "hex": "#b49373",
+      "nombre": "Camel",
+      "lab": [
+       63.2,
+       7.9,
+       21.71
+      ]
+     },
+     {
+      "hex": "#745739",
+      "nombre": "Chocolate",
+      "lab": [
+       39.2,
+       7.9,
+       21.71
+      ]
+     },
+     {
+      "hex": "#bca233",
+      "nombre": "Oliva",
+      "lab": [
+       67.2,
+       -2.44,
+       58.25
+      ]
+     }
+    ]
+   },
+   "cabello": {
+    "tonos": [
+     {
+      "hex": "#5e3a20",
+      "nombre": "Castaño chocolate",
+      "lab": [
+       28.0,
+       13.0,
+       22.52
+      ]
+     },
+     {
+      "hex": "#764636",
+      "nombre": "Castaño caoba",
+      "lab": [
+       35.0,
+       18.38,
+       18.38
+      ]
+     },
+     {
+      "hex": "#805f3d",
+      "nombre": "Castaño miel",
+      "lab": [
+       43.0,
+       8.89,
+       24.43
+      ]
+     },
+     {
+      "hex": "#a07258",
+      "nombre": "Cobrizo suave",
+      "lab": [
+       52.0,
+       14.91,
+       21.3
+      ]
+     }
+    ],
+    "consejos": [
+     "castaño miel o dorado suave",
+     "reflejos sutiles y naturales"
+    ]
+   },
+   "metales": [
+    {
+     "nombre": "Oro amarillo",
+     "degradado": [
+      "#f6dc8a",
+      "#c9972b"
+     ]
+    },
+    {
+     "nombre": "Cobre",
+     "degradado": [
+      "#f0b08a",
+      "#b8602f"
+     ]
+    },
+    {
+     "nombre": "Bronce",
+     "degradado": [
+      "#d9a86c",
+      "#8f5f2a"
+     ]
+    }
+   ],
+   "consejo": "En vez de negro puro, usa espresso o chocolate intenso."
+  },
+  "primavera_brillante": {
+   "clave": "primavera_brillante",
+   "nombre": "Primavera Brillante",
+   "estacion": "primavera",
+   "lema": "Color limpio y vivo, con calidez",
+   "tema": [
+    "#f4b400",
+    "#ee5a8a"
+   ],
+   "parametros": {
+    "calidez": 0.5,
+    "profundidad": 0.4,
+    "claridad": 0.95,
+    "contraste": 0.75
+   },
+   "favorecedores": [
+    {
+     "hex": "#ff5992",
+     "nombre": "Rosa intenso",
+     "lab": [
+      67.2,
+      75.95,
+      12.03
+     ]
+    },
+    {
+     "hex": "#ff6b6b",
+     "nombre": "Rojo intenso",
+     "lab": [
+      70.8,
+      70.06,
+      38.83
+     ],
+     "estrella": true
+    },
+    {
+     "hex": "#ff6e42",
+     "nombre": "Coral intenso",
+     "lab": [
+      64.5,
+      53.59,
+      51.75
+     ]
+    },
+    {
+     "hex": "#ff8036",
+     "nombre": "Terracota intenso",
+     "lab": [
+      69.0,
+      48.33,
+      61.86
+     ]
+    },
+    {
+     "hex": "#e17f15",
+     "nombre": "Naranja intenso",
+     "lab": [
+      62.7,
+      31.96,
+      65.52
+     ]
+    },
+    {
+     "hex": "#dea700",
+     "nombre": "Mostaza intenso",
+     "lab": [
+      71.7,
+      8.46,
+      80.46
+     ],
+     "estrella": true
+    },
+    {
+     "hex": "#b7a500",
+     "nombre": "Oliva intenso",
+     "lab": [
+      67.2,
+      -8.04,
+      76.48
+     ]
+    },
+    {
+     "hex": "#83be13",
+     "nombre": "Lima intenso",
+     "lab": [
+      70.8,
+      -41.25,
+      68.66
+     ]
+    },
+    {
+     "hex": "#2fb342",
+     "nombre": "Verde intenso",
+     "lab": [
+      64.5,
+      -57.9,
+      46.88
+     ]
+    },
+    {
+     "hex": "#00c790",
+     "nombre": "Verde azulado intenso",
+     "lab": [
+      69.0,
+      -77.53,
+      12.28
+     ]
+    },
+    {
+     "hex": "#00b5af",
+     "nombre": "Turquesa intenso",
+     "lab": [
+      62.7,
+      -71.56,
+      -13.91
+     ]
+    },
+    {
+     "hex": "#00cdff",
+     "nombre": "Azul cielo intenso",
+     "lab": [
+      71.7,
+      -50.91,
+      -62.87
+     ],
+     "estrella": true
+    }
+   ],
+   "neutros": [
+    {
+     "hex": "#ffeee0",
+     "nombre": "Marfil",
+     "lab": [
+      95.2,
+      3.28,
+      9.02
+     ]
+    },
+    {
+     "hex": "#d7c7b9",
+     "nombre": "Arena",
+     "lab": [
+      81.2,
+      3.28,
+      9.02
+     ]
+    },
+    {
+     "hex": "#ac9580",
+     "nombre": "Camel",
+     "lab": [
+      63.2,
+      5.13,
+      14.1
+     ]
+    },
+    {
+     "hex": "#6d5946",
+     "nombre": "Chocolate",
+     "lab": [
+      39.2,
+      5.13,
+      14.1
+     ]
+    },
+    {
+     "hex": "#3c3126",
+     "nombre": "Espresso",
+     "lab": [
+      21.2,
+      3.28,
+      9.02
+     ]
+    }
+   ],
+   "evitar": [
+    {
+     "hex": "#313349",
+     "nombre": "Índigo apagado",
+     "lab": [
+      22.0,
+      5.38,
+      -14.0
+     ]
+    },
+    {
+     "hex": "#433a50",
+     "nombre": "Violeta apagado",
+     "lab": [
+      26.0,
+      9.23,
+      -11.82
+     ]
+    },
+    {
+     "hex": "#593f4f",
+     "nombre": "Fucsia apagado",
+     "lab": [
+      30.0,
+      14.18,
+      -4.88
+     ]
+    },
+    {
+     "hex": "#465067",
+     "nombre": "Azul apagado",
+     "lab": [
+      34.0,
+      2.35,
+      -14.82
+     ]
+    },
+    {
+     "hex": "#675368",
+     "nombre": "Malva apagado",
+     "lab": [
+      38.0,
+      12.14,
+      -8.82
+     ]
+    },
+    {
+     "hex": "#7b5a63",
+     "nombre": "Rosa apagado",
+     "lab": [
+      42.0,
+      15.0,
+      0.26
+     ]
+    }
+   ],
+   "maquillaje": {
+    "labial": [
+     {
+      "hex": "#d85034",
+      "nombre": "Coral",
+      "lab": [
+       52.4,
+       52.09,
+       43.71
+      ]
+     },
+     {
+      "hex": "#d15725",
+      "nombre": "Terracota",
+      "lab": [
+       52.4,
+       45.5,
+       50.53
+      ]
+     },
+     {
+      "hex": "#de4843",
+      "nombre": "Rojo tomate",
+      "lab": [
+       52.4,
+       57.67,
+       36.03
+      ]
+     }
+    ],
+    "rubor": [
+     {
+      "hex": "#f68063",
+      "nombre": "Coral suave",
+      "lab": [
+       66.4,
+       42.9,
+       36.0
+      ]
+     },
+     {
+      "hex": "#f08458",
+      "nombre": "Terracota suave",
+      "lab": [
+       66.4,
+       37.47,
+       41.62
+      ]
+     }
+    ],
+    "sombras": [
+     {
+      "hex": "#d7c7b9",
+      "nombre": "Arena",
+      "lab": [
+       81.2,
+       3.28,
+       9.02
+      ]
+     },
+     {
+      "hex": "#ac9580",
+      "nombre": "Camel",
+      "lab": [
+       63.2,
+       5.13,
+       14.1
+      ]
+     },
+     {
+      "hex": "#6d5946",
+      "nombre": "Chocolate",
+      "lab": [
+       39.2,
+       5.13,
+       14.1
+      ]
+     },
+     {
+      "hex": "#b7a500",
+      "nombre": "Oliva intenso",
+      "lab": [
+       67.2,
+       -8.04,
+       76.48
+      ]
+     }
+    ]
+   },
+   "cabello": {
+    "tonos": [
+     {
+      "hex": "#5e3a20",
+      "nombre": "Castaño chocolate",
+      "lab": [
+       28.0,
+       13.0,
+       22.52
+      ]
+     },
+     {
+      "hex": "#764636",
+      "nombre": "Castaño caoba",
+      "lab": [
+       35.0,
+       18.38,
+       18.38
+      ]
+     },
+     {
+      "hex": "#805f3d",
+      "nombre": "Castaño miel",
+      "lab": [
+       43.0,
+       8.89,
+       24.43
+      ]
+     },
+     {
+      "hex": "#a07258",
+      "nombre": "Cobrizo suave",
+      "lab": [
+       52.0,
+       14.91,
+       21.3
+      ]
+     }
+    ],
+    "consejos": [
+     "castaño miel o dorado suave",
+     "admite reflejos nítidos y contraste marcado"
+    ]
+   },
+   "metales": [
+    {
+     "nombre": "Oro amarillo",
+     "degradado": [
+      "#f6dc8a",
+      "#c9972b"
+     ]
+    },
+    {
+     "nombre": "Cobre",
+     "degradado": [
+      "#f0b08a",
+      "#b8602f"
+     ]
+    },
+    {
+     "nombre": "Bronce",
+     "degradado": [
+      "#d9a86c",
+      "#8f5f2a"
+     ]
+    }
+   ],
+   "consejo": "En vez de negro puro, usa espresso o chocolate intenso."
+  },
+  "verano_claro": {
+   "clave": "verano_claro",
+   "nombre": "Verano Claro",
+   "estacion": "verano",
+   "lema": "Acuarela fría y plata delicada",
+   "tema": [
+    "#9db4d9",
+    "#c9a7d8"
+   ],
+   "parametros": {
+    "calidez": -0.4,
+    "profundidad": 0.12,
+    "claridad": 0.4,
+    "contraste": 0.25
+   },
+   "favorecedores": [
+    {
+     "hex": "#ffb0ca",
+     "nombre": "Rosa pastel",
+     "lab": [
+      81.76,
+      37.98,
+      1.19
+     ]
+    },
+    {
+     "hex": "#ffbbbc",
+     "nombre": "Rojo pastel",
+     "lab": [
+      85.36,
+      35.28,
+      14.11
+     ]
+    },
+    {
+     "hex": "#accf8b",
+     "nombre": "Lima pastel",
+     "lab": [
+      79.06,
+      -23.5,
+      29.86
+     ]
+    },
+    {
+     "hex": "#9ce0a9",
+     "nombre": "Verde pastel",
+     "lab": [
+      83.56,
+      -32.3,
+      20.02
+     ]
+    },
+    {
+     "hex": "#5cd2bb",
+     "nombre": "Verde azulado",
+     "lab": [
+      77.26,
+      -38.78,
+      1.22
+     ],
+     "estrella": true
+    },
+    {
+     "hex": "#64ebed",
+     "nombre": "Turquesa pastel",
+     "lab": [
+      86.26,
+      -36.1,
+      -11.87
+     ],
+     "estrella": true
+    },
+    {
+     "hex": "#62d9ff",
+     "nombre": "Azul cielo pastel",
+     "lab": [
+      81.76,
+      -20.02,
+      -32.3
+     ]
+    },
+    {
+     "hex": "#b4d5ff",
+     "nombre": "Azul pastel",
+     "lab": [
+      85.36,
+      5.42,
+      -37.61
+     ]
+    },
+    {
+     "hex": "#bbbeff",
+     "nombre": "Índigo pastel",
+     "lab": [
+      79.06,
+      14.11,
+      -35.28
+     ]
+    },
+    {
+     "hex": "#e3c3ff",
+     "nombre": "Violeta pastel",
+     "lab": [
+      83.56,
+      23.81,
+      -29.61
+     ]
+    },
+    {
+     "hex": "#e6abe9",
+     "nombre": "Malva",
+     "lab": [
+      77.26,
+      31.71,
+      -22.37
+     ],
+     "estrella": true
+    },
+    {
+     "hex": "#ffbfef",
+     "nombre": "Fucsia pastel",
+     "lab": [
+      86.26,
+      36.1,
+      -11.87
+     ]
+    }
+   ],
+   "neutros": [
+    {
+     "hex": "#f0f4f9",
+     "nombre": "Blanco roto",
+     "lab": [
+      96.0,
+      -0.52,
+      -2.95
+     ]
+    },
+    {
+     "hex": "#cfd4d9",
+     "nombre": "Gris perla",
+     "lab": [
+      84.56,
+      -0.52,
+      -2.95
+     ]
+    },
+    {
+     "hex": "#9ea2a7",
+     "nombre": "Gris piedra",
+     "lab": [
+      66.56,
+      -0.52,
+      -2.95
+     ]
+    },
+    {
+     "hex": "#31416c",
+     "nombre": "Azul marino",
+     "lab": [
+      28.0,
+      7.25,
+      -27.05
+     ]
+    },
+    {
+     "hex": "#373b3f",
+     "nombre": "Carbón",
+     "lab": [
+      24.56,
+      -0.52,
+      -2.95
+     ]
+    }
+   ],
+   "evitar": [
+    {
+     "hex": "#730000",
+     "nombre": "Terracota profundo",
+     "lab": [
+      22.0,
+      43.86,
+      54.55
+     ]
+    },
+    {
+     "hex": "#5a3700",
+     "nombre": "Mostaza profundo",
+     "lab": [
+      26.0,
+      8.29,
+      69.51
+     ]
+    },
+    {
+     "hex": "#910a00",
+     "nombre": "Coral profundo",
+     "lab": [
+      30.0,
+      51.03,
+      47.92
+     ]
+    },
+    {
+     "hex": "#893800",
+     "nombre": "Naranja intenso",
+     "lab": [
+      34.0,
+      31.56,
+      62.48
+     ]
+    },
+    {
+     "hex": "#635b00",
+     "nombre": "Oliva intenso",
+     "lab": [
+      38.0,
+      -8.29,
+      69.51
+     ]
+    },
+    {
+     "hex": "#3a7000",
+     "nombre": "Lima intenso",
+     "lab": [
+      42.0,
+      -36.89,
+      59.49
+     ]
+    }
+   ],
+   "maquillaje": {
+    "labial": [
+     {
+      "hex": "#d96c89",
+      "nombre": "Rosa",
+      "lab": [
+       59.12,
+       45.82,
+       4.01
+      ]
+     },
+     {
+      "hex": "#d56c97",
+      "nombre": "Frambuesa",
+      "lab": [
+       59.12,
+       45.82,
+       -4.01
+      ]
+     },
+     {
+      "hex": "#c572b1",
+      "nombre": "Ciruela",
+      "lab": [
+       59.12,
+       41.69,
+       -19.44
+      ]
+     }
+    ],
+    "rubor": [
+     {
+      "hex": "#f09caf",
+      "nombre": "Rosa suave",
+      "lab": [
+       73.12,
+       33.87,
+       2.96
+      ]
+     },
+     {
+      "hex": "#ec9cba",
+      "nombre": "Frambuesa suave",
+      "lab": [
+       73.12,
+       33.87,
+       -2.96
+      ]
+     }
+    ],
+    "sombras": [
+     {
+      "hex": "#cfd4d9",
+      "nombre": "Gris perla",
+      "lab": [
+       84.56,
+       -0.52,
+       -2.95
+      ]
+     },
+     {
+      "hex": "#9ea2a7",
+      "nombre": "Gris piedra",
+      "lab": [
+       66.56,
+       -0.52,
+       -2.95
+      ]
+     },
+     {
+      "hex": "#31416c",
+      "nombre": "Azul marino",
+      "lab": [
+       28.0,
+       7.25,
+       -27.05
+      ]
+     },
+     {
+      "hex": "#62d9ff",
+      "nombre": "Azul cielo pastel",
+      "lab": [
+       81.76,
+       -20.02,
+       -32.3
+      ]
+     }
+    ]
+   },
+   "cabello": {
+    "tonos": [
+     {
+      "hex": "#76685f",
+      "nombre": "Castaño ceniza",
+      "lab": [
+       45.0,
+       4.0,
+       6.93
+      ]
+     },
+     {
+      "hex": "#918079",
+      "nombre": "Cacao frío",
+      "lab": [
+       55.0,
+       5.14,
+       6.13
+      ]
+     },
+     {
+      "hex": "#a69c90",
+      "nombre": "Rubio ceniza",
+      "lab": [
+       65.0,
+       1.39,
+       7.88
+      ]
+     },
+     {
+      "hex": "#c4b6ab",
+      "nombre": "Gris perla",
+      "lab": [
+       75.0,
+       2.74,
+       7.52
+      ]
+     }
+    ],
+    "consejos": [
+     "rubio ceniza o platino suave",
+     "reflejos sutiles y naturales"
+    ]
+   },
+   "metales": [
+    {
+     "nombre": "Plata",
+     "degradado": [
+      "#f4f5f7",
+      "#a3a9b3"
+     ]
+    },
+    {
+     "nombre": "Oro blanco",
+     "degradado": [
+      "#f2eee6",
+      "#bdb3a0"
+     ]
+    },
+    {
+     "nombre": "Platino",
+     "degradado": [
+      "#e9edf1",
+      "#8e98a6"
+     ]
+    }
+   ],
+   "consejo": "En vez de negro puro, usa carbón o azul marino."
+  },
+  "verano_frio": {
+   "clave": "verano_frio",
+   "nombre": "Verano Frío",
+   "estacion": "verano",
+   "lema": "Rosa empolvado y azul grisáceo",
+   "tema": [
+    "#7f9fcf",
+    "#d79bb3"
+   ],
+   "parametros": {
+    "calidez": -0.9,
+    "profundidad": 0.45,
+    "claridad": 0.4,
+    "contraste": 0.4
+   },
+   "favorecedores": [
+    {
+     "hex": "#e27ea1",
+     "nombre": "Rosa",
+     "lab": [
+      64.6,
+      42.77,
+      -1.64
+     ]
+    },
+    {
+     "hex": "#f5858f",
+     "nombre": "Rojo",
+     "lab": [
+      68.2,
+      43.8,
+      14.06
+     ],
+     "estrella": true
+    },
+    {
+     "hex": "#76a15f",
+     "nombre": "Lima",
+     "lab": [
+      61.9,
+      -27.14,
+      29.93
+     ]
+    },
+    {
+     "hex": "#5bb37b",
+     "nombre": "Verde",
+     "lab": [
+      66.4,
+      -39.28,
+      20.71
+     ]
+    },
+    {
+     "hex": "#0ca392",
+     "nombre": "Verde azulado",
+     "lab": [
+      60.1,
+      -38.77,
+      -1.49
+     ]
+    },
+    {
+     "hex": "#00bec7",
+     "nombre": "Turquesa",
+     "lab": [
+      69.1,
+      -43.33,
+      -17.68
+     ],
+     "estrella": true
+    },
+    {
+     "hex": "#00aae0",
+     "nombre": "Azul cielo",
+     "lab": [
+      64.6,
+      -19.96,
+      -37.86
+     ]
+    },
+    {
+     "hex": "#7ca6f8",
+     "nombre": "Azul",
+     "lab": [
+      68.2,
+      7.99,
+      -45.3
+     ]
+    },
+    {
+     "hex": "#8292da",
+     "nombre": "Índigo",
+     "lab": [
+      61.9,
+      12.35,
+      -38.47
+     ]
+    },
+    {
+     "hex": "#ad95e3",
+     "nombre": "Violeta",
+     "lab": [
+      66.4,
+      25.34,
+      -36.46
+     ]
+    },
+    {
+     "hex": "#b17fbc",
+     "nombre": "Malva",
+     "lab": [
+      60.1,
+      30.07,
+      -24.52
+     ]
+    },
+    {
+     "hex": "#e68bca",
+     "nombre": "Fucsia",
+     "lab": [
+      69.1,
+      43.33,
+      -17.68
+     ],
+     "estrella": true
+    }
+   ],
+   "neutros": [
+    {
+     "hex": "#ecf0f5",
+     "nombre": "Blanco roto",
+     "lab": [
+      94.6,
+      -0.52,
+      -2.95
+     ]
+    },
+    {
+     "hex": "#c4c9cd",
+     "nombre": "Gris perla",
+     "lab": [
+      80.6,
+      -0.52,
+      -2.95
+     ]
+    },
+    {
+     "hex": "#94989d",
+     "nombre": "Gris piedra",
+     "lab": [
+      62.6,
+      -0.52,
+      -2.95
+     ]
+    },
+    {
+     "hex": "#31416c",
+     "nombre": "Azul marino",
+     "lab": [
+      28.0,
+      7.25,
+      -27.05
+     ]
+    },
+    {
+     "hex": "#2f3236",
+     "nombre": "Carbón",
+     "lab": [
+      20.6,
+      -0.52,
+      -2.95
+     ]
+    }
+   ],
+   "evitar": [
+    {
+     "hex": "#700a00",
+     "nombre": "Terracota profundo",
+     "lab": [
+      22.0,
+      39.95,
+      57.48
+     ]
+    },
+    {
+     "hex": "#553a00",
+     "nombre": "Mostaza profundo",
+     "lab": [
+      26.0,
+      3.42,
+      69.92
+     ]
+    },
+    {
+     "hex": "#8e1500",
+     "nombre": "Coral profundo",
+     "lab": [
+      30.0,
+      47.56,
+      51.36
+     ]
+    },
+    {
+     "hex": "#843c00",
+     "nombre": "Naranja intenso",
+     "lab": [
+      34.0,
+      27.13,
+      64.53
+     ]
+    },
+    {
+     "hex": "#6a5900",
+     "nombre": "Oliva intenso",
+     "lab": [
+      38.0,
+      -3.42,
+      69.92
+     ]
+    },
+    {
+     "hex": "#446f00",
+     "nombre": "Lima intenso",
+     "lab": [
+      42.0,
+      -32.65,
+      61.92
+     ]
+    }
+   ],
+   "maquillaje": {
+    "labial": [
+     {
+      "hex": "#c25775",
+      "nombre": "Rosa",
+      "lab": [
+       51.2,
+       45.82,
+       4.01
+      ]
+     },
+     {
+      "hex": "#be5782",
+      "nombre": "Frambuesa",
+      "lab": [
+       51.2,
+       45.82,
+       -4.01
+      ]
+     },
+     {
+      "hex": "#af5d9c",
+      "nombre": "Ciruela",
+      "lab": [
+       51.2,
+       41.69,
+       -19.44
+      ]
+     }
+    ],
+    "rubor": [
+     {
+      "hex": "#d9879a",
+      "nombre": "Rosa suave",
+      "lab": [
+       65.2,
+       33.87,
+       2.96
+      ]
+     },
+     {
+      "hex": "#d587a5",
+      "nombre": "Frambuesa suave",
+      "lab": [
+       65.2,
+       33.87,
+       -2.96
+      ]
+     }
+    ],
+    "sombras": [
+     {
+      "hex": "#c4c9cd",
+      "nombre": "Gris perla",
+      "lab": [
+       80.6,
+       -0.52,
+       -2.95
+      ]
+     },
+     {
+      "hex": "#94989d",
+      "nombre": "Gris piedra",
+      "lab": [
+       62.6,
+       -0.52,
+       -2.95
+      ]
+     },
+     {
+      "hex": "#31416c",
+      "nombre": "Azul marino",
+      "lab": [
+       28.0,
+       7.25,
+       -27.05
+      ]
+     },
+     {
+      "hex": "#00aae0",
+      "nombre": "Azul cielo",
+      "lab": [
+       64.6,
+       -19.96,
+       -37.86
+      ]
+     }
+    ]
+   },
+   "cabello": {
+    "tonos": [
+     {
+      "hex": "#4c4038",
+      "nombre": "Castaño ceniza",
+      "lab": [
+       28.0,
+       4.0,
+       6.93
+      ]
+     },
+     {
+      "hex": "#5e4f49",
+      "nombre": "Cacao frío",
+      "lab": [
+       35.0,
+       5.14,
+       6.13
+      ]
+     },
+     {
+      "hex": "#6d6459",
+      "nombre": "Rubio ceniza",
+      "lab": [
+       43.0,
+       1.39,
+       7.88
+      ]
+     },
+     {
+      "hex": "#867a6f",
+      "nombre": "Gris perla",
+      "lab": [
+       52.0,
+       2.74,
+       7.52
+      ]
+     }
+    ],
+    "consejos": [
+     "castaño ceniza o cacao frío",
+     "reflejos sutiles y naturales"
+    ]
+   },
+   "metales": [
+    {
+     "nombre": "Plata",
+     "degradado": [
+      "#f4f5f7",
+      "#a3a9b3"
+     ]
+    },
+    {
+     "nombre": "Oro blanco",
+     "degradado": [
+      "#f2eee6",
+      "#bdb3a0"
+     ]
+    },
+    {
+     "nombre": "Platino",
+     "degradado": [
+      "#e9edf1",
+      "#8e98a6"
+     ]
+    }
+   ],
+   "consejo": "En vez de negro puro, usa carbón o azul marino."
+  },
+  "verano_suave": {
+   "clave": "verano_suave",
+   "nombre": "Verano Suave",
+   "estacion": "verano",
+   "lema": "Bruma elegante en tonos ahumados",
+   "tema": [
+    "#8fa3b3",
+    "#b9a2b8"
+   ],
+   "parametros": {
+    "calidez": -0.3,
+    "profundidad": 0.5,
+    "claridad": 0.08,
+    "contraste": 0.2
+   },
+   "favorecedores": [
+    {
+     "hex": "#be8795",
+     "nombre": "Rosa",
+     "lab": [
+      62.0,
+      22.94,
+      1.04
+     ]
+    },
+    {
+     "hex": "#cf8f8e",
+     "nombre": "Rojo",
+     "lab": [
+      65.6,
+      24.15,
+      10.05
+     ]
+    },
+    {
+     "hex": "#849472",
+     "nombre": "Lima apagado",
+     "lab": [
+      59.3,
+      -12.49,
+      16.33
+     ]
+    },
+    {
+     "hex": "#7ca482",
+     "nombre": "Verde",
+     "lab": [
+      63.8,
+      -20.69,
+      13.23
+     ]
+    },
+    {
+     "hex": "#639388",
+     "nombre": "Verde azulado apagado",
+     "lab": [
+      57.5,
+      -18.94,
+      0.86
+     ]
+    },
+    {
+     "hex": "#5aafaf",
+     "nombre": "Turquesa",
+     "lab": [
+      66.5,
+      -25.73,
+      -8.06
+     ],
+     "estrella": true
+    },
+    {
+     "hex": "#629eb7",
+     "nombre": "Azul cielo",
+     "lab": [
+      62.0,
+      -12.37,
+      -19.34
+     ]
+    },
+    {
+     "hex": "#8aa0cd",
+     "nombre": "Azul",
+     "lab": [
+      65.6,
+      3.37,
+      -25.94
+     ],
+     "estrella": true
+    },
+    {
+     "hex": "#8c8cb0",
+     "nombre": "Índigo apagado",
+     "lab": [
+      59.3,
+      7.9,
+      -18.98
+     ]
+    },
+    {
+     "hex": "#a793bc",
+     "nombre": "Violeta",
+     "lab": [
+      63.8,
+      15.66,
+      -18.92
+     ]
+    },
+    {
+     "hex": "#9d819d",
+     "nombre": "Malva apagado",
+     "lab": [
+      57.5,
+      15.64,
+      -10.71
+     ]
+    },
+    {
+     "hex": "#c992b1",
+     "nombre": "Fucsia",
+     "lab": [
+      66.5,
+      25.73,
+      -8.06
+     ],
+     "estrella": true
+    }
+   ],
+   "neutros": [
+    {
+     "hex": "#eaeef3",
+     "nombre": "Blanco roto",
+     "lab": [
+      94.0,
+      -0.52,
+      -2.95
+     ]
+    },
+    {
+     "hex": "#c3c7cc",
+     "nombre": "Gris perla",
+     "lab": [
+      80.0,
+      -0.52,
+      -2.95
+     ]
+    },
+    {
+     "hex": "#92969b",
+     "nombre": "Gris piedra",
+     "lab": [
+      62.0,
+      -0.52,
+      -2.95
+     ]
+    },
+    {
+     "hex": "#31416c",
+     "nombre": "Azul marino",
+     "lab": [
+      28.0,
+      7.25,
+      -27.05
+     ]
+    },
+    {
+     "hex": "#2d3135",
+     "nombre": "Carbón",
+     "lab": [
+      20.0,
+      -0.52,
+      -2.95
+     ]
+    }
+   ],
+   "evitar": [
+    {
+     "hex": "#740000",
+     "nombre": "Terracota profundo",
+     "lab": [
+      22.0,
+      44.62,
+      53.94
+     ]
+    },
+    {
+     "hex": "#5b3700",
+     "nombre": "Mostaza profundo",
+     "lab": [
+      26.0,
+      9.26,
+      69.39
+     ]
+    },
+    {
+     "hex": "#920700",
+     "nombre": "Coral profundo",
+     "lab": [
+      30.0,
+      51.69,
+      47.2
+     ]
+    },
+    {
+     "hex": "#8a3700",
+     "nombre": "Naranja intenso",
+     "lab": [
+      34.0,
+      32.43,
+      62.03
+     ]
+    },
+    {
+     "hex": "#625c00",
+     "nombre": "Oliva intenso",
+     "lab": [
+      38.0,
+      -9.26,
+      69.39
+     ]
+    },
+    {
+     "hex": "#387100",
+     "nombre": "Lima intenso",
+     "lab": [
+      42.0,
+      -37.71,
+      58.97
+     ]
+    }
+   ],
+   "maquillaje": {
+    "labial": [
+     {
+      "hex": "#ac6073",
+      "nombre": "Rosa",
+      "lab": [
+       50.0,
+       33.07,
+       2.89
+      ]
+     },
+     {
+      "hex": "#a9617d",
+      "nombre": "Frambuesa",
+      "lab": [
+       50.0,
+       33.07,
+       -2.89
+      ]
+     },
+     {
+      "hex": "#9e648f",
+      "nombre": "Ciruela",
+      "lab": [
+       50.0,
+       30.09,
+       -14.03
+      ]
+     }
+    ],
+    "rubor": [
+     {
+      "hex": "#c18e99",
+      "nombre": "Rosa suave",
+      "lab": [
+       64.0,
+       21.12,
+       1.85
+      ]
+     },
+     {
+      "hex": "#bf8e9f",
+      "nombre": "Frambuesa suave",
+      "lab": [
+       64.0,
+       21.12,
+       -1.85
+      ]
+     }
+    ],
+    "sombras": [
+     {
+      "hex": "#c3c7cc",
+      "nombre": "Gris perla",
+      "lab": [
+       80.0,
+       -0.52,
+       -2.95
+      ]
+     },
+     {
+      "hex": "#92969b",
+      "nombre": "Gris piedra",
+      "lab": [
+       62.0,
+       -0.52,
+       -2.95
+      ]
+     },
+     {
+      "hex": "#31416c",
+      "nombre": "Azul marino",
+      "lab": [
+       28.0,
+       7.25,
+       -27.05
+      ]
+     },
+     {
+      "hex": "#629eb7",
+      "nombre": "Azul cielo",
+      "lab": [
+       62.0,
+       -12.37,
+       -19.34
+      ]
+     }
+    ]
+   },
+   "cabello": {
+    "tonos": [
+     {
+      "hex": "#4c4038",
+      "nombre": "Castaño ceniza",
+      "lab": [
+       28.0,
+       4.0,
+       6.93
+      ]
+     },
+     {
+      "hex": "#5e4f49",
+      "nombre": "Cacao frío",
+      "lab": [
+       35.0,
+       5.14,
+       6.13
+      ]
+     },
+     {
+      "hex": "#6d6459",
+      "nombre": "Rubio ceniza",
+      "lab": [
+       43.0,
+       1.39,
+       7.88
+      ]
+     },
+     {
+      "hex": "#867a6f",
+      "nombre": "Gris perla",
+      "lab": [
+       52.0,
+       2.74,
+       7.52
+      ]
+     }
+    ],
+    "consejos": [
+     "castaño ceniza o cacao frío",
+     "tonos mezclados y suaves, sin contrastes duros"
+    ]
+   },
+   "metales": [
+    {
+     "nombre": "Plata",
+     "degradado": [
+      "#f4f5f7",
+      "#a3a9b3"
+     ]
+    },
+    {
+     "nombre": "Oro blanco",
+     "degradado": [
+      "#f2eee6",
+      "#bdb3a0"
+     ]
+    },
+    {
+     "nombre": "Platino",
+     "degradado": [
+      "#e9edf1",
+      "#8e98a6"
+     ]
+    }
+   ],
+   "consejo": "En vez de negro puro, usa carbón o azul marino."
+  },
+  "otono_suave": {
+   "clave": "otono_suave",
+   "nombre": "Otoño Suave",
+   "estacion": "otono",
+   "lema": "Tierra apagada y salvia",
+   "tema": [
+    "#c9a24a",
+    "#8c9a5b"
+   ],
+   "parametros": {
+    "calidez": 0.35,
+    "profundidad": 0.5,
+    "claridad": 0.08,
+    "contraste": 0.25
+   },
+   "favorecedores": [
+    {
+     "hex": "#bf8791",
+     "nombre": "Rosa",
+     "lab": [
+      62.0,
+      22.75,
+      3.12
+     ]
+    },
+    {
+     "hex": "#ce908b",
+     "nombre": "Rojo",
+     "lab": [
+      65.6,
+      23.14,
+      12.2
+     ]
+    },
+    {
+     "hex": "#b18577",
+     "nombre": "Coral apagado",
+     "lab": [
+      59.3,
+      15.09,
+      13.97
+     ]
+    },
+    {
+     "hex": "#c1907a",
+     "nombre": "Terracota",
+     "lab": [
+      63.8,
+      15.52,
+      19.03
+     ]
+    },
+    {
+     "hex": "#a3846d",
+     "nombre": "Naranja apagado",
+     "lab": [
+      57.5,
+      8.67,
+      16.86
+     ]
+    },
+    {
+     "hex": "#b99e72",
+     "nombre": "Mostaza",
+     "lab": [
+      66.5,
+      3.38,
+      26.75
+     ],
+     "estrella": true
+    },
+    {
+     "hex": "#a0966d",
+     "nombre": "Oliva",
+     "lab": [
+      62.0,
+      -2.88,
+      22.78
+     ]
+    },
+    {
+     "hex": "#95a577",
+     "nombre": "Lima",
+     "lab": [
+      65.6,
+      -13.94,
+      22.14
+     ],
+     "estrella": true
+    },
+    {
+     "hex": "#799678",
+     "nombre": "Verde apagado",
+     "lab": [
+      59.3,
+      -16.25,
+      12.6
+     ]
+    },
+    {
+     "hex": "#69a694",
+     "nombre": "Verde azulado",
+     "lab": [
+      63.8,
+      -24.33,
+      3.33
+     ]
+    },
+    {
+     "hex": "#5e9490",
+     "nombre": "Turquesa apagado",
+     "lab": [
+      57.5,
+      -18.53,
+      -4.01
+     ]
+    },
+    {
+     "hex": "#5eacc7",
+     "nombre": "Azul cielo",
+     "lab": [
+      66.5,
+      -16.52,
+      -21.3
+     ],
+     "estrella": true
+    }
+   ],
+   "neutros": [
+    {
+     "hex": "#faebdf",
+     "nombre": "Marfil",
+     "lab": [
+      94.0,
+      2.91,
+      8.01
+     ]
+    },
+    {
+     "hex": "#d2c4b8",
+     "nombre": "Arena",
+     "lab": [
+      80.0,
+      2.91,
+      8.01
+     ]
+    },
+    {
+     "hex": "#a59382",
+     "nombre": "Camel",
+     "lab": [
+      62.0,
+      4.21,
+      11.56
+     ]
+    },
+    {
+     "hex": "#675747",
+     "nombre": "Chocolate",
+     "lab": [
+      38.0,
+      4.21,
+      11.56
+     ]
+    },
+    {
+     "hex": "#392e25",
+     "nombre": "Espresso",
+     "lab": [
+      20.0,
+      2.91,
+      8.01
+     ]
+    }
+   ],
+   "evitar": [
+    {
+     "hex": "#002e98",
+     "nombre": "Índigo profundo",
+     "lab": [
+      22.0,
+      26.45,
+      -64.81
+     ]
+    },
+    {
+     "hex": "#4b2292",
+     "nombre": "Violeta profundo",
+     "lab": [
+      26.0,
+      44.24,
+      -54.25
+     ]
+    },
+    {
+     "hex": "#930069",
+     "nombre": "Fucsia profundo",
+     "lab": [
+      30.0,
+      66.65,
+      -21.4
+     ]
+    },
+    {
+     "hex": "#0053c0",
+     "nombre": "Azul intenso",
+     "lab": [
+      34.0,
+      9.5,
+      -69.35
+     ]
+    },
+    {
+     "hex": "#92299b",
+     "nombre": "Malva intenso",
+     "lab": [
+      38.0,
+      57.48,
+      -39.95
+     ]
+    },
+    {
+     "hex": "#c40062",
+     "nombre": "Rosa intenso",
+     "lab": [
+      42.0,
+      69.95,
+      2.69
+     ]
+    }
+   ],
+   "maquillaje": {
+    "labial": [
+     {
+      "hex": "#a96554",
+      "nombre": "Coral",
+      "lab": [
+       50.0,
+       25.43,
+       21.34
+      ]
+     },
+     {
+      "hex": "#a6674e",
+      "nombre": "Terracota",
+      "lab": [
+       50.0,
+       22.22,
+       24.67
+      ]
+     },
+     {
+      "hex": "#ab635b",
+      "nombre": "Rojo tomate",
+      "lab": [
+       50.0,
+       28.16,
+       17.59
+      ]
+     }
+    ],
+    "rubor": [
+     {
+      "hex": "#c09084",
+      "nombre": "Coral suave",
+      "lab": [
+       64.0,
+       16.24,
+       13.63
+      ]
+     },
+     {
+      "hex": "#be9180",
+      "nombre": "Terracota suave",
+      "lab": [
+       64.0,
+       14.19,
+       15.75
+      ]
+     }
+    ],
+    "sombras": [
+     {
+      "hex": "#d2c4b8",
+      "nombre": "Arena",
+      "lab": [
+       80.0,
+       2.91,
+       8.01
+      ]
+     },
+     {
+      "hex": "#a59382",
+      "nombre": "Camel",
+      "lab": [
+       62.0,
+       4.21,
+       11.56
+      ]
+     },
+     {
+      "hex": "#675747",
+      "nombre": "Chocolate",
+      "lab": [
+       38.0,
+       4.21,
+       11.56
+      ]
+     },
+     {
+      "hex": "#a0966d",
+      "nombre": "Oliva",
+      "lab": [
+       62.0,
+       -2.88,
+       22.78
+      ]
+     }
+    ]
+   },
+   "cabello": {
+    "tonos": [
+     {
+      "hex": "#5e3a20",
+      "nombre": "Castaño chocolate",
+      "lab": [
+       28.0,
+       13.0,
+       22.52
+      ]
+     },
+     {
+      "hex": "#764636",
+      "nombre": "Castaño caoba",
+      "lab": [
+       35.0,
+       18.38,
+       18.38
+      ]
+     },
+     {
+      "hex": "#805f3d",
+      "nombre": "Castaño miel",
+      "lab": [
+       43.0,
+       8.89,
+       24.43
+      ]
+     },
+     {
+      "hex": "#a07258",
+      "nombre": "Cobrizo suave",
+      "lab": [
+       52.0,
+       14.91,
+       21.3
+      ]
+     }
+    ],
+    "consejos": [
+     "castaño miel o dorado suave",
+     "tonos mezclados y suaves, sin contrastes duros"
+    ]
+   },
+   "metales": [
+    {
+     "nombre": "Oro amarillo",
+     "degradado": [
+      "#f6dc8a",
+      "#c9972b"
+     ]
+    },
+    {
+     "nombre": "Cobre",
+     "degradado": [
+      "#f0b08a",
+      "#b8602f"
+     ]
+    },
+    {
+     "nombre": "Bronce",
+     "degradado": [
+      "#d9a86c",
+      "#8f5f2a"
+     ]
+    }
+   ],
+   "consejo": "En vez de negro puro, usa espresso o chocolate intenso."
+  },
+  "otono_calido": {
+   "clave": "otono_calido",
+   "nombre": "Otoño Cálido",
+   "estacion": "otono",
+   "lema": "Especias, óxido y oliva",
+   "tema": [
+    "#c8872e",
+    "#a8502d"
+   ],
+   "parametros": {
+    "calidez": 0.95,
+    "profundidad": 0.6,
+    "claridad": 0.35,
+    "contraste": 0.5
+   },
+   "favorecedores": [
+    {
+     "hex": "#ca6c7b",
+     "nombre": "Rosa",
+     "lab": [
+      56.8,
+      38.74,
+      8.66
+     ]
+    },
+    {
+     "hex": "#d7776b",
+     "nombre": "Rojo",
+     "lab": [
+      60.4,
+      36.14,
+      23.11
+     ]
+    },
+    {
+     "hex": "#b66f53",
+     "nombre": "Coral",
+     "lab": [
+      54.1,
+      25.15,
+      27.54
+     ]
+    },
+    {
+     "hex": "#c37c52",
+     "nombre": "Terracota",
+     "lab": [
+      58.6,
+      23.33,
+      34.08
+     ]
+    },
+    {
+     "hex": "#a37344",
+     "nombre": "Naranja",
+     "lab": [
+      52.3,
+      13.6,
+      33.01
+     ]
+    },
+    {
+     "hex": "#ae9145",
+     "nombre": "Mostaza",
+     "lab": [
+      61.3,
+      1.83,
+      43.66
+     ],
+     "estrella": true
+    },
+    {
+     "hex": "#9b8741",
+     "nombre": "Oliva",
+     "lab": [
+      56.8,
+      -1.66,
+      39.67
+     ]
+    },
+    {
+     "hex": "#859a4c",
+     "nombre": "Lima",
+     "lab": [
+      60.4,
+      -19.74,
+      38.09
+     ],
+     "estrella": true
+    },
+    {
+     "hex": "#5e8d54",
+     "nombre": "Verde",
+     "lab": [
+      54.1,
+      -27.46,
+      25.25
+     ]
+    },
+    {
+     "hex": "#2a9f7c",
+     "nombre": "Verde azulado",
+     "lab": [
+      58.6,
+      -40.31,
+      9.01
+     ]
+    },
+    {
+     "hex": "#008d84",
+     "nombre": "Turquesa",
+     "lab": [
+      52.3,
+      -35.4,
+      -4.6
+     ]
+    },
+    {
+     "hex": "#00a5cc",
+     "nombre": "Azul cielo",
+     "lab": [
+      61.3,
+      -29.58,
+      -32.17
+     ],
+     "estrella": true
+    }
+   ],
+   "neutros": [
+    {
+     "hex": "#fde7d3",
+     "nombre": "Marfil",
+     "lab": [
+      92.8,
+      4.39,
+      12.07
+     ]
+    },
+    {
+     "hex": "#d4c0ad",
+     "nombre": "Arena",
+     "lab": [
+      78.8,
+      4.39,
+      12.07
+     ]
+    },
+    {
+     "hex": "#ae8d6d",
+     "nombre": "Camel",
+     "lab": [
+      60.8,
+      7.9,
+      21.71
+     ]
+    },
+    {
+     "hex": "#6d5134",
+     "nombre": "Chocolate",
+     "lab": [
+      36.8,
+      7.9,
+      21.71
+     ]
+    },
+    {
+     "hex": "#3a2b1c",
+     "nombre": "Espresso",
+     "lab": [
+      18.8,
+      4.39,
+      12.07
+     ]
+    }
+   ],
+   "evitar": [
+    {
+     "hex": "#a5ceff",
+     "nombre": "Índigo pastel",
+     "lab": [
+      85.0,
+      20.93,
+      -66.8
+     ]
+    },
+    {
+     "hex": "#e4bfff",
+     "nombre": "Violeta pastel",
+     "lab": [
+      85.0,
+      39.55,
+      -57.76
+     ]
+    },
+    {
+     "hex": "#ffa2ff",
+     "nombre": "Fucsia pastel",
+     "lab": [
+      85.0,
+      64.62,
+      -26.9
+     ]
+    },
+    {
+     "hex": "#81d4ff",
+     "nombre": "Azul pastel",
+     "lab": [
+      85.0,
+      12.16,
+      -68.94
+     ]
+    },
+    {
+     "hex": "#ffb0ff",
+     "nombre": "Malva pastel",
+     "lab": [
+      85.0,
+      53.94,
+      -44.62
+     ]
+    },
+    {
+     "hex": "#ff99dd",
+     "nombre": "Rosa pastel",
+     "lab": [
+      85.0,
+      69.93,
+      -3.18
+     ]
+    }
+   ],
+   "maquillaje": {
+    "labial": [
+     {
+      "hex": "#af5843",
+      "nombre": "Coral",
+      "lab": [
+       47.6,
+       33.71,
+       28.28
+      ]
+     },
+     {
+      "hex": "#ab5b3b",
+      "nombre": "Terracota",
+      "lab": [
+       47.6,
+       29.44,
+       32.7
+      ]
+     },
+     {
+      "hex": "#b2554c",
+      "nombre": "Rojo tomate",
+      "lab": [
+       47.6,
+       37.31,
+       23.32
+      ]
+     }
+    ],
+    "rubor": [
+     {
+      "hex": "#c98372",
+      "nombre": "Coral suave",
+      "lab": [
+       61.6,
+       24.51,
+       20.57
+      ]
+     },
+     {
+      "hex": "#c5866c",
+      "nombre": "Terracota suave",
+      "lab": [
+       61.6,
+       21.41,
+       23.78
+      ]
+     }
+    ],
+    "sombras": [
+     {
+      "hex": "#d4c0ad",
+      "nombre": "Arena",
+      "lab": [
+       78.8,
+       4.39,
+       12.07
+      ]
+     },
+     {
+      "hex": "#ae8d6d",
+      "nombre": "Camel",
+      "lab": [
+       60.8,
+       7.9,
+       21.71
+      ]
+     },
+     {
+      "hex": "#6d5134",
+      "nombre": "Chocolate",
+      "lab": [
+       36.8,
+       7.9,
+       21.71
+      ]
+     },
+     {
+      "hex": "#9b8741",
+      "nombre": "Oliva",
+      "lab": [
+       56.8,
+       -1.66,
+       39.67
+      ]
+     }
+    ]
+   },
+   "cabello": {
+    "tonos": [
+     {
+      "hex": "#5e3a20",
+      "nombre": "Castaño chocolate",
+      "lab": [
+       28.0,
+       13.0,
+       22.52
+      ]
+     },
+     {
+      "hex": "#764636",
+      "nombre": "Castaño caoba",
+      "lab": [
+       35.0,
+       18.38,
+       18.38
+      ]
+     },
+     {
+      "hex": "#805f3d",
+      "nombre": "Castaño miel",
+      "lab": [
+       43.0,
+       8.89,
+       24.43
+      ]
+     },
+     {
+      "hex": "#a07258",
+      "nombre": "Cobrizo suave",
+      "lab": [
+       52.0,
+       14.91,
+       21.3
+      ]
+     }
+    ],
+    "consejos": [
+     "castaño miel o dorado suave",
+     "reflejos sutiles y naturales"
+    ]
+   },
+   "metales": [
+    {
+     "nombre": "Oro amarillo",
+     "degradado": [
+      "#f6dc8a",
+      "#c9972b"
+     ]
+    },
+    {
+     "nombre": "Cobre",
+     "degradado": [
+      "#f0b08a",
+      "#b8602f"
+     ]
+    },
+    {
+     "nombre": "Bronce",
+     "degradado": [
+      "#d9a86c",
+      "#8f5f2a"
+     ]
+    }
+   ],
+   "consejo": "En vez de negro puro, usa espresso o chocolate intenso."
+  },
+  "otono_profundo": {
+   "clave": "otono_profundo",
+   "nombre": "Otoño Profundo",
+   "estacion": "otono",
+   "lema": "Burdeos, bosque y caoba",
+   "tema": [
+    "#c4503a",
+    "#8a9a45"
+   ],
+   "parametros": {
+    "calidez": 0.6,
+    "profundidad": 0.9,
+    "claridad": 0.5,
+    "contraste": 0.8
+   },
+   "favorecedores": [
+    {
+     "hex": "#a93856",
+     "nombre": "Rosa",
+     "lab": [
+      41.2,
+      48.28,
+      8.34
+     ]
+    },
+    {
+     "hex": "#b54541",
+     "nombre": "Rojo",
+     "lab": [
+      44.8,
+      45.3,
+      25.94
+     ]
+    },
+    {
+     "hex": "#954227",
+     "nombre": "Coral",
+     "lab": [
+      38.5,
+      33.07,
+      32.84
+     ]
+    },
+    {
+     "hex": "#a04f22",
+     "nombre": "Terracota",
+     "lab": [
+      43.0,
+      30.59,
+      40.3
+     ]
+    },
+    {
+     "hex": "#804910",
+     "nombre": "Naranja",
+     "lab": [
+      36.7,
+      19.16,
+      40.72
+     ]
+    },
+    {
+     "hex": "#886700",
+     "nombre": "Mostaza",
+     "lab": [
+      45.7,
+      4.8,
+      52.78
+     ],
+     "estrella": true
+    },
+    {
+     "hex": "#6e6200",
+     "nombre": "Oliva",
+     "lab": [
+      41.2,
+      -4.44,
+      48.8
+     ]
+    },
+    {
+     "hex": "#537414",
+     "nombre": "Lima",
+     "lab": [
+      44.8,
+      -26.26,
+      45.12
+     ],
+     "estrella": true
+    },
+    {
+     "hex": "#236827",
+     "nombre": "Verde",
+     "lab": [
+      38.5,
+      -35.8,
+      29.83
+     ]
+    },
+    {
+     "hex": "#007856",
+     "nombre": "Verde azulado",
+     "lab": [
+      43.0,
+      -49.86,
+      8.61
+     ]
+    },
+    {
+     "hex": "#006762",
+     "nombre": "Turquesa",
+     "lab": [
+      36.7,
+      -44.29,
+      -7.97
+     ]
+    },
+    {
+     "hex": "#007eb0",
+     "nombre": "Azul cielo",
+     "lab": [
+      45.7,
+      -33.93,
+      -40.72
+     ],
+     "estrella": true
+    }
+   ],
+   "neutros": [
+    {
+     "hex": "#efddce",
+     "nombre": "Marfil",
+     "lab": [
+      89.2,
+      3.53,
+      9.7
+     ]
+    },
+    {
+     "hex": "#c7b6a8",
+     "nombre": "Arena",
+     "lab": [
+      75.2,
+      3.53,
+      9.7
+     ]
+    },
+    {
+     "hex": "#9d856e",
+     "nombre": "Camel",
+     "lab": [
+      57.2,
+      5.75,
+      15.79
+     ]
+    },
+    {
+     "hex": "#5f4a35",
+     "nombre": "Chocolate",
+     "lab": [
+      33.2,
+      5.75,
+      15.79
+     ]
+    },
+    {
+     "hex": "#302419",
+     "nombre": "Espresso",
+     "lab": [
+      15.2,
+      3.53,
+      9.7
+     ]
+    }
+   ],
+   "evitar": [
+    {
+     "hex": "#d1d2ef",
+     "nombre": "Índigo pastel",
+     "lab": [
+      85.0,
+      5.18,
+      -14.08
+     ]
+    },
+    {
+     "hex": "#dbd0eb",
+     "nombre": "Violeta pastel",
+     "lab": [
+      85.0,
+      9.07,
+      -11.95
+     ]
+    },
+    {
+     "hex": "#ebccde",
+     "nombre": "Fucsia pastel",
+     "lab": [
+      85.0,
+      14.11,
+      -5.08
+     ]
+    },
+    {
+     "hex": "#cbd4f0",
+     "nombre": "Azul pastel",
+     "lab": [
+      85.0,
+      2.55,
+      -14.78
+     ]
+    },
+    {
+     "hex": "#e4cde5",
+     "nombre": "Malva pastel",
+     "lab": [
+      85.0,
+      12.01,
+      -8.99
+     ]
+    },
+    {
+     "hex": "#f1cbd5",
+     "nombre": "Rosa pastel",
+     "lab": [
+      85.0,
+      15.0,
+      0.05
+     ]
+    }
+   ],
+   "maquillaje": {
+    "labial": [
+     {
+      "hex": "#a0412c",
+      "nombre": "Coral",
+      "lab": [
+       40.4,
+       38.3,
+       32.14
+      ]
+     },
+     {
+      "hex": "#9b4623",
+      "nombre": "Terracota",
+      "lab": [
+       40.4,
+       33.46,
+       37.16
+      ]
+     },
+     {
+      "hex": "#a43d36",
+      "nombre": "Rojo tomate",
+      "lab": [
+       40.4,
+       42.4,
+       26.5
+      ]
+     }
+    ],
+    "rubor": [
+     {
+      "hex": "#bc6d5a",
+      "nombre": "Coral suave",
+      "lab": [
+       54.4,
+       29.11,
+       24.43
+      ]
+     },
+     {
+      "hex": "#b87053",
+      "nombre": "Terracota suave",
+      "lab": [
+       54.4,
+       25.43,
+       28.24
+      ]
+     }
+    ],
+    "sombras": [
+     {
+      "hex": "#c7b6a8",
+      "nombre": "Arena",
+      "lab": [
+       75.2,
+       3.53,
+       9.7
+      ]
+     },
+     {
+      "hex": "#9d856e",
+      "nombre": "Camel",
+      "lab": [
+       57.2,
+       5.75,
+       15.79
+      ]
+     },
+     {
+      "hex": "#5f4a35",
+      "nombre": "Chocolate",
+      "lab": [
+       33.2,
+       5.75,
+       15.79
+      ]
+     },
+     {
+      "hex": "#6e6200",
+      "nombre": "Oliva",
+      "lab": [
+       41.2,
+       -4.44,
+       48.8
+      ]
+     }
+    ]
+   },
+   "cabello": {
+    "tonos": [
+     {
+      "hex": "#49280f",
+      "nombre": "Castaño chocolate",
+      "lab": [
+       20.0,
+       13.0,
+       22.52
+      ]
+     },
+     {
+      "hex": "#5b2f20",
+      "nombre": "Castaño caoba",
+      "lab": [
+       25.0,
+       18.38,
+       18.38
+      ]
+     },
+     {
+      "hex": "#634525",
+      "nombre": "Castaño miel",
+      "lab": [
+       32.0,
+       8.89,
+       24.43
+      ]
+     },
+     {
+      "hex": "#7f543c",
+      "nombre": "Cobrizo suave",
+      "lab": [
+       40.0,
+       14.91,
+       21.3
+      ]
+     }
+    ],
+    "consejos": [
+     "castaño chocolate cálido o caoba",
+     "reflejos sutiles y naturales"
+    ]
+   },
+   "metales": [
+    {
+     "nombre": "Oro amarillo",
+     "degradado": [
+      "#f6dc8a",
+      "#c9972b"
+     ]
+    },
+    {
+     "nombre": "Cobre",
+     "degradado": [
+      "#f0b08a",
+      "#b8602f"
+     ]
+    },
+    {
+     "nombre": "Bronce",
+     "degradado": [
+      "#d9a86c",
+      "#8f5f2a"
+     ]
+    }
+   ],
+   "consejo": "En vez de negro puro, usa espresso o chocolate intenso."
+  },
+  "invierno_profundo": {
+   "clave": "invierno_profundo",
+   "nombre": "Invierno Profundo",
+   "estacion": "invierno",
+   "lema": "Joya oscura y contraste total",
+   "tema": [
+    "#3f63d6",
+    "#aab4cc"
+   ],
+   "parametros": {
+    "calidez": -0.5,
+    "profundidad": 0.92,
+    "claridad": 0.65,
+    "contraste": 0.92
+   },
+   "favorecedores": [
+    {
+     "hex": "#b0255f",
+     "nombre": "Rosa",
+     "lab": [
+      40.16,
+      58.29,
+      1.02
+     ]
+    },
+    {
+     "hex": "#bf3046",
+     "nombre": "Rojo",
+     "lab": [
+      43.76,
+      57.42,
+      22.04
+     ],
+     "estrella": true
+    },
+    {
+     "hex": "#2c6500",
+     "nombre": "Lima",
+     "lab": [
+      37.46,
+      -35.18,
+      43.44
+     ]
+    },
+    {
+     "hex": "#00752c",
+     "nombre": "Verde",
+     "lab": [
+      41.96,
+      -51.34,
+      30.85
+     ]
+    },
+    {
+     "hex": "#006751",
+     "nombre": "Verde azulado",
+     "lab": [
+      35.66,
+      -54.29,
+      0.95
+     ]
+    },
+    {
+     "hex": "#00818a",
+     "nombre": "Turquesa intenso",
+     "lab": [
+      44.66,
+      -58.91,
+      -20.28
+     ],
+     "estrella": true
+    },
+    {
+     "hex": "#0070b0",
+     "nombre": "Azul cielo",
+     "lab": [
+      40.16,
+      -30.03,
+      -49.97
+     ]
+    },
+    {
+     "hex": "#0069cd",
+     "nombre": "Azul",
+     "lab": [
+      43.76,
+      9.62,
+      -60.74
+     ]
+    },
+    {
+     "hex": "#3352ad",
+     "nombre": "Índigo",
+     "lab": [
+      37.46,
+      20.03,
+      -52.19
+     ]
+    },
+    {
+     "hex": "#734fb2",
+     "nombre": "Violeta",
+     "lab": [
+      41.96,
+      36.88,
+      -47.2
+     ]
+    },
+    {
+     "hex": "#7f3588",
+     "nombre": "Malva",
+     "lab": [
+      35.66,
+      43.93,
+      -31.92
+     ]
+    },
+    {
+     "hex": "#b4368d",
+     "nombre": "Fucsia intenso",
+     "lab": [
+      44.66,
+      58.91,
+      -20.28
+     ],
+     "estrella": true
+    }
+   ],
+   "neutros": [
+    {
+     "hex": "#dce0e5",
+     "nombre": "Blanco roto",
+     "lab": [
+      88.96,
+      -0.52,
+      -2.95
+     ]
+    },
+    {
+     "hex": "#b5b9be",
+     "nombre": "Gris perla",
+     "lab": [
+      74.96,
+      -0.52,
+      -2.95
+     ]
+    },
+    {
+     "hex": "#85898e",
+     "nombre": "Gris piedra",
+     "lab": [
+      56.96,
+      -0.52,
+      -2.95
+     ]
+    },
+    {
+     "hex": "#31416c",
+     "nombre": "Azul marino",
+     "lab": [
+      28.0,
+      7.25,
+      -27.05
+     ]
+    },
+    {
+     "hex": "#23262a",
+     "nombre": "Carbón",
+     "lab": [
+      14.96,
+      -0.52,
+      -2.95
+     ]
+    }
+   ],
+   "evitar": [
+    {
+     "hex": "#efcebe",
+     "nombre": "Terracota pastel",
+     "lab": [
+      85.0,
+      9.23,
+      11.82
+     ]
+    },
+    {
+     "hex": "#e3d2b8",
+     "nombre": "Mostaza pastel",
+     "lab": [
+      85.0,
+      1.57,
+      14.92
+     ]
+    },
+    {
+     "hex": "#f1cdc1",
+     "nombre": "Coral pastel",
+     "lab": [
+      85.0,
+      10.79,
+      10.42
+     ]
+    },
+    {
+     "hex": "#ebcfbb",
+     "nombre": "Naranja pastel",
+     "lab": [
+      85.0,
+      6.58,
+      13.48
+     ]
+    },
+    {
+     "hex": "#ddd4b8",
+     "nombre": "Oliva pastel",
+     "lab": [
+      85.0,
+      -1.57,
+      14.92
+     ]
+    },
+    {
+     "hex": "#d0d8bc",
+     "nombre": "Lima pastel",
+     "lab": [
+      85.0,
+      -7.73,
+      12.86
+     ]
+    }
+   ],
+   "maquillaje": {
+    "labial": [
+     {
+      "hex": "#ad2958",
+      "nombre": "Rosa",
+      "lab": [
+       39.92,
+       55.79,
+       4.88
+      ]
+     },
+     {
+      "hex": "#aa2a68",
+      "nombre": "Frambuesa",
+      "lab": [
+       39.92,
+       55.79,
+       -4.88
+      ]
+     },
+     {
+      "hex": "#9a3686",
+      "nombre": "Ciruela",
+      "lab": [
+       39.92,
+       50.75,
+       -23.67
+      ]
+     }
+    ],
+    "rubor": [
+     {
+      "hex": "#c7607c",
+      "nombre": "Rosa suave",
+      "lab": [
+       53.92,
+       43.83,
+       3.83
+      ]
+     },
+     {
+      "hex": "#c36189",
+      "nombre": "Frambuesa suave",
+      "lab": [
+       53.92,
+       43.83,
+       -3.83
+      ]
+     }
+    ],
+    "sombras": [
+     {
+      "hex": "#b5b9be",
+      "nombre": "Gris perla",
+      "lab": [
+       74.96,
+       -0.52,
+       -2.95
+      ]
+     },
+     {
+      "hex": "#85898e",
+      "nombre": "Gris piedra",
+      "lab": [
+       56.96,
+       -0.52,
+       -2.95
+      ]
+     },
+     {
+      "hex": "#31416c",
+      "nombre": "Azul marino",
+      "lab": [
+       28.0,
+       7.25,
+       -27.05
+      ]
+     },
+     {
+      "hex": "#0070b0",
+      "nombre": "Azul cielo",
+      "lab": [
+       40.16,
+       -30.03,
+       -49.97
+      ]
+     }
+    ]
+   },
+   "cabello": {
+    "tonos": [
+     {
+      "hex": "#3a2e26",
+      "nombre": "Castaño ceniza",
+      "lab": [
+       20.0,
+       4.0,
+       6.93
+      ]
+     },
+     {
+      "hex": "#463832",
+      "nombre": "Cacao frío",
+      "lab": [
+       25.0,
+       5.14,
+       6.13
+      ]
+     },
+     {
+      "hex": "#524a3f",
+      "nombre": "Rubio ceniza",
+      "lab": [
+       32.0,
+       1.39,
+       7.88
+      ]
+     },
+     {
+      "hex": "#685c52",
+      "nombre": "Gris perla",
+      "lab": [
+       40.0,
+       2.74,
+       7.52
+      ]
+     }
+    ],
+    "consejos": [
+     "negro azulado o castaño oscuro frío",
+     "reflejos sutiles y naturales"
+    ]
+   },
+   "metales": [
+    {
+     "nombre": "Plata",
+     "degradado": [
+      "#f4f5f7",
+      "#a3a9b3"
+     ]
+    },
+    {
+     "nombre": "Oro blanco",
+     "degradado": [
+      "#f2eee6",
+      "#bdb3a0"
+     ]
+    },
+    {
+     "nombre": "Platino",
+     "degradado": [
+      "#e9edf1",
+      "#8e98a6"
+     ]
+    }
+   ],
+   "consejo": "El negro puro y el blanco óptico sí te funcionan."
+  },
+  "invierno_frio": {
+   "clave": "invierno_frio",
+   "nombre": "Invierno Frío",
+   "estacion": "invierno",
+   "lema": "Zafiro, fucsia y plata",
+   "tema": [
+    "#2563c9",
+    "#b8c2d6"
+   ],
+   "parametros": {
+    "calidez": -0.95,
+    "profundidad": 0.6,
+    "claridad": 0.7,
+    "contraste": 0.75
+   },
+   "favorecedores": [
+    {
+     "hex": "#e4538f",
+     "nombre": "Rosa",
+     "lab": [
+      56.8,
+      61.34,
+      -2.79
+     ]
+    },
+    {
+     "hex": "#f85b73",
+     "nombre": "Rojo intenso",
+     "lab": [
+      60.4,
+      61.64,
+      19.32
+     ]
+    },
+    {
+     "hex": "#4d9130",
+     "nombre": "Lima",
+     "lab": [
+      54.1,
+      -39.94,
+      43.43
+     ]
+    },
+    {
+     "hex": "#00a357",
+     "nombre": "Verde intenso",
+     "lab": [
+      58.6,
+      -55.93,
+      28.99
+     ]
+    },
+    {
+     "hex": "#009480",
+     "nombre": "Verde azulado",
+     "lab": [
+      52.3,
+      -57.34,
+      -2.6
+     ]
+    },
+    {
+     "hex": "#00afbf",
+     "nombre": "Turquesa intenso",
+     "lab": [
+      61.3,
+      -60.38,
+      -25.13
+     ],
+     "estrella": true
+    },
+    {
+     "hex": "#009ae7",
+     "nombre": "Azul cielo",
+     "lab": [
+      56.8,
+      -28.26,
+      -54.51
+     ]
+    },
+    {
+     "hex": "#2f92ff",
+     "nombre": "Azul intenso",
+     "lab": [
+      60.4,
+      11.22,
+      -63.62
+     ],
+     "estrella": true
+    },
+    {
+     "hex": "#547de3",
+     "nombre": "Índigo",
+     "lab": [
+      54.1,
+      17.64,
+      -56.3
+     ]
+    },
+    {
+     "hex": "#987be9",
+     "nombre": "Violeta intenso",
+     "lab": [
+      58.6,
+      35.59,
+      -51.98
+     ]
+    },
+    {
+     "hex": "#a860bc",
+     "nombre": "Malva",
+     "lab": [
+      52.3,
+      44.23,
+      -36.59
+     ]
+    },
+    {
+     "hex": "#e464c2",
+     "nombre": "Fucsia intenso",
+     "lab": [
+      61.3,
+      60.38,
+      -25.13
+     ],
+     "estrella": true
+    }
+   ],
+   "neutros": [
+    {
+     "hex": "#e6ebf0",
+     "nombre": "Blanco roto",
+     "lab": [
+      92.8,
+      -0.52,
+      -2.95
+     ]
+    },
+    {
+     "hex": "#bfc4c8",
+     "nombre": "Gris perla",
+     "lab": [
+      78.8,
+      -0.52,
+      -2.95
+     ]
+    },
+    {
+     "hex": "#8f9398",
+     "nombre": "Gris piedra",
+     "lab": [
+      60.8,
+      -0.52,
+      -2.95
+     ]
+    },
+    {
+     "hex": "#31416c",
+     "nombre": "Azul marino",
+     "lab": [
+      28.0,
+      7.25,
+      -27.05
+     ]
+    },
+    {
+     "hex": "#2b2e32",
+     "nombre": "Carbón",
+     "lab": [
+      18.8,
+      -0.52,
+      -2.95
+     ]
+    }
+   ],
+   "evitar": [
+    {
+     "hex": "#eecebd",
+     "nombre": "Terracota pastel",
+     "lab": [
+      85.0,
+      8.47,
+      12.38
+     ]
+    },
+    {
+     "hex": "#e1d3b8",
+     "nombre": "Mostaza pastel",
+     "lab": [
+      85.0,
+      0.63,
+      14.99
+     ]
+    },
+    {
+     "hex": "#f0cdc0",
+     "nombre": "Coral pastel",
+     "lab": [
+      85.0,
+      10.11,
+      11.08
+     ]
+    },
+    {
+     "hex": "#ead0bb",
+     "nombre": "Naranja pastel",
+     "lab": [
+      85.0,
+      5.72,
+      13.87
+     ]
+    },
+    {
+     "hex": "#dfd4b8",
+     "nombre": "Oliva pastel",
+     "lab": [
+      85.0,
+      -0.63,
+      14.99
+     ]
+    },
+    {
+     "hex": "#d1d7bb",
+     "nombre": "Lima pastel",
+     "lab": [
+      85.0,
+      -6.9,
+      13.32
+     ]
+    }
+   ],
+   "maquillaje": {
+    "labial": [
+     {
+      "hex": "#c73d6b",
+      "nombre": "Rosa",
+      "lab": [
+       47.6,
+       57.78,
+       5.06
+      ]
+     },
+     {
+      "hex": "#c33e7b",
+      "nombre": "Frambuesa",
+      "lab": [
+       47.6,
+       57.78,
+       -5.06
+      ]
+     },
+     {
+      "hex": "#b1499b",
+      "nombre": "Ciruela",
+      "lab": [
+       47.6,
+       52.57,
+       -24.51
+      ]
+     }
+    ],
+    "rubor": [
+     {
+      "hex": "#e0728f",
+      "nombre": "Rosa suave",
+      "lab": [
+       61.6,
+       45.82,
+       4.01
+      ]
+     },
+     {
+      "hex": "#dc739d",
+      "nombre": "Frambuesa suave",
+      "lab": [
+       61.6,
+       45.82,
+       -4.01
+      ]
+     }
+    ],
+    "sombras": [
+     {
+      "hex": "#bfc4c8",
+      "nombre": "Gris perla",
+      "lab": [
+       78.8,
+       -0.52,
+       -2.95
+      ]
+     },
+     {
+      "hex": "#8f9398",
+      "nombre": "Gris piedra",
+      "lab": [
+       60.8,
+       -0.52,
+       -2.95
+      ]
+     },
+     {
+      "hex": "#31416c",
+      "nombre": "Azul marino",
+      "lab": [
+       28.0,
+       7.25,
+       -27.05
+      ]
+     },
+     {
+      "hex": "#009ae7",
+      "nombre": "Azul cielo",
+      "lab": [
+       56.8,
+       -28.26,
+       -54.51
+      ]
+     }
+    ]
+   },
+   "cabello": {
+    "tonos": [
+     {
+      "hex": "#4c4038",
+      "nombre": "Castaño ceniza",
+      "lab": [
+       28.0,
+       4.0,
+       6.93
+      ]
+     },
+     {
+      "hex": "#5e4f49",
+      "nombre": "Cacao frío",
+      "lab": [
+       35.0,
+       5.14,
+       6.13
+      ]
+     },
+     {
+      "hex": "#6d6459",
+      "nombre": "Rubio ceniza",
+      "lab": [
+       43.0,
+       1.39,
+       7.88
+      ]
+     },
+     {
+      "hex": "#867a6f",
+      "nombre": "Gris perla",
+      "lab": [
+       52.0,
+       2.74,
+       7.52
+      ]
+     }
+    ],
+    "consejos": [
+     "castaño ceniza o cacao frío",
+     "reflejos sutiles y naturales"
+    ]
+   },
+   "metales": [
+    {
+     "nombre": "Plata",
+     "degradado": [
+      "#f4f5f7",
+      "#a3a9b3"
+     ]
+    },
+    {
+     "nombre": "Oro blanco",
+     "degradado": [
+      "#f2eee6",
+      "#bdb3a0"
+     ]
+    },
+    {
+     "nombre": "Platino",
+     "degradado": [
+      "#e9edf1",
+      "#8e98a6"
+     ]
+    }
+   ],
+   "consejo": "En vez de negro puro, usa carbón o azul marino."
+  },
+  "invierno_brillante": {
+   "clave": "invierno_brillante",
+   "nombre": "Invierno Brillante",
+   "estacion": "invierno",
+   "lema": "Cristalino, nítido y eléctrico",
+   "tema": [
+    "#2f5de0",
+    "#d63384"
+   ],
+   "parametros": {
+    "calidez": -0.55,
+    "profundidad": 0.5,
+    "claridad": 0.97,
+    "contraste": 0.95
+   },
+   "favorecedores": [
+    {
+     "hex": "#ff4597",
+     "nombre": "Rosa intenso",
+     "lab": [
+      62.0,
+      78.14,
+      0.82
+     ]
+    },
+    {
+     "hex": "#ff5271",
+     "nombre": "Rojo intenso",
+     "lab": [
+      65.6,
+      76.14,
+      28.62
+     ]
+    },
+    {
+     "hex": "#4ea210",
+     "nombre": "Lima intenso",
+     "lab": [
+      59.3,
+      -48.07,
+      58.53
+     ]
+    },
+    {
+     "hex": "#00b54d",
+     "nombre": "Verde intenso",
+     "lab": [
+      63.8,
+      -68.64,
+      40.59
+     ]
+    },
+    {
+     "hex": "#00a687",
+     "nombre": "Verde azulado intenso",
+     "lab": [
+      57.5,
+      -74.14,
+      0.78
+     ]
+    },
+    {
+     "hex": "#00c3d1",
+     "nombre": "Turquesa intenso",
+     "lab": [
+      66.5,
+      -77.48,
+      -27.28
+     ],
+     "estrella": true
+    },
+    {
+     "hex": "#00aeff",
+     "nombre": "Azul cielo intenso",
+     "lab": [
+      62.0,
+      -39.78,
+      -67.26
+     ]
+    },
+    {
+     "hex": "#00a1ff",
+     "nombre": "Azul intenso",
+     "lab": [
+      65.6,
+      13.28,
+      -80.25
+     ],
+     "estrella": true
+    },
+    {
+     "hex": "#5886ff",
+     "nombre": "Índigo intenso",
+     "lab": [
+      59.3,
+      26.65,
+      -70.9
+     ]
+    },
+    {
+     "hex": "#b17fff",
+     "nombre": "Violeta intenso",
+     "lab": [
+      63.8,
+      48.65,
+      -63.18
+     ]
+    },
+    {
+     "hex": "#c95ed8",
+     "nombre": "Malva intenso",
+     "lab": [
+      57.5,
+      59.67,
+      -44.0
+     ]
+    },
+    {
+     "hex": "#ff5bd5",
+     "nombre": "Fucsia intenso",
+     "lab": [
+      66.5,
+      77.48,
+      -27.28
+     ],
+     "estrella": true
+    }
+   ],
+   "neutros": [
+    {
+     "hex": "#eaeef3",
+     "nombre": "Blanco roto",
+     "lab": [
+      94.0,
+      -0.52,
+      -2.95
+     ]
+    },
+    {
+     "hex": "#c3c7cc",
+     "nombre": "Gris perla",
+     "lab": [
+      80.0,
+      -0.52,
+      -2.95
+     ]
+    },
+    {
+     "hex": "#92969b",
+     "nombre": "Gris piedra",
+     "lab": [
+      62.0,
+      -0.52,
+      -2.95
+     ]
+    },
+    {
+     "hex": "#31416c",
+     "nombre": "Azul marino",
+     "lab": [
+      28.0,
+      7.25,
+      -27.05
+     ]
+    },
+    {
+     "hex": "#2d3135",
+     "nombre": "Carbón",
+     "lab": [
+      20.0,
+      -0.52,
+      -2.95
+     ]
+    }
+   ],
+   "evitar": [
+    {
+     "hex": "#472f23",
+     "nombre": "Terracota apagado",
+     "lab": [
+      22.0,
+      9.15,
+      11.88
+     ]
+    },
+    {
+     "hex": "#483c27",
+     "nombre": "Mostaza apagado",
+     "lab": [
+      26.0,
+      1.46,
+      14.93
+     ]
+    },
+    {
+     "hex": "#5c4037",
+     "nombre": "Coral apagado",
+     "lab": [
+      30.0,
+      10.72,
+      10.49
+     ]
+    },
+    {
+     "hex": "#614c3b",
+     "nombre": "Naranja apagado",
+     "lab": [
+      34.0,
+      6.48,
+      13.53
+     ]
+    },
+    {
+     "hex": "#605941",
+     "nombre": "Oliva apagado",
+     "lab": [
+      38.0,
+      -1.46,
+      14.93
+     ]
+    },
+    {
+     "hex": "#5f664e",
+     "nombre": "Lima apagado",
+     "lab": [
+      42.0,
+      -7.64,
+      12.91
+     ]
+    }
+   ],
+   "maquillaje": {
+    "labial": [
+     {
+      "hex": "#dc2f70",
+      "nombre": "Rosa",
+      "lab": [
+       50.0,
+       68.54,
+       6.0
+      ]
+     },
+     {
+      "hex": "#d83183",
+      "nombre": "Frambuesa",
+      "lab": [
+       50.0,
+       68.54,
+       -6.0
+      ]
+     },
+     {
+      "hex": "#c342aa",
+      "nombre": "Ciruela",
+      "lab": [
+       50.0,
+       62.35,
+       -29.08
+      ]
+     }
+    ],
+    "rubor": [
+     {
+      "hex": "#f76d95",
+      "nombre": "Rosa suave",
+      "lab": [
+       64.0,
+       56.58,
+       4.95
+      ]
+     },
+     {
+      "hex": "#f26ea6",
+      "nombre": "Frambuesa suave",
+      "lab": [
+       64.0,
+       56.58,
+       -4.95
+      ]
+     }
+    ],
+    "sombras": [
+     {
+      "hex": "#c3c7cc",
+      "nombre": "Gris perla",
+      "lab": [
+       80.0,
+       -0.52,
+       -2.95
+      ]
+     },
+     {
+      "hex": "#92969b",
+      "nombre": "Gris piedra",
+      "lab": [
+       62.0,
+       -0.52,
+       -2.95
+      ]
+     },
+     {
+      "hex": "#31416c",
+      "nombre": "Azul marino",
+      "lab": [
+       28.0,
+       7.25,
+       -27.05
+      ]
+     },
+     {
+      "hex": "#00aeff",
+      "nombre": "Azul cielo intenso",
+      "lab": [
+       62.0,
+       -39.78,
+       -67.26
+      ]
+     }
+    ]
+   },
+   "cabello": {
+    "tonos": [
+     {
+      "hex": "#4c4038",
+      "nombre": "Castaño ceniza",
+      "lab": [
+       28.0,
+       4.0,
+       6.93
+      ]
+     },
+     {
+      "hex": "#5e4f49",
+      "nombre": "Cacao frío",
+      "lab": [
+       35.0,
+       5.14,
+       6.13
+      ]
+     },
+     {
+      "hex": "#6d6459",
+      "nombre": "Rubio ceniza",
+      "lab": [
+       43.0,
+       1.39,
+       7.88
+      ]
+     },
+     {
+      "hex": "#867a6f",
+      "nombre": "Gris perla",
+      "lab": [
+       52.0,
+       2.74,
+       7.52
+      ]
+     }
+    ],
+    "consejos": [
+     "castaño ceniza o cacao frío",
+     "admite reflejos nítidos y contraste marcado"
+    ]
+   },
+   "metales": [
+    {
+     "nombre": "Plata",
+     "degradado": [
+      "#f4f5f7",
+      "#a3a9b3"
+     ]
+    },
+    {
+     "nombre": "Oro blanco",
+     "degradado": [
+      "#f2eee6",
+      "#bdb3a0"
+     ]
+    },
+    {
+     "nombre": "Platino",
+     "degradado": [
+      "#e9edf1",
+      "#8e98a6"
+     ]
+    }
+   ],
+   "consejo": "En vez de negro puro, usa carbón o azul marino."
+  }
+ }
+}

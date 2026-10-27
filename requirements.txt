@@ -1,5 +1,16 @@
-opencv-python==4.8.1.78
+# Dependencias de Prisma (Python 3.12). Instalar con:  pip install -r requirements.txt
+#
+# OpenCV: se usa opencv-contrib-python, que es la que instala MediaPipe. No instales
+# también opencv-python: los dos paquetes traen el módulo cv2 y se pisan entre sí.
+
+# Visión por computador, color y modelo
+opencv-contrib-python==4.11.0.86
 mediapipe==1.1.0
-numpy==1.26.2
+numpy>=1.26.2
 scikit-learn==1.3.2
 scikit-image==0.26.0
+
+# API REST local (hito 8)
+fastapi>=0.115
+uvicorn>=0.30
+python-multipart>=0.0.9
