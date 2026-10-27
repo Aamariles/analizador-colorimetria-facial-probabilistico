@@ -1,0 +1,680 @@
+<!doctype html>
+<!--
+  PRISMA · Analizador de Colorimetría Facial Probabilístico — vista web (front-end)
+  =====================================================================================
+  Archivo único y autocontenido: HTML (ventanas y plantillas) + CSS (tokens y componentes) + JS (lógica de interfaz).
+
+  FLUJO DE 4 VENTANAS  (ids de sección → paso de la barra)
+    #v-home   1 Inicio      Presentación, consejos, política de Cero Almacenamiento y botones de entrada.
+    #v-pair   2 Enlace      Emparejamiento PC-celular (QR + código). Se crea por JS; solo aparece en el handoff.
+    #v-phone  3 Cámara      Captura en vivo con guías y control de luz (también es la vista del celular).
+    #v-result 4 Resultado   Colores medidos, estación, probabilidad, análisis por ejes, paletas, maquillaje, joyería e informe.
+  Sin ventana de muestras: al llegar la foto, el código ubica el rostro, toma solo la piel, el cabello, el iris y los
+  labios (auto()) y pasa directo al resultado. El usuario no marca ni ajusta nada. Si la foto no tiene un rostro, no
+  avanza: la descarta y pide tomarla o subirla otra vez en la misma ventana (avisos .fail).
+
+  ETIQUETAS DE ACOPLAMIENTO (búscalas en el código)
+    [ANÁLISIS PROVISIONAL]  Cálculo de ejemplo hecho en el navegador. Debe reemplazarse por el análisis del backend.
+    [ACOPLAMIENTO]          Punto exacto donde conectar el backend (FastAPI / SMTP / API local).
+    [ENTORNO]               Depende de la plataforma de vista previa (window.claude); fuera de ella degrada con un aviso.
+
+  DEPENDENCIAS EXTERNAS (CDN, versiones fijas): qrcodejs 1.0.0 · html2canvas 1.4.1 · jsPDF 2.5.1 · Google Fonts (Playfair Display, Inter)
+  · MediaPipe Tasks Vision 0.10.14 y el modelo face_landmarker, que ubican el rostro en el navegador (sin conexión no se puede
+  revisar la foto y se pide intentarlo de nuevo).
+  PRIVACIDAD: la foto vive solo en memoria (variables st.url, base, pimg) y se borra con wipe(); ver README.md.
+  Convenciones: ids para elementos únicos, clases para componentes; estado en el objeto `st`; textos de interfaz en español.
+-->
+<html lang="es"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;1,500;1,600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<title>Prisma · Colorimetría por foto</title>
+<style>
+/* ===== BASE Y TOKENS DE DISEÑO · Variables de color (claro/oscuro), reset y atributo [hidden]. El modo oscuro se activa por prefers-color-scheme o [data-theme="dark"]. ===== */
+*{box-sizing:border-box}[hidden]{display:none!important}
+:root{--bg:#f7f2ec;--card:#fffdfa;--ink:#1d1715;--mut:#7b6f68;--line:#e6ddd3;--acc:#b4513a;--tint:#f1e7dd;--glow:#f3c6bb;--glow2:#d9cdf0;--glow3:#f6dcb8;color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#141010;--card:#1c1716;--ink:#f4ece6;--mut:#a09189;--line:#2e2624;--acc:#e58f74;--tint:#241d1b;--glow:#6b3a30;--glow2:#3d3560;--glow3:#6b5530;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#141010;--card:#1c1716;--ink:#f4ece6;--mut:#a09189;--line:#2e2624;--acc:#e58f74;--tint:#241d1b;--glow:#6b3a30;--glow2:#3d3560;--glow3:#6b5530;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;overflow-x:hidden;background:var(--bg);color:var(--ink);font:400 16px/1.6 Jost,system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}
+.top,body::before{background:var(--bg);background:color-mix(in srgb,var(--bg) 84%,transparent);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10}
+/* ===== ENCABEZADO Y BARRA DE PASOS ===== */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:9;display:flex;justify-content:space-between;align-items:center;padding:14px clamp(16px,4vw,40px)}
+.logo{font:italic 600 28px "Cormorant Garamond",Georgia,serif}.logo::after{content:"";display:inline-block;width:7px;height:7px;margin-left:4px;border-radius:50%;background:linear-gradient(135deg,var(--acc),var(--glow2))}
+#steps{display:flex;gap:18px;list-style:none;margin:0;padding:0;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--mut)}
+#steps li{padding:4px 0;border-bottom:1px solid transparent}#steps .on{color:var(--ink);border-color:var(--acc)}#steps .ok{color:var(--acc)}
+/* ===== LAYOUT, ANIMACIÓN DE ENTRADA Y TIPOGRAFÍA (las animaciones se anulan con prefers-reduced-motion) ===== */
+main{max-width:960px;margin:0 auto;padding:12px clamp(16px,4vw,40px) 72px}
+section{position:relative;isolation:isolate}section:not([hidden]){animation:in .6s cubic-bezier(.2,.7,.2,1) both}@keyframes in{from{opacity:0;transform:translateY(14px)}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+#v-home::before{content:"";position:absolute;inset:-40px -10vw auto;height:440px;z-index:-1;background:radial-gradient(40% 60% at 15% 30%,var(--glow),transparent 70%),radial-gradient(35% 55% at 85% 20%,var(--glow2),transparent 70%),radial-gradient(30% 50% at 55% 85%,var(--glow3),transparent 70%);filter:blur(30px);opacity:.8}
+h1,h2,h3{font-family:"Cormorant Garamond",Georgia,serif;font-weight:500;line-height:1.02;letter-spacing:-.015em;margin:.2em 0 .35em}
+h1{font-size:clamp(44px,9vw,92px)}h1 em{font-style:italic;background:linear-gradient(100deg,var(--acc),#c9809a 55%,#8f7ad1);-webkit-background-clip:text;background-clip:text;color:transparent;padding-right:.06em}
+h2{font-size:clamp(30px,5vw,44px)}h3{font-size:24px;margin-top:1.2em}
+.eyebrow{font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:var(--acc);margin:0 0 10px}
+.lead{color:var(--mut);font-size:18px;max-width:52ch;font-weight:300}.sm{font-size:13px;color:var(--mut)}a{color:var(--acc)}
+.heroart{display:grid;gap:28px;align-items:center;padding:clamp(8px,3vw,32px) 0 18px}@media(min-width:760px){.heroart{grid-template-columns:1.3fr .7fr}}
+/* ===== VENTANA 1 · ARTE DEL HÉROE (anillo cromático)  ===== */
+.orb{position:relative;width:min(300px,60vw);aspect-ratio:1;margin:auto;border-radius:50%;background:conic-gradient(from 20deg,#e9a79a,#f3c58f,#e8dc9b,#b3d29e,#8fd0c0,#92b4e6,#b7a1ea,#e0a0d0,#e9a79a);display:grid;place-items:center;animation:spin 40s linear infinite;box-shadow:0 40px 80px -40px var(--acc)}
+.orb::before{content:"";position:absolute;inset:16%;border-radius:50%;background:var(--bg)}
+.orb span{position:relative;font:italic 500 64px/1 "Cormorant Garamond",Georgia,serif;text-align:center;animation:spin 40s linear infinite reverse}
+.orb small{display:block;font:500 10px Jost,sans-serif;letter-spacing:.22em;text-transform:uppercase;color:var(--mut);margin-top:6px}@keyframes spin{to{transform:rotate(360deg)}}
+/* ===== COMPONENTES BASE · tarjetas, botones, campos y listas ===== */
+.card{background:var(--card);border:1px solid var(--line);border-radius:26px;padding:clamp(18px,3vw,32px);margin:16px 0;box-shadow:0 30px 60px -45px rgba(60,30,20,.35)}
+.row{display:flex;flex-wrap:wrap;gap:12px;margin-top:18px}
+.btn{display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:0 26px;border-radius:99px;border:1px solid var(--ink);background:transparent;color:var(--ink);font:500 12px Jost,sans-serif;letter-spacing:.16em;text-transform:uppercase;cursor:pointer;text-decoration:none;transition:transform .2s,background .2s,color .2s}
+.btn:hover{transform:translateY(-2px)}.btn.p{background:var(--ink);color:var(--bg);box-shadow:0 14px 30px -14px var(--acc)}.btn.p:hover{background:var(--acc);color:#fff}
+.btn:disabled{opacity:.35;cursor:not-allowed;transform:none}.big{width:100%;min-height:56px;margin-top:14px}
+.in{width:100%;padding:13px 16px;border-radius:14px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font:400 15px Jost,sans-serif}.in:focus{outline:2px solid var(--acc);outline-offset:1px}
+.tips{padding-left:18px;margin:8px 0;color:var(--mut)}.tips li::marker{color:var(--acc)}
+/* ===== RESULTADO · FICHAS DE LOS COLORES MEDIDOS (solo informativas), HERO Y ESTACIONES VECINAS ===== */
+.chips{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:14px 0}
+.chip{display:flex;gap:12px;align-items:center;padding:10px 12px;border:1px solid var(--line);border-radius:16px;background:var(--card);font-size:14px}
+.chip i{width:38px;height:38px;border-radius:50%;box-shadow:inset 0 0 0 1px rgba(0,0,0,.12);background:var(--tint);flex:none}.chip small{display:block;color:var(--mut);font-size:12px}
+.hero{background:var(--tint);border-color:transparent;overflow:hidden}.hero small{color:var(--acc);font-weight:500;letter-spacing:.24em;text-transform:uppercase;font-size:11px}.hero h1{font-style:italic;margin:.05em 0 .1em}
+.strip{display:flex;height:64px;border-radius:18px;overflow:hidden;margin:20px 0 6px;box-shadow:0 20px 40px -28px #000}.strip i{flex:1;transition:flex .3s}.strip i:hover{flex:2.4}
+.nbs{display:grid;gap:8px;margin-top:16px}
+.nb{position:relative;display:flex;justify-content:space-between;padding:12px 16px;border-radius:14px;border:1px solid var(--line);background:var(--card);color:var(--ink);overflow:hidden;cursor:pointer;font:400 14px Jost,sans-serif}
+.nb i{position:absolute;left:0;bottom:0;height:2px;background:var(--acc)}.nb.on{border-color:var(--ink);font-weight:500}
+/* ===== PESTAÑAS Y CUADRÍCULAS DE COLOR (swatches) ===== */
+.tabs{display:flex;gap:26px;overflow-x:auto;margin:26px 0 0;border-bottom:1px solid var(--line)}
+.tab{padding:12px 0;border:0;border-bottom:2px solid transparent;background:none;color:var(--mut);cursor:pointer;font:500 12px Jost,sans-serif;letter-spacing:.16em;text-transform:uppercase;white-space:nowrap}.tab.on{color:var(--ink);border-color:var(--acc)}
+.sws{display:grid;grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:14px}
+.sw i{display:block;height:84px;border-radius:18px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.08);transition:transform .25s}.sw:hover i{transform:translateY(-3px) scale(1.02)}
+.sw span{display:block;font-size:13px;margin-top:8px;line-height:1.3}.sw small{display:block;color:var(--mut);font-size:11px;letter-spacing:.08em;text-transform:uppercase}
+/* ===== PRUEBA EN EL ROSTRO (fondo de color) Y VISTA DE CELULAR ===== */
+.dbox{display:flex;justify-content:center;padding:clamp(24px,6vw,48px);border-radius:26px;transition:background .35s;margin:14px 0}
+.dbox img{width:min(270px,68%);aspect-ratio:3/4;object-fit:cover;border-radius:999px 999px 36px 36px;border:5px solid rgba(255,255,255,.6);box-shadow:0 30px 60px -28px rgba(0,0,0,.55)}
+#dcap{font:italic 600 24px "Cormorant Garamond",Georgia,serif}
+.dots{display:flex;flex-wrap:wrap;gap:10px}.dot{width:40px;height:40px;border-radius:50%;border:2px solid var(--card);box-shadow:0 0 0 1px var(--line);cursor:pointer;transition:transform .2s}.dot:hover{transform:scale(1.15)}
+.guide{display:flex;justify-content:center;margin:16px 0}.oval{width:150px;height:200px;border:2px dashed var(--acc);border-radius:50%}
+#pp{max-width:100%;border-radius:20px;margin-top:14px}#qr{display:flex;justify-content:center;padding:14px;background:#fff;border-radius:18px;width:fit-content;box-shadow:0 20px 40px -28px #000}
+.code{font:500 34px ui-monospace,monospace;letter-spacing:.2em;margin:14px 0}details summary{cursor:pointer}
+#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(22px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:12px 22px;border-radius:99px;font-size:13px;letter-spacing:.04em;z-index:20}
+@media(max-width:520px){#dc{grid-template-columns:repeat(2,minmax(0,1fr))}#dc .chip{gap:8px;padding:8px 10px}#dc .chip i{width:30px;height:30px}#steps{gap:10px;font-size:10px}.btn{padding:0 18px}}
+/* ===== CAPA 2 · Acento, tipografía (Playfair Display + Inter), degradado animado del título, íconos y botones primarios/fantasma ===== */
+:root{--onacc:#fff}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--onacc:#1a0f0c}}:root[data-theme="dark"]{--onacc:#1a0f0c}
+body,.btn,.in,.nb,.tab,.orb small{font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif}
+.logo,h1,h2,h3,.orb span,#dcap,.quote,.steps3 b{font-family:"Playfair Display",Georgia,serif}
+h1{font-size:clamp(38px,7.2vw,74px);line-height:1.08;letter-spacing:-.02em}h2{font-size:clamp(28px,4.6vw,40px);line-height:1.15}h3{line-height:1.2}.orb span{font-size:56px}
+h1 em{background:linear-gradient(100deg,var(--acc),#c9809a,#8f7ad1,#4f9d94,#d9a441,var(--acc));background-size:300% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:hue 9s ease-in-out infinite alternate}@keyframes hue{to{background-position:100% 0}}
+.ic{width:22px;height:22px;flex:none;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}.ic.s{width:13px;height:13px;vertical-align:-2px}
+.btn{gap:10px;font-size:11.5px;letter-spacing:.14em}.btn .ic{width:18px;height:18px}
+.btn.p{background:var(--acc);border-color:var(--acc);color:var(--onacc);box-shadow:0 16px 32px -14px var(--acc)}.btn.p:hover{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+.cta .btn{min-height:54px}.cta .btn.p{padding:0 34px}
+.btn.g{border-color:var(--acc);color:var(--acc);box-shadow:0 0 0 4px color-mix(in srgb,var(--acc) 12%,transparent)}.btn.g:hover{background:color-mix(in srgb,var(--acc) 10%,transparent)}
+.tag{font-size:9px;letter-spacing:.14em;padding:3px 8px;border-radius:99px;background:var(--acc);color:var(--onacc)}
+.lnk{order:3;align-self:center;cursor:pointer;color:var(--mut);font-size:13px;text-decoration:underline;text-underline-offset:4px;padding:0 8px}.lnk:hover{color:var(--ink)}
+.tips{list-style:none;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px 22px}.tips li{display:flex;gap:12px;align-items:center}
+.tips .ic{width:38px;height:38px;padding:8px;border:1px solid var(--line);border-radius:50%;color:var(--acc)}
+.sec{margin:60px 0 16px;text-align:center}
+.steps3{list-style:none;padding:0;margin:0;display:grid;gap:16px}@media(min-width:760px){.steps3{grid-template-columns:repeat(3,1fr)}}
+.steps3 li{position:relative;padding:26px 22px;border:1px solid var(--line);border-radius:24px;background:var(--card)}
+.il{width:64px;height:64px;color:var(--acc);fill:none;stroke:currentColor;stroke-width:1.4;stroke-linecap:round;stroke-linejoin:round}
+.steps3 b{position:absolute;right:20px;top:14px;font-size:34px;font-style:italic;font-weight:500;color:var(--line)}
+.steps3 h3{font-size:21px;margin:.7em 0 .25em}.steps3 p{margin:0;color:var(--mut);font-size:14px}
+blockquote.quote{margin:60px 0 14px;text-align:center;font-size:clamp(26px,4.6vw,42px);font-style:italic;line-height:1.2}
+.quote small{display:block;margin-top:14px;font:400 11px Inter,system-ui,sans-serif;letter-spacing:.18em;text-transform:uppercase;color:var(--mut);font-style:normal}
+.teaser{position:relative;overflow:hidden}.teaser .strip{margin:6px 0 18px}.blur{filter:blur(6px);opacity:.75;margin-top:16px;pointer-events:none;user-select:none}
+.teaser::after{content:"";position:absolute;inset:52% 0 0;background:linear-gradient(transparent,var(--card) 82%)}
+.veil{position:absolute;left:0;right:0;bottom:24px;z-index:1;text-align:center;font:italic 600 22px "Playfair Display",Georgia,serif}
+.priv{display:flex;gap:14px;align-items:flex-start;margin:36px 0 0;padding:20px 22px;border:1px solid var(--line);border-radius:20px;background:var(--tint)}
+.priv .ic{width:26px;height:26px;color:var(--acc);margin-top:2px}.priv p{margin:0;font-size:14px}.priv span{display:block;color:var(--mut);font-size:12.5px;margin-top:4px}
+.badges{display:flex;flex-wrap:wrap;gap:8px 16px;margin:18px 0 4px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--mut)}.badges span{display:inline-flex;gap:7px;align-items:center}.badges span::before{content:"";width:5px;height:5px;border-radius:50%;background:var(--acc)}
+.orbw{position:relative;width:min(300px,60vw);margin:auto}.orbw .orb{width:100%}
+.orbw em{position:absolute;font:600 9px Inter,system-ui,sans-serif;letter-spacing:.18em;text-transform:uppercase;font-style:normal;color:#2a2220;opacity:0;transition:opacity .4s;pointer-events:none}
+.orbw em:nth-of-type(1){top:6.5%;left:50%;transform:translateX(-50%)}.orbw em:nth-of-type(2){right:6.5%;top:50%;transform:translateY(-50%);writing-mode:vertical-rl}.orbw em:nth-of-type(3){bottom:6.5%;left:50%;transform:translateX(-50%)}.orbw em:nth-of-type(4){left:6.5%;top:50%;transform:translateY(-50%) rotate(180deg);writing-mode:vertical-rl}
+.orbw:hover em{opacity:1}.orbw:hover .orb,.orbw:hover .orb span{animation-play-state:paused}
+.hand{width:min(260px,100%);height:auto;display:block;margin:6px auto 12px;fill:none;stroke:var(--ink);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}.hand .qrb,.hand .beam{stroke:var(--acc)}.hand .ph{animation:sway 2.4s ease-in-out infinite alternate}@keyframes sway{to{transform:translateX(-14px)}}.hand .beam{stroke-dasharray:4 5;animation:dash 1s linear infinite}@keyframes dash{to{stroke-dashoffset:-18}}
+.live{display:flex;align-items:center;gap:12px;margin-top:12px;padding:12px 16px;border-radius:14px;background:var(--tint);font-size:14px}.pulse{width:12px;height:12px;border-radius:50%;background:var(--acc);animation:pl 1.6s ease-out infinite}@keyframes pl{0%{box-shadow:0 0 0 0 var(--acc)}70%,100%{box-shadow:0 0 0 12px transparent}}.live.off .pulse{animation:none;background:var(--mut)}
+.cam{position:relative;aspect-ratio:3/4;width:min(100%,320px);margin:14px auto;border-radius:24px;overflow:hidden;background:var(--tint)}.cam video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}
+.gd{position:absolute;inset:0;width:100%;height:100%;fill:none;stroke:var(--acc);stroke-width:.7}.gd .gl{stroke-dasharray:2 2}.gd text{fill:var(--acc);stroke:none;font:3.2px Inter,sans-serif;letter-spacing:.3px}
+.lt{margin:8px 0;padding:10px 14px;border-radius:14px;font-size:14px;text-align:center}.lt.ok{background:#dff3e3;color:#17612b}.lt.warn{background:#fff0d6;color:#8a5200}
+.veil{left:0;right:0;margin:0 auto;width:fit-content;bottom:26px;font:500 11.5px Inter,system-ui,sans-serif;text-align:initial;background:var(--card)}
+#tz>*{animation:in .8s ease both}
+.strip i{transition:flex .3s,background-color 1.4s cubic-bezier(.4,0,.2,1)}.sw i{transition:transform .25s,background-color 1.2s cubic-bezier(.4,0,.2,1)}
+.sw b{font-weight:400}.sw b,.sw small,#tn,#tl,#tm{transition:opacity .45s}.f{opacity:0}
+
+#tz .sws{grid-template-columns:repeat(4,1fr)}@media(max-width:520px){#tz .sws{grid-template-columns:repeat(2,1fr)}}
+.hero{position:relative}.gauge{position:absolute;right:20px;top:20px;width:112px;height:112px}.gauge svg{width:100%;height:100%;transform:rotate(-90deg);fill:none;stroke-width:9;stroke-linecap:round}.gauge .bg{stroke:var(--line)}.gauge .fg{stroke:var(--acc);stroke-dasharray:326.7;stroke-dashoffset:326.7;transition:stroke-dashoffset 1.4s cubic-bezier(.4,0,.2,1)}.gauge b{position:absolute;inset:0;display:grid;place-items:center;font:italic 600 28px "Playfair Display",Georgia,serif}
+.hero small,.hero h1,.hero .lead{padding-right:128px}@media(max-width:520px){.gauge{width:84px;height:84px}.gauge b{font-size:20px}.hero small,.hero h1,.hero .lead{padding-right:96px}}
+/* ===== CÁMARA · tinte de aviso de luz, línea de escaneo y guía facial (verde cuando está lista) ===== */
+.cam::after{content:"";position:absolute;inset:0;pointer-events:none;opacity:0}.cam.w::after{background:rgba(255,140,30,.38)}.cam.c::after{background:rgba(60,120,255,.34)}.cam.d::after{background:rgba(20,20,30,.45)}.cam.w::after,.cam.c::after,.cam.d::after{animation:blk 1.6s ease-in-out infinite}@keyframes blk{50%{opacity:1}}
+.cam.w::before,.cam.c::before,.cam.d::before{content:"Busca una luz más neutra";position:absolute;left:0;right:0;bottom:14px;z-index:2;text-align:center;color:#fff;font:500 13px Inter,system-ui,sans-serif;text-shadow:0 1px 6px rgba(0,0,0,.7)}
+.gd ellipse,.gd .gl{transition:stroke .4s}.gd.go{stroke:#2e9e5b}.gd.go text{fill:#2e9e5b}
+/* ===== [LEGADO] Estilos de la casilla de consentimiento anterior; hoy el consentimiento usa el modal #hd ===== */
+.hab{display:flex;gap:12px;align-items:flex-start;margin:14px 0 4px;padding:14px 16px;border:1px solid var(--line);border-radius:16px;background:var(--tint);font-size:12.5px;color:var(--mut);cursor:pointer}.hab input{margin-top:3px;accent-color:var(--acc);width:18px;height:18px;flex:none}.hab b{color:var(--ink)}
+.cta.lock .btn,.cta.lock .lnk,.lnk.lock{opacity:.4;pointer-events:none}
+/* ===== SUPERPOSICIONES (.ld) · carga, consentimiento, guía rápida y vista previa ===== */
+.ld{position:fixed;inset:0;z-index:30;display:grid;place-items:center;background:var(--bg);background:color-mix(in srgb,var(--bg) 92%,transparent);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);text-align:center;padding:24px}
+.bar{width:min(360px,80vw);height:6px;border-radius:9px;background:var(--line);margin:18px auto 0;overflow:hidden}.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--glow),var(--acc))}
+.spin{display:inline-block;width:14px;height:14px;border:2px solid var(--line);border-top-color:var(--acc);border-radius:50%;animation:rot .8s linear infinite;vertical-align:-2px}@keyframes rot{to{transform:rotate(360deg)}}
+.hdc{width:min(520px,100%);text-align:left;background:var(--card);border:1px solid var(--line);border-radius:26px;padding:28px;box-shadow:0 40px 80px -40px #000}.hdc p{font-size:14px;color:var(--mut)}.hdc h2{font-size:28px;margin-top:0}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1b1b1d;--card:#242426;--ink:#f1f1f2;--mut:#a3a3a8;--line:#38383b;--tint:#2b2b2e}}:root[data-theme="dark"]{--bg:#1b1b1d;--card:#242426;--ink:#f1f1f2;--mut:#a3a3a8;--line:#38383b;--tint:#2b2b2e}
+/* ===== RESULTADOS · Título con degradado de la estación, medidor de probabilidad (--g1/--g2 se fijan desde JS) ===== */
+.hero h1{background:linear-gradient(100deg,var(--g1,var(--acc)),var(--g2,var(--acc)));-webkit-background-clip:text;background-clip:text;color:transparent;font-size:clamp(46px,10vw,92px);line-height:1;filter:drop-shadow(0 6px 22px color-mix(in srgb,var(--g1,var(--acc)) 40%,transparent))}
+.gauge .fg{stroke:var(--g1,var(--acc))}
+.scanln{position:absolute;z-index:1;left:6%;right:6%;top:12%;height:2px;background:linear-gradient(90deg,transparent,var(--acc),transparent);box-shadow:0 0 14px var(--acc);opacity:0;pointer-events:none}.cam.live .scanln{opacity:.9;animation:scn 2.6s ease-in-out infinite alternate}@keyframes scn{to{top:86%}}
+#t-p:not([hidden]),#t-c:not([hidden]),#t-b:not([hidden]){animation:in .45s cubic-bezier(.2,.7,.2,1) both}
+.sw i{position:relative}.sw i::after{content:"";position:absolute;inset:0;border-radius:inherit;background:linear-gradient(135deg,rgba(255,255,255,.38),transparent 55%);opacity:0;transition:opacity .3s}.sw:hover i::after{opacity:1}.sw:hover i{box-shadow:inset 0 -8px 14px rgba(0,0,0,.2),inset 0 2px 0 rgba(255,255,255,.4),0 14px 22px -12px rgba(0,0,0,.5)}
+.rules{list-style:none;padding:0;margin:18px 0 0;display:grid;gap:8px;font-size:14px;color:var(--mut)}.rules li{display:flex;gap:10px}.rules li::before{content:"";flex:none;width:6px;height:6px;border-radius:50%;background:var(--acc);margin-top:9px}
+.btn.ready{animation:rdy 1.4s ease-in-out infinite}@keyframes rdy{0%,100%{box-shadow:0 0 0 0 color-mix(in srgb,var(--acc) 55%,transparent)}50%{box-shadow:0 0 0 14px transparent}}
+#roi{border-radius:18px;max-width:100%;box-shadow:0 24px 50px -30px #000}.roc{display:flex;gap:8px;justify-content:center;margin:12px 0 18px}.roc i{width:30px;height:30px;border-radius:50%;box-shadow:inset 0 0 0 1px rgba(0,0,0,.15)}
+.hdl{list-style:none;padding:0;margin:14px 0;display:grid;gap:8px;font-size:15px}.hdc p{font-size:12.5px}
+/* ===== BARRA DE PASOS EN MÓVIL Y BLOQUE DE PRIVACIDAD ===== */
+#steps li{white-space:nowrap}@media(max-width:620px){#steps{gap:8px}#steps li:not(.on){font-size:0}#steps li:not(.on)::before{content:attr(data-n);font-size:11px}}
+.priv>div{flex:1}.priv .hdl{margin:8px 0}.code{font-size:46px}#v-pair .card{text-align:center}#v-pair #qr{margin:10px auto}
+.hdl li{display:flex;align-items:center;gap:12px}.hdl .ic{width:34px;height:34px;padding:7px;border:1px solid var(--line);border-radius:50%;color:var(--acc);flex:none}
+.lt .ic{width:16px;height:16px;vertical-align:-3px;margin-right:6px}.ic.st{fill:var(--acc)}
+/* ===== VENTANA 5 · Hero con foto y anillo, chips, barras de ejes, metales y panel de acción fijo (.dock) ===== */
+.hh{display:grid;grid-template-columns:auto 1fr;gap:28px;align-items:center}
+.avw{position:relative;width:184px;height:184px}.avw .gauge{position:absolute;inset:0;width:100%;height:100%}.avw img{position:absolute;inset:20px;width:calc(100% - 40px);height:calc(100% - 40px);border-radius:50%;object-fit:cover;background:var(--tint)}
+.avw .gauge b{inset:auto;left:50%;bottom:-8px;transform:translateX(-50%);display:block;padding:2px 14px;border-radius:99px;background:var(--card);border:1px solid var(--line);font-size:20px}
+.hero small,.hero h1,.hero .lead{padding-right:0}.hero h1{margin-top:.1em}
+.chp{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}.chp span{display:inline-flex;align-items:center;padding:6px 14px;border-radius:99px;border:1px solid var(--line);background:var(--card);font-size:11px;letter-spacing:.14em;text-transform:uppercase}.chp span::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--g1,var(--acc));margin-right:8px}
+.trk{margin:20px 0}.th{display:flex;justify-content:space-between;align-items:baseline}.th small{color:var(--mut);font-size:12px;letter-spacing:.08em}
+.tr{position:relative;height:6px;margin:14px 8px 8px;border-radius:9px;background:var(--line)}.tr.t1{background:linear-gradient(90deg,#8fb0e0,#e9e1d8 50%,#e9a77a)}.tr.t2{background:linear-gradient(90deg,#f3e9df,#3a2d28)}.tr.t3{background:linear-gradient(90deg,#c9c4be,#e0663f)}
+.tr i{position:absolute;top:50%;left:50%;width:20px;height:20px;border-radius:50%;background:var(--card);border:3px solid var(--ink);transform:translate(-50%,-50%);box-shadow:0 4px 10px rgba(0,0,0,.3);transition:left 1.1s cubic-bezier(.4,0,.2,1)}
+.te{display:flex;justify-content:space-between;font-size:12px;color:var(--mut)}
+.seg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:10px}.seg span{text-align:center;padding:9px;border-radius:12px;border:1px solid var(--line);font-size:13px;color:var(--mut)}.seg span.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.mts{display:grid;gap:12px}@media(min-width:700px){.mts{grid-template-columns:repeat(3,1fr)}}
+.mt{display:flex;flex-wrap:wrap;gap:14px;align-items:center;padding:16px;border:1px solid var(--line);border-radius:20px}.mt .sph{width:64px;height:64px;border-radius:50%;flex:none;background:linear-gradient(135deg,var(--m1),var(--m2));display:grid;place-items:center;color:#2a2220;box-shadow:inset 0 -6px 12px rgba(0,0,0,.18),inset 0 2px 0 rgba(255,255,255,.55)}.mt .sph .ic{width:28px;height:28px}
+.mt b{display:block}.mt small{color:var(--mut);font-size:12px}.mt em{font-style:normal;font-size:11px;letter-spacing:.1em;text-transform:uppercase;padding:4px 10px;border-radius:99px;border:1px solid var(--line);color:var(--mut)}.mt em.f2{background:var(--acc);border-color:var(--acc);color:var(--onacc)}.mt em.f1{color:var(--ink)}
+.dock{position:sticky;bottom:calc(10px + env(safe-area-inset-bottom,0px));z-index:8;display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:18px;padding:12px;border-radius:24px;border:1px solid var(--line);background:var(--card);background:color-mix(in srgb,var(--card) 88%,transparent);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);box-shadow:0 24px 50px -24px rgba(0,0,0,.45)}.dock .in{flex:1 1 220px;width:auto}
+@media(max-width:620px){.hh{grid-template-columns:1fr;justify-items:center;text-align:center}.avw{width:156px;height:156px}.chp{justify-content:center}.dock .btn.p{flex:1 1 100%}.dock .btn{flex:1 1 40%}}
+/* ===== GUÍA RÁPIDA · pasos navegables, modal y tarjetas ===== */
+#steps li{cursor:pointer}#steps li:hover{color:var(--ink)}#steps li.lk{opacity:.5}
+.hw{width:min(640px,100%);max-height:calc(100vh - 48px);overflow:auto}.hw p{font-size:14px}.hws{list-style:none;padding:0;margin:14px 0;display:grid;gap:10px}.hws li{padding:14px 16px;border:1px solid var(--line);border-radius:16px}.hws li.on{border-color:var(--acc);background:var(--tint)}.hws b{display:block;margin-bottom:4px;font-size:15px}.hws p{margin:0;font-size:13px}
+.top{justify-content:flex-start}.top .logo{margin-right:auto}.qm{flex:none;width:34px;height:34px;margin-left:12px;border-radius:50%;border:1px solid var(--line);background:var(--card);color:var(--acc);font:italic 600 18px "Playfair Display",Georgia,serif;line-height:1;cursor:pointer;transition:background .2s,color .2s}.qm:hover{background:var(--acc);color:var(--onacc)}
+/* ===== MARCOS DE COLOR Y EFECTOS HOVER (la guía completa "?" resalta al pasar el cursor; las ventanas individuales siempre resaltadas) ===== */
+.card,.steps3 li,.hws li,.priv,.mt,.dock,.hdc{border-color:color-mix(in srgb,var(--acc) 42%,var(--line))}
+.hero{border-color:color-mix(in srgb,var(--g1,var(--acc)) 55%,transparent)}
+.hws li,.steps3 li{position:relative;overflow:hidden;transition:transform .3s cubic-bezier(.2,.7,.2,1),box-shadow .3s,border-color .3s,background .3s}
+.hws li::before,.steps3 li::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:linear-gradient(var(--acc),#c9809a);transform:scaleY(0);transform-origin:top;transition:transform .35s}
+.hws li:hover,.steps3 li:hover{transform:translateY(-4px);border-color:var(--acc);background:var(--tint);box-shadow:0 18px 34px -20px color-mix(in srgb,var(--acc) 75%,transparent)}
+.hws li:hover::before,.steps3 li:hover::before{transform:scaleY(1)}
+.hws li{border-color:var(--acc);background:var(--tint);box-shadow:0 18px 34px -20px color-mix(in srgb,var(--acc) 75%,transparent)}
+.hws li::before{transform:scaleY(1)}
+.hws li:hover{transform:translateY(-4px);box-shadow:0 22px 38px -18px color-mix(in srgb,var(--acc) 90%,transparent)}
+/* ===== INFORME A4 (.rp) · usa colores planos y tamaños fijos (794 px) para exportarse bien a PDF ===== */
+.rvc{width:min(620px,100%);max-height:calc(100vh - 32px);overflow:auto}.rvw{position:relative;overflow:hidden;border-radius:10px;border:1px solid var(--line);margin:12px 0;background:#fffdfa}#rvb{width:794px;transform-origin:0 0}
+.rp{width:794px;min-height:1123px;box-sizing:border-box;padding:28px 38px;background:#fffdfa;color:#2a2220;font:11px/1.35 Inter,system-ui,sans-serif;text-align:left}.rp *{box-sizing:border-box}
+.rp h1{font:italic 600 42px/1.05 "Playfair Display",Georgia,serif;margin:4px 0;padding:0;letter-spacing:-.01em}
+.rp h2{font:600 10px Inter,system-ui,sans-serif;letter-spacing:.2em;text-transform:uppercase;color:#b4513a;margin:12px 0 7px;padding:0;display:flex;align-items:center;gap:10px}.rp h2::after{content:"";flex:1;height:1px;background:#e6ddd3}
+.rp b{font-weight:600}.rhd{display:flex;align-items:center;gap:22px}.rph{position:relative;width:166px;height:166px;flex:none}
+.rp1{position:absolute;left:0;top:0;width:146px;height:146px;border-radius:50%;object-fit:cover;border:6px solid #b4513a}.rp2{position:absolute;right:0;bottom:0;width:58px;height:72px;border-radius:12px;object-fit:cover;border:5px solid #b4513a;background:#fff}
+.rtt{flex:1}.rey{font-size:9px;letter-spacing:.22em;text-transform:uppercase;color:#7b6f68}.rtg{font:italic 500 15px "Playfair Display",Georgia,serif;color:#7b6f68}
+.rch{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}.rch span{padding:4px 11px;border:1px solid #e6ddd3;border-radius:99px;font-size:9px;letter-spacing:.12em;text-transform:uppercase}
+.rgg{position:relative;width:96px;text-align:center;flex:none}.rgg b{position:absolute;left:0;right:0;top:32px;font:italic 600 24px "Playfair Display",Georgia,serif}.rgg small{display:block;font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:#7b6f68}
+.rtk{display:grid;grid-template-columns:1fr 1fr;gap:8px 26px}.rt .rh{display:flex;justify-content:space-between;font-size:11px}.rt .rh span{color:#7b6f68;font-size:9px}
+.rbar{position:relative;height:6px;border-radius:9px;margin:9px 6px 5px}.rbar i{position:absolute;top:50%;width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:50%;background:#fff;border:3px solid #2a2220}
+.rl{display:flex;justify-content:space-between;font-size:9px;color:#7b6f68}
+.rsg{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-top:7px}.rsg span{text-align:center;padding:4px;border:1px solid #e6ddd3;border-radius:8px;font-size:10px;color:#7b6f68}.rsg span.on{background:#2a2220;color:#fff;border-color:#2a2220}
+.rl2{font-size:10px;font-weight:600;margin:6px 0 4px}.rsw{display:flex;flex-wrap:wrap;gap:6px 8px}
+.rw{width:calc((100% - 40px)/6)}.rw i{display:block;height:34px;border-radius:9px;border:1px solid rgba(0,0,0,.08)}.rw span{display:block;font-size:8.5px;margin-top:2px;line-height:1.2}.rw small{display:block;font-size:8px;color:#7b6f68}.rsw.sm .rw i{height:22px}
+.rbt{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.rbt .rl2{margin-top:0}.rbt .rw{width:calc((100% - 8px)/2)}.rbt .rw i{height:22px}
+.rhr{display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:center;margin-top:8px}.rhr .rw{width:calc((100% - 24px)/4)}.rhr .rw i{height:22px}.rhr p{margin:0;font-size:10px;color:#7b6f68}
+.rjw{display:flex;align-items:center;gap:18px}.rm{display:flex;align-items:center;gap:8px}.rm i{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:inset 0 -5px 10px rgba(0,0,0,.18)}.rjw p{margin:0 0 0 auto;font-size:10px;color:#7b6f68}
+.rft{margin-top:12px;padding-top:8px;border-top:1px solid #e6ddd3;font-size:8.5px;color:#7b6f68}
+#hw.full .hws li{border-color:color-mix(in srgb,var(--acc) 42%,var(--line));background:transparent;box-shadow:none}
+#hw.full .hws li::before{transform:scaleY(0)}
+#hw.full .hws li:hover{transform:translateY(-4px);border-color:var(--acc);background:var(--tint);box-shadow:0 18px 34px -20px color-mix(in srgb,var(--acc) 75%,transparent)}
+#hw.full .hws li:hover::before{transform:scaleY(1)}
+</style></head><body>
+<!-- SPRITE de íconos de línea (24×24 y 64×64); se usan con <svg><use href="#i-nombre"/></svg> y heredan color/trazo por CSS. -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.4 1.4M17.6 17.6L19 19M5 19l1.4-1.4M17.6 6.4L19 5"/></symbol><symbol id="i-ban" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M5.6 5.6l12.8 12.8"/></symbol><symbol id="i-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l3 3 5-6"/></symbol><symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 3l10 18H2z"/><path d="M12 10v5M12 18h.01"/></symbol><symbol id="i-star" viewBox="0 0 24 24"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/></symbol><symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></symbol><symbol id="i-ring" viewBox="0 0 24 24"><circle cx="12" cy="15" r="6"/><path d="M9.5 6.5L12 3l2.5 3.5L12 9z"/></symbol><symbol id="i-neck" viewBox="0 0 24 24"><path d="M5 4c0 8 2.5 12 7 12s7-4 7-12"/><circle cx="12" cy="18.5" r="2"/></symbol><symbol id="i-bulb" viewBox="0 0 24 24"><path d="M9 18h6M10 21h4M12 3a6 6 0 00-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0012 3z"/></symbol><symbol id="i-face" viewBox="0 0 24 24"><ellipse cx="12" cy="12" rx="6.5" ry="8.5"/><path d="M9.5 10.5h.01M14.5 10.5h.01M9.5 15c1.5 1.2 3.5 1.2 5 0"/></symbol><symbol id="i-glasses" viewBox="0 0 24 24"><circle cx="6.5" cy="14" r="3.5"/><circle cx="17.5" cy="14" r="3.5"/><path d="M10 14h4M3 14l-1-5M21 14l1-5M3 3l18 18"/></symbol><symbol id="i-cam" viewBox="0 0 24 24"><path d="M4 8h3l1.5-2h7L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></symbol><symbol id="i-phone" viewBox="0 0 24 24"><rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M11 18.5h2"/></symbol><symbol id="i-qr" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3zM20 14v2M17 20h4"/></symbol><symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/></symbol><symbol id="i-photo" viewBox="0 0 64 64"><path d="M8 20V10h10M46 10h10v10M56 44v10H46M18 54H8V44"/><ellipse cx="32" cy="30" rx="10" ry="13"/><path d="M20 54c2-8 7-10 12-10s10 2 12 10"/></symbol><symbol id="i-scan" viewBox="0 0 64 64"><ellipse cx="32" cy="30" rx="12" ry="16"/><path d="M8 32h48M14 14l-4-4M50 14l4-4M14 50l-4 4M50 50l4 4"/><circle cx="26" cy="26" r="1.2"/><circle cx="38" cy="26" r="1.2"/><circle cx="32" cy="40" r="1.2"/></symbol><symbol id="i-pal" viewBox="0 0 64 64"><path d="M32 8C18 8 8 18 8 31s9 25 21 25c5 0 5-4 3-6-3-4 0-8 5-8h8c6 0 11-4 11-10C56 18 46 8 32 8z"/><circle cx="21" cy="28" r="3"/><circle cx="31" cy="20" r="3"/><circle cx="43" cy="24" r="3"/></symbol></svg>
+<!-- ENCABEZADO: marca, barra de pasos navegable (#steps) y botón "?" de guía rápida (#qm). -->
+<header class="top"><span class="logo">Prisma</span><ol id="steps"><li data-n="1">Inicio</li><li data-n="2">Enlace</li><li data-n="3">Cámara</li><li data-n="4">Resultado</li></ol><button class="qm" id="qm" aria-label="Guía rápida: cómo funciona Prisma" title="Guía rápida">?</button></header>
+<!-- CONTENIDO: una <section> por ventana; solo una visible a la vez (ver show() en el script). -->
+<main>
+<!-- VENTANA 1 · INICIO: título, descripción, consejos, consentimiento (plantilla #hdt), cómo funciona, vista previa animada y política de privacidad. -->
+<section id="v-home">
+<div class="heroart"><div><p class="eyebrow">Analizador de Colorimetría Facial Probabilístico</p><h1>Descubre tu <em>paleta de colores</em> ideal con una sola foto</h1>
+<p class="lead">Un algoritmo de visión por computador extrae el tono real de tu piel y un modelo probabilístico calcula matemáticamente tu estación cromática. En segundos, con un reporte detallado listo para tu correo.</p></div><div class="orbw" aria-hidden="true"><div class="orb"><span>12<small>estaciones</small></span></div><em>Primavera</em><em>Verano</em><em>Otoño</em><em>Invierno</em></div></div>
+<div class="card"><h3>Cómo asegurar un análisis preciso</h3>
+<ul class="tips"><li><svg class="ic"><use href="#i-bulb"/></svg>Luz lo más neutra posible (ni amarilla ni azulada), sin flash.</li><li><svg class="ic"><use href="#i-face"/></svg>Cara limpia: sin maquillaje ni filtros.</li><li><svg class="ic"><use href="#i-glasses"/></svg>Recoge tu cabello y quítate las gafas: rostro despejado y de frente.</li><li><svg class="ic"><use href="#i-cam"/></svg>Cámara a la altura de los ojos, fondo neutro.</li></ul>
+<!-- PLANTILLA del aviso Habeas Data (Ley 1581 de 2012); se copia al modal #hd cuando el usuario intenta usar cámara o archivos. --><template id="hdt"><p class="eyebrow">Habeas Data · Ley 1581 de 2012</p><h2>Tratamiento de tu imagen facial</h2><ul class="hdl"><li><svg class="ic"><use href="#i-ban"/></svg>No guardamos tu foto</li><li><svg class="ic"><use href="#i-lock"/></svg>Procesamiento seguro en tu dispositivo</li><li><svg class="ic"><use href="#i-check"/></svg>Solo para calcular tu paleta</li></ul><p> Tu rostro es un dato biométrico sensible. Aplicamos política de cero almacenamiento: tu foto se procesa en tu dispositivo, no se guarda y se descarta al pulsar “Probar con otra foto” o al cerrar la página. Si usas el celular como cámara, viaja solo hasta tu pantalla y se borra al llegar. Autorizo este tratamiento únicamente para calcular mi paleta.</p></template>
+<div class="row cta"><button class="btn p" id="take"><svg class="ic"><use href="#i-cam"/></svg>Tomar foto</button><label class="lnk">Subir una imagen<input type="file" accept="image/*" hidden id="f2"></label><button class="btn g" id="phone"><svg class="ic"><use href="#i-phone"/></svg>Usar mi celular como cámara<svg class="ic"><use href="#i-qr"/></svg><span class="tag">Recomendado</span></button></div>
+<p class="lt warn fail" id="err-home" role="alert" hidden></p><div class="badges"><span>Conversión CIELAB</span><span>Corrección Gray World</span><span>Clustering K-Means</span><span>Clasificador bayesiano</span></div>
+<p class="sm"><svg class="ic s"><use href="#i-lock"/></svg> Tu foto se procesa en tu dispositivo · <a href="#" id="hascode">Ya tengo un código del celular</a></p></div>
+<div class="card" id="hp" hidden><h3>Conecta tu celular</h3><svg class="hand" viewBox="0 0 240 130" aria-hidden="true"><rect x="10" y="14" width="130" height="84" rx="8"/><path d="M75 98v14M55 112h40"/><rect class="qrb" x="48" y="30" width="54" height="54" rx="4"/><path d="M58 40h14v14H58zM78 40h14v14H78zM58 60h14v14H58zM78 62h6v6h-6zM88 72h4"/><g class="ph"><rect x="168" y="30" width="44" height="84" rx="9"/><circle cx="190" cy="104" r="2"/></g><path class="beam" d="M166 56H104M166 72H104"/></svg>
+<p class="sm">Escanea el código con la cámara del celular, o abre este mismo enlace allí y escribe el código.</p>
+<div id="qr"></div><p class="code" id="code"></p>
+<label class="sm">Enlace de esta página (corrígelo si el QR no abre la página correcta)</label><input class="in" id="lnk">
+<div class="live"><i class="pulse"></i><span id="hs"></span></div><button class="btn" id="tc" style="margin-top:12px">Probar conexión</button></div>
+<h2 class="sec">Cómo funciona</h2>
+<ol class="steps3"><li><svg class="il"><use href="#i-photo"/></svg><b>01</b><h3>Toma o sube tu foto</h3><p>Con luz lo más neutra posible y sin filtros.</p></li><li><svg class="il"><use href="#i-scan"/></svg><b>02</b><h3>Analizamos tu rostro</h3><p>Extrae el tono base de piel, cabello, ojos y labios con clustering K-Means, corrige la iluminación con Gray World y calcula tu probabilidad estacional con un clasificador bayesiano en el espacio CIELAB.</p></li><li><svg class="il"><use href="#i-pal"/></svg><b>03</b><h3>Recibe tu paleta ideal</h3><p>Obtienes tu estación cromática y una paleta en HEX con maquillaje y metales, lista para enviar a tu correo.</p></li></ol>
+<blockquote class="quote">Descubre los colores que potencian tu imagen<small>12 estaciones · resultado en segundos · foto procesada en tu dispositivo</small></blockquote>
+<div class="card teaser" id="teaser"><div id="tz"></div><button class="btn g veil" id="unlock">Desbloquea tu paleta completa</button></div>
+<div class="priv"><svg class="ic"><use href="#i-lock"/></svg><div><p><b>Política de Cero Almacenamiento · Ley 1581 de 2012</b></p><ul class="hdl"><li><svg class="ic"><use href="#i-ban"/></svg>No guardamos tu foto</li><li><svg class="ic"><use href="#i-lock"/></svg>Se procesa y se descarta: nada queda almacenado</li><li><svg class="ic"><use href="#i-check"/></svg>Solo se usa para calcular tu paleta</li></ul><span>Si usas el celular como cámara, la foto viaja solo hasta tu pantalla y se borra al llegar.</span></div></div>
+</section>
+
+<!-- VENTANA 3 · CÁMARA: sirve a dos modos — local (webcam, sin código) y celular (con código de emparejamiento). -->
+<section id="v-phone" hidden><h1>Tu foto para Prisma</h1>
+<p class="lead">Toma una selfie con luz lo más neutra posible y envíala a la pantalla principal.</p>
+<div class="card"><label class="sm">Código de la pantalla</label><input class="in" id="pc" maxlength="8" autocapitalize="characters">
+<p class="lt warn fail" id="err-phone" role="alert" hidden></p><div class="cam"><i class="scanln"></i><video id="vid" playsinline muted hidden></video><svg class="gd" viewBox="0 0 100 133"><ellipse cx="50" cy="62" rx="28" ry="38"/><path class="gl" d="M22 54H78M30 82H70M50 20V104"/><text x="80" y="53">OJOS</text><text x="72" y="81">LABIOS</text></svg></div><p class="lt" id="plt" hidden></p><p class="sm" style="text-align:center">Alinea los ojos y los labios con las guías, cabello recogido y luz de frente.</p>
+<button class="btn p big" id="live">Vista en vivo con guía</button><button class="btn p big" id="snap" hidden disabled>Capturar foto</button><label class="lnk" id="pfl" style="display:block;text-align:center;margin-top:12px">Usar la cámara del sistema<input type="file" accept="image/*" capture="user" hidden id="pf"></label>
+<img id="pp" alt="" hidden><button class="btn p big" id="send" hidden>Enviar a la pantalla</button><p class="sm" id="pst"></p><p class="sm" style="text-align:center"><a href="#" id="cback">Volver al inicio</a></p></div></section>
+
+<!-- VENTANA 4 · RESULTADOS: hero con foto y anillo de probabilidad, colores medidos solos, análisis por ejes, pestañas de paletas y panel de acción fijo (.dock). -->
+<section id="v-result" hidden>
+<div class="card hero"><div class="hh"><div class="avw"><img id="avt" alt="Tu foto"><div class="gauge"><svg viewBox="0 0 120 120"><circle class="bg" cx="60" cy="60" r="52"/><circle class="fg" id="gfg" cx="60" cy="60" r="52"/></svg><b id="gv">0%</b></div></div><div class="ht"><small id="af"></small><h1 id="sn"></h1><p class="lead" id="tg"></p><div class="chp" id="chp"></div></div></div><div class="strip" id="strip"></div></div>
+<div class="card"><h3>Tu análisis</h3><p class="sm">Medimos automáticamente el color de cada zona de tu rostro:</p><div class="chips" id="dc"></div><p class="lt" id="lt" hidden></p><p class="sm">Así se ubica tu coloración en cada eje. La probabilidad por estación sale de un clasificador bayesiano sobre estos rasgos.</p><div id="az"></div><h3>Otras estaciones posibles</h3><div class="nbs" id="nb"></div><p class="sm" id="nt"></p><p class="sm"><svg class="ic s"><use href="#i-info"/></svg> Probabilidad estimada con un clasificador bayesiano gaussiano sobre rasgos medidos en CIELAB. Los tonos base se extraen con clustering K-Means, que descarta brillos y sombras, y la iluminación se corrige con Gray World.</p></div>
+<nav class="tabs"><button class="tab on" data-t="c">Tus mejores colores</button><button class="tab" data-t="a">Colores a evitar</button><button class="tab" data-t="b">Maquillaje</button><button class="tab" data-t="j">Joyería</button></nav>
+<div class="card" id="t-p"><h3>Prueba de colores sobre tu rostro</h3>
+<div class="row" style="margin:0 0 8px"><button class="tab on" data-f="best">Mejores</button><button class="tab" data-f="neu">Neutros</button><button class="tab" data-f="avoid">Evitar</button><button class="tab" data-f="ab">Comparar A/B</button></div>
+<div class="dbox" id="dbox"><img id="dimg" alt="Tu foto"></div><p id="dcap" style="margin:4px 0 10px;font-weight:600"></p><div class="dots" id="dr"></div></div>
+<div class="card" id="t-c"></div><div class="card" id="t-n" hidden></div><div class="card" id="t-a" hidden></div><div class="card" id="t-b" hidden></div><div class="card" id="t-j" hidden></div>
+<p class="sm">Estimación automática basada en píxeles: la luz, la cámara y los filtros la alteran. Para un diagnóstico definitivo, consulta a un asesor de imagen.</p>
+<div class="dock"><input class="in" id="em" type="email" placeholder="tu@correo.com" autocomplete="email"><a class="btn p" id="mail" target="_blank" rel="noopener">Enviar reporte detallado a mi correo</a><button class="btn" id="dl">Descargar tarjeta</button></div>
+<div class="row" style="justify-content:center"><button class="btn" id="again">Probar con otra foto</button></div>
+</section>
+</main><!-- PANTALLA DE CARGA · foto con las zonas que se miden solas, barra de progreso y mensajes mientras se analiza. -->
+<div class="ld" id="ld" hidden><div><canvas id="roi"></canvas><div class="roc" id="roc"></div><p class="eyebrow">Analizando tu rostro</p><h2 id="lt2"></h2><div class="bar"><i id="lb"></i></div></div></div>
+<!-- MODAL · Vista previa del informe de una página (A4) con descarga en PDF. -->
+<div class="ld" id="rv" hidden role="dialog" aria-modal="true"><div class="hdc rvc"><p class="eyebrow">Vista previa</p><h2>Tu informe de una sola página</h2><div class="rvw" id="rvw"><div id="rvb"></div></div><p class="sm">Así se verá tu informe en PDF.</p><div class="row"><button class="btn p" id="rvd">Descargar PDF</button><button class="btn" id="rvx">Cerrar</button></div></div></div>
+<!-- MODAL · Guía rápida: completa (botón "?") o solo la etapa pulsada en un paso bloqueado. -->
+<div class="ld" id="hw" hidden role="dialog" aria-modal="true"><div class="hdc hw"><p class="eyebrow">Guía rápida</p><h2>Conoce cómo funciona Prisma paso a paso</h2><p class="hw-i">Sabemos que tu privacidad y tu imagen son importantes. Por eso, hemos diseñado un proceso seguro, rápido y transparente. Si aún no has subido tu foto, aquí te explicamos qué ocurre en cada etapa para que navegues con total tranquilidad:</p>
+<ol class="hws"><li data-n="1"><b>1. Inicio (tu punto de partida)</b><p>Aquí te explicamos cómo funciona la tecnología detrás de Prisma y te damos los mejores consejos para que tu foto sea perfecta (como usar luz neutra y tener el rostro despejado). Además, te explicamos nuestra Política de Cero Almacenamiento: tu fotografía se procesa de forma segura en tu propio dispositivo, nunca se guarda en ningún servidor y se elimina apenas cierras la página. Si usas el celular como cámara, la foto pasa de forma temporal hasta tu pantalla y se borra al llegar.</p></li>
+<li data-n="2"><b>2. Enlace / Cámara (la captura segura)</b><p>En esta ventana, el sistema se prepara para recibir tu foto. Puedes subir una imagen que ya tengas, tomarte una selfie con tu cámara web, o incluso conectar tu celular mediante un código QR para usarlo como cámara. Si usas la cámara en vivo, te mostraremos unas guías visuales en pantalla para que alinees perfectamente tus ojos y labios, garantizando el mejor ángulo para el análisis.</p></li>
+<li data-n="3"><b>3. Resultado (tu paleta ideal)</b><p>¡El momento de la verdad! Apenas recibe tu foto, el sistema ubica tu rostro y mide solo el color de tu piel, cabello, ojos y labios, sin que tengas que marcar nada. Si no encuentra un rostro, te pedirá tomar o subir otra foto. En esta ventana final descubrirás tu estación cromática (Primavera, Verano, Otoño o Invierno) y el porcentaje de probabilidad calculado. Podrás explorar tus mejores colores, los tonos que debes evitar cerca del rostro, y recomendaciones de maquillaje y joyería. Además, si lo deseas, podrás enviar el reporte detallado a tu correo o descargar una tarjeta resumen para llevarla siempre contigo.</p></li></ol>
+<div class="row"><button class="btn p" id="hwgo">Ir al inicio</button><button class="btn" id="hwx">Cerrar</button></div></div></div>
+<!-- MODAL · Consentimiento Habeas Data (contenido tomado de #hdt). -->
+<div class="ld" id="hd" hidden role="dialog" aria-modal="true"><div class="hdc"><div id="hdb"></div><div class="row"><button class="btn p" id="hy">Acepto y continuar</button><button class="btn" id="hn">Cancelar</button></div></div></div>
+<div id="toast" hidden></div>
+<!-- LIBRERÍAS: QR del emparejamiento · html2canvas + jsPDF para exportar el informe a PDF desde el navegador. -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+/* ==========================================================================
+   1. UTILIDADES
+   ========================================================================== */
+/** Atajos de DOM: `$` = primer elemento, `$$` = array de todos; `cl(x,a,b)` acota x al rango [a,b] (por defecto 0-1). */
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)],cl=(x,a=0,b=1)=>Math.min(b,Math.max(a,x));
+/**
+ * Obtiene una capacidad de la plataforma (p. ej. 'db', 'downloads') si existe `window.claude`; si no, resuelve a null.
+ * [ENTORNO] Fuera de la vista previa devuelve null y quien la usa muestra un aviso en lugar de fallar.
+ * @param {string} n Nombre de la capacidad.
+ * @returns {Promise<object|null>}
+ */
+const use=n=>window.claude&&claude.use?claude.use(n).catch(()=>null):Promise.resolve(null);
+/** Convierte canales RGB (0-255) a "#rrggbb". */
+const hx=(r,g,b)=>'#'+[r,g,b].map(v=>Math.round(v).toString(16).padStart(2,'0')).join('');
+/**
+ * [ANÁLISIS PROVISIONAL] sRGB → CIELAB (iluminante D65).
+ * @returns {number[]} [L*, a*, b*]
+ */
+const lab=(r,g,b)=>{const f=v=>(v/=255)<=.04045?v/12.92:((v+.055)/1.055)**2.4,R=f(r),G=f(g),B=f(b),q=t=>t>.008856?Math.cbrt(t):7.787*t+16/116,X=q((R*.4124+G*.3576+B*.1805)/.95047),Y=q(R*.2126+G*.7152+B*.0722),Z=q((R*.0193+G*.1192+B*.9505)/1.08883);return[116*Y-16,500*(X-Y),200*(Y-Z)]};
+/** HSL → "#rrggbb". Solo genera colores del recomendador provisional. @param {number} h 0-360 @param {number} s 0-1 @param {number} l 0-1 */
+const hsl=(h,s,l)=>{const a=s*Math.min(l,1-l),f=n=>{const k=(n+h/30)%12;return 255*(l-a*Math.max(-1,Math.min(k-3,9-k,1)))};return hx(f(0),f(8),f(4))};
+/* ==========================================================================
+   2. CATÁLOGO Y RECOMENDADOR PROVISIONAL  [ANÁLISIS PROVISIONAL]
+   ========================================================================== */
+/**
+ * Catálogo de las 12 estaciones. Fila: [nombre, (reservado), calidez −1..1, profundidad 0..1, claridad 0..1, contraste 0..1, lema].
+ * El índice de la fila es el identificador de la estación (st.sel).
+ */
+const S=[['Primavera Clara','',.55,.12,.55,.3,'Luz dorada y pasteles cálidos'],['Primavera Cálida','',.95,.4,.65,.45,'Oro, coral y verdes de sol'],['Primavera Brillante','',.5,.4,.95,.75,'Color limpio y vivo, con calidez'],['Verano Claro','',-.4,.12,.4,.25,'Acuarela fría y plata delicada'],['Verano Frío','',-.9,.45,.4,.4,'Rosa empolvado y azul grisáceo'],['Verano Suave','',-.3,.5,.08,.2,'Bruma elegante en tonos ahumados'],['Otoño Suave','',.35,.5,.08,.25,'Tierra apagada y salvia'],['Otoño Cálido','',.95,.6,.35,.5,'Especias, óxido y oliva'],['Otoño Profundo','',.6,.9,.5,.8,'Burdeos, bosque y caoba'],['Invierno Profundo','',-.5,.92,.65,.92,'Joya oscura y contraste total'],['Invierno Frío','',-.95,.6,.7,.75,'Zafiro, fucsia y plata'],['Invierno Brillante','',-.55,.5,.97,.95,'Cristalino, nítido y eléctrico']];
+/** Matices base [tono HSL, nombre, calidez −1..1] con los que `gen` construye las paletas de ejemplo. */
+const H=[[350,'Rosa',-.5],[2,'Rojo',.1],[14,'Coral',.8],[24,'Terracota',.9],[38,'Naranja',.8],[48,'Mostaza',.9],[64,'Oliva',.7],[95,'Lima',.4],[135,'Verde',0],[165,'Verde azulado',-.2],[185,'Turquesa',-.1],[205,'Azul cielo',-.5],[222,'Azul',-.7],[248,'Índigo',-.8],[275,'Violeta',-.8],[300,'Malva',-.7],[325,'Fucsia',-.8]];
+/** Nombre legible de un color: matiz más cercano + modificador (pastel / apagado / profundo / intenso). */
+const nm=(h,s,l)=>H.reduce((a,x)=>{const d=Math.min(Math.abs(x[0]-h),360-Math.abs(x[0]-h));return d<a[0]?[d,x[1]]:a},[999])[1]+(l>.78?' pastel':s<.3?' apagado':l<.3?' profundo':s>.82?' intenso':'');
+/** Crea un color de paleta `{hex, name, s}` desde valores HSL. */
+const mk=(h,s,l)=>({hex:hsl(h,s,l),name:nm(h,s,l),s});
+/**
+ * Recomendador provisional: paleta completa de una estación.
+ * [ACOPLAMIENTO] Sustituir por el diccionario HEX del repositorio, conservando esta forma de salida.
+ * @param {number} i Índice de la estación en S.
+ * @returns {{pal:Color[],neu:Color[],avoid:Color[],star:Color[],lips:Color[],blush:Color[],shadow:Color[],hair:string[],metal:string,tip:string}}
+ *   `Color` = {hex:string, name:string, s:number}.
+ */
+function gen(i){const[,,w,d,c]=S[i],ix=(f)=>H.map((x,j)=>[f(x[2]),j]).sort((a,b)=>a[0]-b[0]);
+const pal=ix(t=>Math.abs(t-w)).slice(0,12).map(a=>a[1]).sort((a,b)=>a-b).map((j,k)=>{const v=[0,.08,-.06,.04,-.1,.1][k%6];return mk(H[j][0],cl(.22+.68*c+v*1.2,.12,.95),cl(.86-.5*d+v,.22,.9))});
+const nn=w>0?['Marfil','Arena','Camel','Chocolate','Espresso']:['Blanco roto','Gris perla','Gris piedra','Azul marino','Carbón'];
+const neu=[.93,.78,.6,.4,.2].map((L,k)=>({hex:hsl(w>0?32:222,.1+.12*Math.abs(w),cl(L-.1*(d-.5),.1,.95)),name:nn[k]}));
+const avoid=ix(t=>-Math.abs(t-w)).slice(0,6).map((a,k)=>mk(H[a[1]][0],c<.5?.95:.18,d>.55?.86:.2+.04*k));
+const lh=w>0?[14,24,2]:[350,325,300],ls=cl(.35+.5*c,.3,.9),ll=cl(.58-.22*d,.3,.7);
+return{pal,neu,avoid,star:[...pal].sort((a,b)=>b.s-a.s).slice(0,3),lips:lh.map(h=>mk(h,ls,ll)),blush:lh.slice(0,2).map(h=>mk(h,ls-.1,ll+.14)),shadow:[neu[1],neu[2],neu[3],pal[6]],
+hair:[w>0?(d>.6?'castaño chocolate cálido o caoba':d>.3?'castaño miel o dorado suave':'rubio dorado o miel claro'):(d>.6?'negro azulado o castaño oscuro frío':d>.3?'castaño ceniza o cacao frío':'rubio ceniza o platino suave'),c<.3?'tonos mezclados y suaves, sin contrastes duros':c>.7?'admite reflejos nítidos y contraste marcado':'reflejos sutiles y naturales'],
+metal:w>.25?'oro amarillo, cobre y bronce':w<-.25?'plata, platino y oro blanco':'oro rosa y plata suave',
+tip:w>0?'En vez de negro puro, usa espresso o chocolate intenso.':d>.7?'El negro puro y el blanco óptico sí te funcionan.':'En vez de negro puro, usa carbón o azul marino.'}}
+/**
+ * [ANÁLISIS PROVISIONAL] Clasificador bayesiano gaussiano ingenuo con priors uniformes sobre 4 rasgos.
+ * [ACOPLAMIENTO] Sustituir por la probabilidad que entregue el backend.
+ * @param {{w:number,d:number,c:number,k:number}} f Calidez (−1..1), profundidad, claridad y contraste (0..1).
+ * @returns {Array<[number,number]>} Pares [índice de estación, probabilidad %] ordenados de mayor a menor.
+ */
+const rank=f=>{const L=S.map(s=>-(((f.w-s[2])/2/.251)**2+((f.d-s[3])/.324)**2+((f.c-s[4])/.389)**2+((f.k-s[5])/.486)**2)/2),M=Math.max(...L),E=L.map(v=>Math.exp(v-M)),T=E.reduce((a,b)=>a+b);return E.map((v,i)=>[i,Math.round(100*v/T)]).sort((a,b)=>b[1]-a[1])};
+/* ==========================================================================
+   3. ESTADO Y NAVEGACIÓN
+   ========================================================================== */
+/**
+ * LB: etiquetas de las 4 zonas que el código muestrea solo · V: orden de ventanas (igual al de la barra de pasos).
+ */
+const LB=['Piel (mejilla)','Cabello (raíz)','Ojo (iris)','Labios'],V=['home','pair','phone','result'];
+/**
+ * Estado global (único objeto mutable de la app).
+ *  pts    zonas muestreadas solas [{x,y,rgb,hex}]   url   foto (dataURL) en memoria   gw   ganancias Gray World
+ *  luz    control de luz {ok,msg}
+ *  f      rasgos {w,d,c,k}                          rk    ranking [índice,%]          sel  estación mostrada
+ *  dr/di/dj  modo y colores de la prueba en rostro   pair/local  banderas del flujo (handoff / captura local)
+ * Variables sueltas: base (canvas con la foto), db (base compartida del handoff), unsub (cancela la escucha), pimg (foto del celular a enviar).
+ */
+let st={pts:[null,null,null,null],dr:'best',di:0},base,db=null,unsub=null,pimg='';
+/**
+ * Muestra una ventana y oculta las demás; actualiza la barra de pasos (activo / hecho / bloqueado) y el scroll.
+ * @param {'home'|'pair'|'phone'|'result'} v
+ */
+function show(v){alertas();V.forEach(x=>$('#v-'+x).hidden=x!==v);const k=V.indexOf(v);$$('#steps li').forEach((l,i)=>{l.className=(i===k?'on':i<k?'ok':'')+(i!==k&&!avail(i+1)?' lk':'');l.hidden=i===1&&!st.pair});$('#steps').hidden=v==='phone'&&!st.local;scrollTo(0,0)}
+/** Aviso flotante breve (3,5 s). @param {string} t */
+const toast=t=>{const e=$('#toast');e.textContent=t;e.hidden=false;setTimeout(()=>e.hidden=true,3500)};
+/* ==========================================================================
+   4. FOTO Y MUESTREO AUTOMÁTICO (el usuario no marca ninguna zona)
+   ========================================================================== */
+/**
+ * Carga una imagen, la reduce a ≤720 px, calcula la corrección Gray World y el control de luz, y lanza el análisis automático.
+ * @param {string} src URL, blob URL o dataURL de la imagen.
+ * @param {(motivo:string)=>void} fail Qué hacer si la foto no sirve (ver analyze).
+ */
+function load(src,fail){const im=new Image();im.onerror=()=>fail('error');im.onload=()=>{const k=Math.min(1,720/Math.max(im.width,im.height));base=document.createElement('canvas');base.width=Math.round(im.width*k);base.height=Math.round(im.height*k);base.getContext('2d').drawImage(im,0,0,base.width,base.height);st.url=base.toDataURL('image/jpeg',.85);st.gw=gw(base);st.luz=light();st.pts=[null,null,null,null];analyze(fail)};im.src=src}
+/** [ANÁLISIS PROVISIONAL] Control de luz global según luminosidad (L*) y dominante (b*) de la foto reducida a 24×24. @returns {{ok:number,msg:string}} */
+function light(){const t=document.createElement('canvas');t.width=t.height=24;const c=t.getContext('2d');c.drawImage(base,0,0,24,24);const d=c.getImageData(0,0,24,24).data;let R=0,G=0,B=0;for(let i=0;i<d.length;i+=4){R+=d[i];G+=d[i+1];B+=d[i+2]}const n=d.length/4,l=lab(R/n,G/n,B/n);return l[0]<28?{ok:0,msg:'Control de luz: la foto es oscura, busca una luz más intensa y neutra.'}:l[2]>24?{ok:0,msg:'Control de luz: se ve muy cálida y puede inclinar el resultado hacia estaciones cálidas.'}:l[2]<-3?{ok:0,msg:'Control de luz: se ve muy fría y puede inclinar el resultado hacia estaciones frías.'}:{ok:1,msg:'Control de luz: razonable.'}}
+/** [ANÁLISIS PROVISIONAL] Tono base de un parche cuadrado de lado `n` centrado en (x, y): K-Means y corrección Gray World. @returns {{x:number,y:number,rgb:number[],hex:string}} */
+const patch=(x,y,n)=>{n=Math.max(5,Math.min(n|0,base.width,base.height));const d=base.getContext('2d').getImageData(cl(Math.round(x-n/2),0,base.width-n),cl(Math.round(y-n/2),0,base.height-n),n,n).data,rgb=km(d).map((v,i)=>cl(v*st.gw[i],0,255));return{x,y,rgb,hex:hx(...rgb)}};
+/**
+ * Ubicador de los 478 puntos del rostro: MediaPipe FaceLandmarker, el mismo modelo que usa el backend. Se descarga una sola vez
+ * del CDN y corre en el navegador (la foto no sale del dispositivo). Sin conexión, o si tarda más de 20 s, resuelve a null
+ * y el siguiente intento vuelve a probar.
+ * @returns {Promise<object|null>}
+ */
+let fl=null;const MP='https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14';
+const lmk=()=>fl||(fl=Promise.race([import(MP).then(async m=>{const v=m.FaceLandmarker?m:m.default;return v.FaceLandmarker.createFromOptions(await v.FilesetResolver.forVisionTasks(MP+'/wasm'),{baseOptions:{modelAssetPath:'https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task',delegate:'CPU'},runningMode:'IMAGE',numFaces:1})}),new Promise((_,no)=>setTimeout(no,20000))]).catch(()=>fl=null));
+/**
+ * [ANÁLISIS PROVISIONAL] Muestreo automático de las 4 zonas: el usuario no toca la foto. Usa los puntos del rostro del backend:
+ * mejilla (205), cabello sobre la frente (10, subiendo 0,35 anchos de rostro), centro del iris (468, con un parche que no se sale
+ * del iris) y labio inferior (entre 14 y 17).
+ * [ACOPLAMIENTO] En producción las zonas las mide el backend con máscaras completas de cada zona y la segmentación del cabello.
+ * @returns {Promise<{pts?:Array<{x:number,y:number,rgb:number[],hex:string}>,err?:string}>} Piel, cabello, iris y labios (en
+ *   píxeles de `base`) o, si la foto no sirve, el motivo: 'rostro' (no hay un rostro), 'red' (sin conexión no se pudo descargar
+ *   el ubicador) o 'error'.
+ */
+async function auto(){const W=base.width,H=base.height,f=await lmk();if(!f)return{err:'red'};let L;try{L=f.detect(base).faceLandmarks[0]}catch(e){return{err:'error'}}if(!L)return{err:'rostro'};
+const p=i=>[L[i].x*W,L[i].y*H],d=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]),fw=d(p(234),p(454)),fr=p(10),lb=[p(14),p(17)];
+// [x, y, lado del parche] de cada zona: mejilla, cabello, iris y labio inferior.
+return{pts:[[...p(205),fw*.06],[fr[0],Math.max(fr[1]-.35*fw,fw*.03),fw*.06],[...p(468),d(p(468),p(469))*1.2],[(lb[0][0]+lb[1][0])/2,(lb[0][1]+lb[1][1])/2,d(...lb)*.6]].map(([x,y,n])=>patch(x,y,n))}}
+/** Avisos cuando la foto no sirve, por motivo y, si no hay rostro, por ventana: no se pasa al resultado y se pide otra foto. */
+const NOSIRVE={rostro:{home:'No encontramos un rostro en la imagen. Sube otra foto de frente, con el rostro despejado y buena luz.',phone:'No encontramos un rostro en la foto. Vuelve a tomarla: centra tu rostro en el óvalo, de frente y con buena luz.',pair:'La foto que llegó del celular no muestra un rostro. Tómala otra vez con el celular: el mismo código sigue sirviendo.'},red:'No pudimos revisar la foto: el ubicador del rostro se descarga de internet y no hay conexión. Revisa la conexión y vuelve a intentarlo.',error:'No pudimos abrir o analizar la foto. Prueba con otra.'};
+/** Muestra en la ventana `v` ('home', 'phone' o 'pair') el aviso del motivo `m` y lo deja a la vista. */
+const aviso=(v,m)=>{const e=$('#err-'+v);e.innerHTML='<svg class="ic"><use href="#i-alert"/></svg>'+(m==='rostro'?NOSIRVE.rostro[v]:NOSIRVE[m]||NOSIRVE.error);e.hidden=false;e.scrollIntoView({block:'center',behavior:'smooth'})};
+/** Oculta los avisos de foto no válida (al cambiar de ventana o al analizar otra foto). */
+const alertas=()=>$$('.fail').forEach(e=>e.hidden=true);
+/**
+ * Análisis automático, sin pasos manuales: abre la pantalla de carga, muestrea las zonas, calcula los rasgos (calidez,
+ * profundidad, claridad, contraste), clasifica y muestra los resultados. Si la foto no sirve (sin rostro o sin poder revisarla),
+ * no avanza: cierra la carga, descarta la foto y llama a `fail` con el motivo para pedir otra en la misma ventana.
+ * [ANÁLISIS PROVISIONAL] [ACOPLAMIENTO] Punto donde enviar la foto al backend y recibir zonas, estación, probabilidades y rasgos.
+ * @param {(motivo:string)=>void} fail
+ */
+async function analyze(fail){alertas();$('#lb').style.width='0%';$('#lt2').textContent='Ubicando tu rostro y sus zonas…';roi();$('#ld').hidden=false;const z=await auto().catch(()=>({err:'error'}));if(z.err){$('#ld').hidden=true;wipe();return fail(z.err)}st.pts=z.pts;
+const[sk,ha,ey,li]=st.pts.map(p=>lab(...p.rgb)),hue=l=>Math.atan2(l[2],l[1])*57.3,ch=l=>Math.hypot(l[1],l[2]),k=cl((.7*Math.abs(sk[0]-ha[0])+.3*Math.abs(sk[0]-ey[0]))/52);
+st.f={w:cl(.6*cl((hue(sk)-58)/14,-1,1)+.2*cl((ha[2]-6)/10,-1,1)+.2*cl(ey[2]/18,-1,1),-1,1),d:cl((70-(.5*sk[0]+.35*ha[0]+.15*ey[0]))/42),k,c:cl(.5*k+.25*Math.min(ch(ey)/28,1)+.25*Math.min(ch(li)/42,1))};
+st.rk=rank(st.f);st.sel=st.rk[0][0];st.dr='best';st.di=0;$('#dimg').src=st.url;load2(()=>{show('result');render()})}
+/* ==========================================================================
+   5. RESULTADOS (ventana 5)
+   ========================================================================== */
+/** Plantillas de muestras: `sw` = una muestra de color; `grid` = cuadrícula (el callback `x` añade un prefijo, p. ej. la estrella de "colores estrella"). */
+const sw=(c,x='')=>`<div class="sw"><i style="background:${c.hex}"></i><span>${x}${c.name}<small>${c.hex}</small></span></div>`,grid=(a,x)=>`<div class="sws">${a.map(c=>sw(c,x&&x(c))).join('')}</div>`;
+/**
+ * Texto plano del correo, en las 5 secciones del informe.
+ * @param {object} g Paleta de la estación (salida de gen). @param {Array} s Fila de S. @param {number} a Probabilidad %.
+ * @returns {string}
+ */
+const sumTxt=(g,s,a)=>{const j=A=>A.map(c=>c.name+' '+c.hex).join(', '),x=A=>A.map(c=>c.hex).join(' '),n=A=>A.map(c=>c.name).join(', '),f=st.f,pc=v=>Math.round(cl(v)*100)+' %';return`PRISMA · Tu informe de colorimetría\n\n1. VEREDICTO\nEstación: ${s[0]} (${a}% de probabilidad)\n“${s[6]}”\nEstilo: ${kw(s).join(' · ')}\n\n2. SUBTONO Y PERFIL DE COLOR\nTemperatura (eje b*): ${pc((f.w+1)/2)} hacia cálido\nBrillo (eje L*): ${pc(f.d)} hacia profundo\nCroma (ejes a* y b*): ${pc(f.c)} hacia brillante\nContraste: ${f.k<.34?'Bajo':f.k<.67?'Medio':'Alto'}\n\n3. PALETA RECOMENDADA\nNeutros: ${j(g.neu)}\nAcentos: ${x(g.pal)}\nEvitar: ${x(g.avoid)}\n\n4. BELLEZA Y COSMÉTICA\nBase: ${n(bsOf(s))}\nRubor: ${n(g.blush)}\nSombras: ${n(g.shadow)}\nLabial: ${n(g.lips)}\nCabello: ${g.hair.join('; ')}\n\n5. JOYERÍA Y METALES\n${metalsOf(s).join(', ')}\n\nEstimación automática por foto; la luz y la cámara pueden alterarla.`};
+/**
+ * Dibuja toda la ventana de resultados a partir del estado (st.f, st.rk, st.sel) y de la paleta de la estación seleccionada:
+ * hero, análisis por ejes, pestañas (mejores / evitar / maquillaje / joyería), prueba en rostro y enlace de correo.
+ */
+function render(){const g=gen(st.sel),s=S[st.sel],r=st.rk,a=r.find(x=>x[0]===st.sel)[1];
+// Hero: probabilidad, anillo animado, tema de color de la estación y cinta de paleta.
+$('#af').textContent=a+'% de probabilidad';gauge(a);{const q=GR[st.sel],h=$('.hero');h.style.setProperty('--g1',q[0]);h.style.setProperty('--g2',q[1])}$('#strip').innerHTML=g.pal.map(c=>`<i style="background:${c.hex}" title="${c.name}"></i>`).join('');$('.hero').style.background=`linear-gradient(135deg,${g.pal[0].hex}44,${g.pal[5].hex}33 55%,${g.pal[10].hex}44)`;$('#sn').textContent=s[0];$('#tg').textContent=s[6];
+// Otras estaciones posibles (top 3) y avisos cuando el resultado es ambiguo o de baja probabilidad.
+$('#nb').innerHTML=r.slice(0,3).map(([i,p])=>`<button class="nb${i===st.sel?' on':''}" data-i="${i}"><span>${S[i][0]}</span><b>${p}%</b><i style="width:${p}%"></i></button>`).join('');
+$('#nt').textContent=(r[0][1]-r[1][1]<8?`Estás entre ${S[r[0][0]][0]} y ${S[r[1][0]][0]}: toca ambas arriba y compáralas en “Prueba”. `:'')+(r[0][1]<30?'La probabilidad es baja: repite con una luz más neutra.':'');
+// Colores que el código midió solo en cada zona, y control de luz de la foto.
+$('#dc').innerHTML=st.pts.map((p,i)=>`<div class="chip"><i style="background:${p.hex}"></i><span>${LB[i]}<small>${p.hex}</small></span></div>`).join('');
+{const e=$('#lt'),ok=st.luz.ok;e.hidden=false;e.className='lt '+(ok?'ok':'warn');e.innerHTML=`<svg class="ic"><use href="#i-${ok?'check':'alert'}"/></svg>${st.luz.msg}`}
+// Pestañas: mejores colores / evitar / maquillaje (base, rubor, sombras, labial, cabello) / joyería (metales según subtono).
+const bs=[-.05,0,.05].map(o=>({hex:hsl(s[2]>0?30:16,.36,cl(.78-.38*s[3]+o,.25,.88)),name:o<0?'Un tono más claro':o>0?'Un tono más profundo':'Tono base ideal'}));
+$('#t-c').innerHTML=`<h3>Colores de acento</h3>${grid(g.pal,c=>g.star.includes(c)?'<svg class="ic s st"><use href="#i-star"/></svg> ':'')}<h3>Neutros base</h3>${grid(g.neu)}<ul class="rules"><li>Colores estrella: úsalos cerca del rostro.</li><li>Estampados: si el 75 % o más de sus colores está en tu paleta, adelante.</li><li>${g.tip}</li></ul>`;
+$('#t-a').innerHTML=`<h3>Mejor evitar</h3>${grid(g.avoid)}<p class="sm">Úsalos lejos del rostro: restan luz a tu piel y endurecen tus rasgos.</p>`;
+$('#t-b').innerHTML=`<h3>Base</h3>${grid(bs)}<h3>Rubor</h3>${grid(g.blush)}<h3>Sombras</h3>${grid(g.shadow)}<h3>Labial</h3>${grid(g.lips)}<p><b>Cabello:</b> ${g.hair.join('; ')}.</p><p class="sm">Prueba la base en la mandíbula con luz neutra: el tono final se confirma en persona.</p>`;
+const mt=(n,c1,c2,q)=>`<div class="mt" style="--m1:${c1};--m2:${c2}"><i class="sph"><svg class="ic"><use href="#i-ring"/></svg></i><div><b>${n}</b><small><svg class="ic s"><use href="#i-ring"/></svg> <svg class="ic s"><use href="#i-neck"/></svg> Anillos y collares</small></div><em class="f${q}">${['Evítalo cerca del rostro','Con moderación','Te favorece'][q]}</em></div>`,wm=s[2],ab=Math.abs(wm);
+$('#t-j').innerHTML=`<h3>Metales que te favorecen</h3><div class="mts">${mt('Oro','#f6dc8a','#c9972b',wm>.25?2:wm>-.1?1:0)}${mt('Oro rosa','#f6cdbd','#c98a78',ab<.5?2:ab<.8?1:0)}${mt('Plata','#f4f5f7','#a3a9b3',wm<-.25?2:wm<.1?1:0)}</div><p class="sm">Recomendación base: ${g.metal}.</p>`;
+// Análisis por ejes: el marcador parte del centro y se anima hasta su posición.
+const trk=(n,x,v,a,b,t)=>`<div class="trk"><div class="th"><b>${n}</b><small>${x}</small></div><div class="tr ${t}"><i data-v="${Math.round(cl(v)*100)}" style="left:50%"></i></div><div class="te"><span>${a}</span><span>${b}</span></div></div>`,kk=st.f.k<.34?0:st.f.k<.67?1:2;
+$('#az').innerHTML=trk('Temperatura (subtono)','Eje b*',(st.f.w+1)/2,'Frío','Cálido','t1')+trk('Brillo (luminosidad)','Eje L*',st.f.d,'Claro','Profundo','t2')+trk('Croma (saturación)','Ejes a* y b*',st.f.c,'Suave','Brillante','t3')+`<div class="trk"><div class="th"><b>Contraste</b><small>General</small></div><div class="seg">${['Bajo','Medio','Alto'].map((t,i)=>`<span class="${kk===i?'on':''}">${t}</span>`).join('')}</div></div>`;
+setTimeout(()=>$$('#az .tr i').forEach(e=>e.style.left=e.dataset.v+'%'),80);
+// Chips de palabras clave y foto del usuario en el hero.
+$('#chp').innerHTML=[s[2]>.25?'Cálido':s[2]<-.25?'Frío':'Neutro',s[3]<.3?'Claro':s[3]>.7?'Profundo':'Medio',s[4]<.3?'Suave':s[4]>.7?'Brillante':'Equilibrado',s[5]<.34?'Contraste bajo':s[5]<.67?'Contraste medio':'Contraste alto'].map(t=>`<span>${t}</span>`).join('');
+if(st.url)$('#avt').src=st.url;
+// Prueba en rostro y enlace de correo se actualizan con la estación mostrada.
+drape();mail()}
+/** "Prueba en tu rostro": pinta el fondo del retrato con el color elegido. Modos: best / neu / avoid y 'ab' (comparador A/B). */
+function drape(){if(st.dr==='ab')return ab();const g=gen(st.sel),L={best:g.pal,neu:g.neu,avoid:g.avoid}[st.dr],v={best:'Te favorece',neu:'Neutro útil',avoid:'Te favorece menos'}[st.dr],c=L[st.di]||L[0];
+$('#dr').innerHTML=L.map((q,i)=>`<button class="dot" style="background:${q.hex}" data-i="${i}" aria-label="${q.name}"></button>`).join('');$('#dbox').style.background=c.hex;$('#dcap').textContent=`${c.name} · ${c.hex} · ${v}`}
+// Selección de color en la prueba (lado A = st.di; lado B = st.dj en modo A/B).
+$('#dr').onclick=e=>{const b=e.target.closest('.dot');if(b){st[b.dataset.s==='b'?'dj':'di']=+b.dataset.i;drape()}};
+// Filtros de la prueba: mejores / neutros / evitar / comparar A/B.
+$$('[data-f]').forEach(b=>b.onclick=()=>{$$('[data-f]').forEach(x=>x.classList.toggle('on',x===b));st.dr=b.dataset.f;st.di=0;drape()});
+// Comparar estaciones vecinas: cambia la estación mostrada sin reclasificar.
+$('#nb').onclick=e=>{const b=e.target.closest('.nb');if(b){st.sel=+b.dataset.i;render()}};
+// Pestañas de resultados; "Prueba en tu rostro" (#t-p) acompaña a "Tus mejores colores".
+$$('[data-t]').forEach(b=>b.onclick=()=>{$$('[data-t]').forEach(x=>x.classList.toggle('on',x===b));['p','c','b','n','a','j'].forEach(k=>$('#t-'+k).hidden=!(k===b.dataset.t||(k==='p'&&b.dataset.t==='c')))});
+/**
+ * Actualiza el enlace `mailto:` con el resumen en texto plano.
+ * [ACOPLAMIENTO] Sustituir por el envío del PDF por el backend (FastAPI genera el PDF desde la plantilla y lo envía por SMTP).
+ */
+function mail(){const g=gen(st.sel),s=S[st.sel],a=st.rk.find(x=>x[0]===st.sel)[1],t=sumTxt(g,s,a);$('#mail').href='mailto:'+$('#em').value.trim()+'?subject='+encodeURIComponent('Tu colorimetría Prisma: '+s[0])+'&body='+encodeURIComponent(t)}
+$('#em').oninput=mail;
+
+/* ==========================================================================
+   6. ENTRADA DE FOTO: ARCHIVO Y HANDOFF PC-CELULAR
+   ========================================================================== */
+/** Carga la foto elegida desde el dispositivo (input de archivo). */
+const fromFile=e=>{const f=e.target.files[0];if(f)load(URL.createObjectURL(f),m=>aviso('home',m));e.target.value=''};$('#f2').onchange=fromFile;
+/** "Probar con otra foto": descarta la foto (cero almacenamiento) y vuelve al inicio. */
+$('#again').onclick=()=>{wipe();st.pair=st.local=0;show('home')};
+/** Dibuja el QR con el enlace de la página + `#tel-CÓDIGO`, que abre la vista del celular. */
+function qr(){const c=$('#code').textContent;$('#qr').innerHTML='';if(window.QRCode)new QRCode($('#qr'),{text:$('#lnk').value.trim()+'#tel-'+c,width:220,height:220})}
+$('#lnk').value=location.href.split('#')[0];$('#lnk').oninput=qr;
+/**
+ * Handoff (PC): abre la ventana de enlace, genera un código de 6 caracteres, crea el documento `handoff/<CÓDIGO>` y escucha la llegada de la foto (campo `img`).
+ * [ENTORNO] Usa la base compartida de la plataforma (window.claude). [ACOPLAMIENTO] Reemplazar por la API local / WebSocket del proyecto.
+ */
+$('#phone').onclick=async()=>{st.pair=1;st.local=0;show('pair');$('#hp').hidden=false;db=db||await use('db');const A='ABCDEFGHJKMNPQRSTUVWXYZ23456789',code=Array.from({length:6},()=>A[Math.random()*31|0]).join('');$('#code').textContent=code;qr();
+if(!db){$('.live').classList.add('off');$('#hs').textContent='Para conectar el celular, abre esta página con tu sesión iniciada.';return}
+const ref=db.doc('handoff/'+code);try{await ref.set({t:Date.now()})}catch(e){}$('.live').classList.remove('off');$('#hs').textContent='Escuchando… esperando la foto del celular';listen(ref)};
+/** Escucha `handoff/<CÓDIGO>` hasta que llega una foto nueva del celular; si la foto no sirve, avisa y sigue escuchando el mismo código. */
+let ult=0;function listen(ref){unsub&&unsub();unsub=ref.onSnapshot(s=>{const d=s.exists&&s.data();if(d&&d.img&&d.t!==ult){ult=d.t;unsub();ref.delete().catch(()=>{});toast('Foto recibida del celular');load(d.img,m=>{aviso('pair',m);listen(ref)})}},()=>{$('#hs').textContent='No se pudo escuchar al celular.'})}
+// Abre la vista de celular escribiendo el código a mano (si el QR no sirve).
+$('#hascode').onclick=e=>{e.preventDefault();capUI(0);show('phone')};
+// Foto desde la cámara del sistema (celular): se reduce a ≤560 px y pasa a setPhoto().
+$('#pf').onchange=e=>{const f=e.target.files[0];if(!f)return;const im=new Image();im.onload=()=>{const k=Math.min(1,560/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=im.width*k;c.height=im.height*k;c.getContext('2d').drawImage(im,0,0,c.width,c.height);setPhoto(c)};im.src=URL.createObjectURL(f);e.target.value=''};
+/**
+ * Botón de envío. Modo local: analiza la foto y abre el resultado (sin rostro, pide otra y reabre la cámara en vivo).
+ * Modo celular: escribe la foto en `handoff/<CÓDIGO>`.
+ * Si tarda más de 5 s muestra "Procesando matemática compleja…" para que no parezca congelado.
+ */
+$('#send').onclick=async()=>{if(st.local){stop();load(pimg,m=>{aviso('phone',m);$('#pp').hidden=$('#send').hidden=true;lv0()});return}const code=$('#pc').value.trim().toUpperCase();db=db||await use('db');if(!db){$('#pst').textContent='Sin conexión con la pantalla: abre esta página con tu sesión iniciada.';return}
+$('#pst').textContent='Enviando…';const w=setTimeout(()=>$('#pst').innerHTML='<span class="spin"></span> Procesando matemática compleja…',5000);try{await db.doc('handoff/'+code).set({img:pimg,t:Date.now()});clearTimeout(w);$('#pst').textContent='¡Listo! Mira la pantalla principal.'}catch(e){clearTimeout(w);$('#pst').textContent='No se pudo enviar. Revisa el código e inténtalo de nuevo.'}};
+/* ==========================================================================
+   7. CÁMARA EN VIVO Y ANÁLISIS DE FOTOGRAMA (ventana 3)
+   ========================================================================== */
+/**
+ * [ANÁLISIS PROVISIONAL] Corrección Gray World: ganancias por canal (acotadas a 0,8–1,25) que igualan el promedio de la imagen al gris.
+ * @param {HTMLCanvasElement} c @returns {number[]} [gR, gG, gB]
+ */
+const gw=c=>{const d=c.getContext('2d').getImageData(0,0,c.width,c.height).data;let R=0,G=0,B=0;const n=d.length/4;for(let i=0;i<d.length;i+=4){R+=d[i];G+=d[i+1];B+=d[i+2]}const m=(R+G+B)/3/n;return[R,G,B].map(v=>cl(m/(v/n),.8,1.25))};
+/**
+ * [ANÁLISIS PROVISIONAL] Tono base de un parche con K-Means (k=3, 8 iteraciones, espacio Lab): descarta clústeres <20 % (brillos/sombras) y devuelve el RGB medio del mayor.
+ * @param {Uint8ClampedArray} d Datos RGBA del parche. @returns {number[]} [r, g, b]
+ */
+const km=d=>{const P=[];for(let i=0;i<d.length;i+=4)P.push({c:[d[i],d[i+1],d[i+2]],l:lab(d[i],d[i+1],d[i+2])});const s=[...P].sort((a,b)=>a.l[0]-b.l[0]);let C=[1,3,5].map(k=>s[s.length*k/6|0].l),G;for(let t=0;t<8;t++){G=[[],[],[]];P.forEach(p=>{let b=0,m=1e9;C.forEach((q,i)=>{const e=(p.l[0]-q[0])**2+(p.l[1]-q[1])**2+(p.l[2]-q[2])**2;if(e<m){m=e;b=i}});G[b].push(p)});C=C.map((q,i)=>G[i].length?[0,1,2].map(k=>G[i].reduce((a,p)=>a+p.l[k],0)/G[i].length):q)}const K=G.filter(g=>g.length>=P.length*.2),g=(K.length?K:G).sort((a,b)=>b.length-a.length)[0];return[0,1,2].map(k=>g.reduce((a,p)=>a+p.c[k],0)/g.length)};
+/**
+ * [ANÁLISIS PROVISIONAL] Control de luz de un fotograma (48×64, región central): luminosidad, luz lateral y dominante cálida/fría.
+ * @param {CanvasImageSource} s @returns {{ok:number,msg:string}}
+ */
+const chk0=s=>{const c=document.createElement('canvas');c.width=48;c.height=64;const x=c.getContext('2d');x.drawImage(s,0,0,48,64);const d=x.getImageData(12,12,24,40).data;let R=0,G=0,B=0,A=0,Z=0;const n=d.length/4;for(let i=0;i<d.length;i+=4){R+=d[i];G+=d[i+1];B+=d[i+2];const q=lab(d[i],d[i+1],d[i+2])[0];(i/4%24<12?A+=q:Z+=q)}const l=lab(R/n,G/n,B/n),df=Math.abs(A-Z)/(n/2);return l[0]<35?{ok:0,msg:'Luz insuficiente: busca una luz más intensa y neutra.'}:l[0]>88?{ok:0,msg:'Sobreexpuesta: evita el flash y la luz directa.'}:df>16?{ok:0,msg:'Luz lateral o sombras marcadas: gira hacia la luz.'}:l[2]>30?{ok:0,msg:'Luz muy cálida: busca una luz más neutra.'}:l[2]<7?{ok:0,msg:'Luz muy fría: busca una luz más neutra.'}:{ok:1,msg:'Iluminación óptima'}};
+/**
+ * Pinta el aviso de iluminación, el tinte parpadeante (w cálida · c fría · d oscura), la línea de escaneo y el color verde de la guía.
+ * @param {{ok:number,msg:string,fr:boolean}} r Resultado de chk().
+ */
+const ban=r=>{const e=$('#plt'),cm=$('.cam'),live=!$('#vid').hidden,k=r.ok?'':/cálida/.test(r.msg)?'w':/fría/.test(r.msg)?'c':'d';e.hidden=false;e.className='lt '+(r.ok?'ok':'warn');e.innerHTML='<svg class="ic"><use href="#i-'+(r.ok?'check':'alert')+'"/></svg>'+(r.ok?(r.fr?'Iluminación óptima · rostro encuadrado':'Iluminación óptima · encuadra tu rostro en el óvalo'):r.msg);cm.className='cam '+(live?'live '+k:'');$('.gd').classList.toggle('go',!!(r.ok&&r.fr))};
+/** Guarda la captura (JPEG ≤230 kB), muestra la vista previa y ajusta el texto del botón de envío. @param {HTMLCanvasElement} c */
+function setPhoto(c){pimg=c.toDataURL('image/jpeg',.72);if(pimg.length>230000)pimg=c.toDataURL('image/jpeg',.5);$('#pp').src=pimg;$('#pp').hidden=false;const r=chk(c);ban(r);$('#send').hidden=false;$('#send').textContent=(st.local?'Analizar esta foto':'Enviar a la pantalla')+(r.ok?'':' de todos modos');$('#pst').textContent=''}
+/** Detiene la cámara y restaura los controles de captura. */
+let stream=null,tm=null;const stop=()=>{clearInterval(tm);stream&&stream.getTracks().forEach(t=>t.stop());stream=null;$('#vid').hidden=true;$('#snap').hidden=true;$('#live').hidden=false};
+/**
+ * Inicia la cámara frontal; cada 500 ms evalúa el fotograma y habilita "Capturar" solo con buena luz.
+ * Si el navegador bloquea getUserMedia, invita a usar la cámara del sistema.
+ */
+$('#live').onclick=async()=>{try{stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user',width:{ideal:720},height:{ideal:960}}});const v=$('#vid');v.srcObject=stream;await v.play();v.hidden=false;$('#live').hidden=true;$('#snap').hidden=false;$('#pp').hidden=$('#send').hidden=true;tm=setInterval(()=>{if(!v.videoWidth)return;const r=chk(v);ban(r);$('#snap').disabled=!r.ok;$('#snap').classList.toggle('ready',!!(r.ok&&r.fr))},500)}catch(e){stop();$('#pst').textContent='Tu navegador bloqueó la vista en vivo. Usa la cámara del sistema (enlace de abajo).'}};
+// Captura el fotograma actual, detiene la cámara y lo pasa a setPhoto().
+$('#snap').onclick=()=>{const v=$('#vid'),k=Math.min(1,560/Math.max(v.videoWidth,v.videoHeight)),c=document.createElement('canvas');c.width=v.videoWidth*k;c.height=v.videoHeight*k;c.getContext('2d').drawImage(v,0,0,c.width,c.height);stop();setPhoto(c)};
+/* ==========================================================================
+   8. INTERFAZ AUXILIAR
+   ========================================================================== */
+/** Anillo de probabilidad: anima el trazo y el contador hasta `p` %. @param {number} p 0-100 */
+function gauge(p){const f=$('#gfg'),v=$('#gv'),a=+v.dataset.p||0;v.dataset.p=p;setTimeout(()=>{f.style.strokeDashoffset=326.7*(1-p/100);const t0=performance.now();(function s(t){const k=Math.min(1,(t-t0)/1400);v.textContent=Math.round(a+(p-a)*k)+'%';if(k<1)requestAnimationFrame(s)})(t0)},80)}
+/**
+ * Pantalla de carga con barra y mensajes (2,6 s simulados).
+ * [ACOPLAMIENTO] Sustituir por la espera real de la respuesta del backend.
+ * @param {Function} done Se ejecuta al terminar.
+ */
+function load2(done){const o=$('#ld'),b=$('#lb'),t=$('#lt2'),M=['Ubicando tu rostro y sus zonas…','Extrayendo el tono puro de tu piel…','Calculando tu afinidad estacional con modelos probabilísticos…','Generando tus combinaciones ideales…'],t0=performance.now();o.hidden=false;roi();/* sustituir por la llamada al backend (fetch) cuando esté conectado */(function s(n){const p=Math.min(1,(n-t0)/2600);b.style.width=Math.round(p*100)+'%';t.textContent=M[Math.min(M.length-1,p*M.length|0)];if(p<1)requestAnimationFrame(s);else setTimeout(()=>{o.hidden=true;done()},250)})(t0)}
+/** Cero almacenamiento: borra de memoria la foto y los colores medidos en ella. */
+const wipe=()=>{st.url='';st.pts=[null,null,null,null];base=null;$('#dimg').removeAttribute('src');$('#avt').removeAttribute('src');$('#pp').removeAttribute('src');pimg=''};
+/** Modo comparador A/B de la prueba: mitad izquierda = color de acento, derecha = color a evitar. */
+function ab(){const g=gen(st.sel),A=g.pal[st.di]||g.pal[0],B=g.avoid[st.dj||0],d=(a,s)=>`<div class="dots" style="flex:1 1 100%">${a.map((q,i)=>`<button class="dot" style="background:${q.hex}" data-s="${s}" data-i="${i}" aria-label="${q.name}"></button>`).join('')}</div>`;$('#dr').innerHTML=d(g.pal,'a')+d(g.avoid,'b');$('#dbox').style.background=`linear-gradient(90deg,${A.hex} 50%,${B.hex} 50%)`;$('#dcap').textContent=`Mejor: ${A.name} · Evitar: ${B.name}`}
+/** [ANÁLISIS PROVISIONAL] Heurística de encuadre: ¿más del 50 % de la región central tiene tono de piel (YCbCr)? @returns {boolean} */
+const skin=s=>{const c=document.createElement('canvas');c.width=48;c.height=64;const x=c.getContext('2d');x.drawImage(s,0,0,48,64);const d=x.getImageData(12,12,24,40).data;let K=0;for(let i=0;i<d.length;i+=4){const b=128-.1687*d[i]-.3313*d[i+1]+.5*d[i+2],r=128+.5*d[i]-.4187*d[i+1]-.0813*d[i+2];if(b>77&&b<127&&r>133&&r<173)K++}return K/(d.length/4)>.5};
+/** Control de luz + encuadre de un fotograma. @returns {{ok:number,msg:string,fr:boolean}} */
+const chk=s=>{const r=chk0(s);r.fr=skin(s);return r};
+/* ==========================================================================
+   9. CONSENTIMIENTO, NAVEGACIÓN Y GUÍA RÁPIDA
+   ========================================================================== */
+/**
+ * Consentimiento Habeas Data (Ley 1581 de 2012). `ask(cb)` pide autorización una vez por sesión antes de usar cámara o archivos y luego ejecuta `cb`.
+ */
+let okc=0,pend=null;const ask=cb=>{if(okc)return cb();pend=cb;$('#hdb').innerHTML=$('#hdt').innerHTML;$('#hd').hidden=false};
+// Aceptar / cancelar el aviso de Habeas Data.
+$('#hy').onclick=()=>{okc=1;$('#hd').hidden=true;if(pend)pend();pend=null};$('#hn').onclick=()=>{$('#hd').hidden=true;pend=null};
+// Intercepta la selección de archivo hasta que exista consentimiento (en el PC, de paso, empieza a cargar el ubicador del rostro).
+$$('.cta label,#pfl').forEach(l=>l.addEventListener('click',e=>{if(l.closest('.cta'))lmk();if(!okc){e.preventDefault();ask(()=>l.querySelector('input').click())}}));
+// Envuelve "Usar mi celular", "Vista en vivo" y "Tomar foto" con el aviso de consentimiento.
+const ph0=$('#phone').onclick,lv0=$('#live').onclick;$('#phone').onclick=()=>ask(()=>{lmk();ph0()});$('#live').onclick=()=>ask(lv0);$('#take').onclick=()=>ask(openCap);
+/** Adapta la ventana de captura: modo local (l=1, webcam) o modo celular (l=0, con código de pantalla). */
+const capUI=l=>{st.local=l;$('#v-phone h1').textContent=l?'Captura inteligente':'Tu foto para Prisma';$('#v-phone .lead').textContent=l?'Alinea tus ojos y labios con las guías. Cuando la luz sea óptima, podrás capturar.':'Toma una selfie con luz lo más neutra posible y envíala a la pantalla principal.';[$('#pc'),$('#pc').previousElementSibling].forEach(e=>e.hidden=!!l)};
+/** Abre la captura local, arranca la cámara en vivo y precarga el ubicador del rostro. */
+const openCap=()=>{lmk();st.pair=0;capUI(1);show('phone');lv0()};
+// "Volver al inicio" desde la captura.
+$('#cback').onclick=e=>{e.preventDefault();stop();wipe();st.pair=st.local=0;show('home')};
+/** Ventana 2 (Enlace): se crea por código y reutiliza la tarjeta #hp (QR, código y estado de conexión). */
+{const s=document.createElement('section');s.id='v-pair';s.hidden=true;s.innerHTML='<h1>Empareja tu celular</h1><p class="lead">Escanea este código con tu celular para usarlo como cámara. Tu foto llegará directo a esta pantalla.</p><p class="lt warn fail" id="err-pair" role="alert" hidden></p>';s.appendChild($('#hp'));s.insertAdjacentHTML('beforeend','<div class="row"><button class="btn" id="pback">Volver</button></div>');$('main').appendChild(s);$('#pback').onclick=()=>{if(unsub)unsub();st.pair=0;show('home')}}
+
+/**
+ * "Probar conexión": escribe y lee `handoff/<CÓDIGO>` y muestra la latencia.
+ * [ACOPLAMIENTO] Apuntar a un endpoint de salud de la API local.
+ */
+$('#tc').onclick=async()=>{const s=$('#hs'),t0=performance.now();s.textContent='Probando conexión…';try{db=db||await use('db');if(!db)throw 0;const r=db.doc('handoff/'+$('#code').textContent);await r.set({t:Date.now()});await r.get();s.textContent='Conexión OK · '+Math.round(performance.now()-t0)+' ms'}catch(e){s.textContent='Sin conexión: abre esta página con tu sesión iniciada.'}};
+/** Colores de tema (degradado del título y del anillo) por estación; solo estilo. */
+const GR=[['#f0a64a','#ee8a7c'],['#e9a23b','#e0663f'],['#f4b400','#ee5a8a'],['#9db4d9','#c9a7d8'],['#7f9fcf','#d79bb3'],['#8fa3b3','#b9a2b8'],['#c9a24a','#8c9a5b'],['#c8872e','#a8502d'],['#c4503a','#8a9a45'],['#3f63d6','#aab4cc'],['#2563c9','#b8c2d6'],['#2f5de0','#d63384']];
+/** Pantalla de carga: foto atenuada con círculos en las 4 zonas analizadas y sus tonos extraídos. */
+function roi(){const r=$('#roi'),k=Math.min(1,240/base.width),x=r.getContext('2d');r.width=base.width*k;r.height=base.height*k;x.drawImage(base,0,0,r.width,r.height);x.fillStyle='rgba(0,0,0,.5)';x.fillRect(0,0,r.width,r.height);st.pts.forEach(p=>{if(!p)return;x.save();x.beginPath();x.arc(p.x*k,p.y*k,15,0,7);x.clip();x.drawImage(base,0,0,r.width,r.height);x.restore();x.beginPath();x.arc(p.x*k,p.y*k,15,0,7);x.lineWidth=2;x.strokeStyle='#fff';x.stroke()});$('#roc').innerHTML=st.pts.filter(Boolean).map(p=>`<i style="background:${p.hex}"></i>`).join('')}
+/**
+ * ¿Está disponible el paso `n` (1-4)? Inicio siempre; Enlace solo en handoff; Cámara requiere foto; Resultado requiere el análisis.
+ * `hm` convierte el paso de la barra al número de etapa de la guía (3 etapas).
+ */
+const avail=n=>n==1||(n==2&&!!st.pair)||(n==3&&!!st.url)||(n==4&&!!st.url&&!!st.rk),hm=[0,1,2,2,3];
+/** Abre la guía rápida: completa (`all`=true, desde "?") o solo la etapa del paso `n`. */
+function help(n,all){$$('#hw .hws li').forEach(l=>l.hidden=!all&&+l.dataset.n!==hm[n]);$('#hw .hw-i').hidden=!all;$('#hw').classList.toggle('full',!!all);$('#hw h2').textContent=all?'Conoce cómo funciona Prisma paso a paso':'¿Qué hace esta ventana?';$('#hw').hidden=false;$('#hw .hw').scrollTop=0}
+/** Navega al paso `n` de la barra; si está bloqueado muestra la explicación de esa etapa. */
+function nav(n){if(V.findIndex(x=>!$('#v-'+x).hidden)===n-1)return;if(!avail(n)){help(n);return}stop();if(unsub)unsub();
+if(n==1)show('home');else if(n==2)$('#phone').click();else if(n==3){st.pair=0;capUI(1);show('phone')}else{show('result');render()}}
+// Barra de pasos, botón "?", cierre de modales y tecla Escape.
+$('#steps').onclick=e=>{const l=e.target.closest('li');if(l)nav(+l.dataset.n)};
+$('#qm').onclick=()=>help(0,true);$('#hwx').onclick=()=>$('#hw').hidden=true;$('#hwgo').onclick=()=>{$('#hw').hidden=true;nav(1)};$('#hw').onclick=e=>{if(e.target.id==='hw')$('#hw').hidden=true};
+addEventListener('keydown',e=>{if(e.key==='Escape')$('#hw').hidden=true});
+/* ==========================================================================
+   10. INFORME DE UNA PÁGINA (vista previa y PDF)
+   ========================================================================== */
+/** Cuatro palabras clave de estilo (temperatura, profundidad, claridad, contraste) derivadas de los parámetros de la estación. */
+const kw=s=>[s[2]>.25?'Cálido':s[2]<-.25?'Frío':'Neutro',s[3]<.3?'Claro':s[3]>.7?'Profundo':'Medio',s[4]<.3?'Suave':s[4]>.7?'Brillante':'Equilibrado',s[5]<.34?'Contraste bajo':s[5]<.67?'Contraste medio':'Contraste alto'];
+/** Tres tonos de base (maquillaje) sugeridos: un tono más claro, ideal y más profundo. */
+const bsOf=s=>[-.05,0,.05].map(o=>({hex:hsl(s[2]>0?30:16,.36,cl(.78-.38*s[3]+o,.25,.88)),name:o<0?'Un tono más claro':o>0?'Un tono más profundo':'Tono base ideal'}));
+/** Paleta de cabello sugerida (4 tonos) según calidez y profundidad de la estación. */
+const hairSw=s=>{const w=s[2]>0,d=s[3],L=d>.6?[.14,.2,.27,.34]:d>.3?[.22,.3,.38,.46]:[.4,.5,.6,.7],N=w?['Castaño chocolate','Castaño caoba','Castaño miel','Cobrizo suave']:['Castaño ceniza','Cacao frío','Rubio ceniza','Gris perla'];return L.map((l,i)=>({hex:hsl(w?[24,16,32,22][i]:[28,22,40,30][i],w?.5:.16,l),name:N[i]}))};
+/** Par de colores del degradado de cada metal (esferas de joyería). */
+const MT={'Oro amarillo':['#f6dc8a','#c9972b'],'Cobre':['#f0b08a','#b8602f'],'Bronce':['#d9a86c','#8f5f2a'],'Plata':['#f4f5f7','#a3a9b3'],'Oro blanco':['#f2eee6','#bdb3a0'],'Platino':['#e9edf1','#8e98a6'],'Oro rosa':['#f6cdbd','#c98a78'],'Oro claro':['#f8e7b0','#d3b25a']};
+/** Metales favorecedores según subtono: fríos (plata, oro blanco, platino), cálidos (oro amarillo, cobre, bronce), neutros (oro rosa, oro claro). */
+const metalsOf=s=>s[2]>.25?['Oro amarillo','Cobre','Bronce']:s[2]<-.25?['Plata','Oro blanco','Platino']:['Oro rosa','Oro claro'];
+/**
+ * HTML del informe A4 (794 px) con sus 5 secciones: veredicto, subtono y perfil, paleta, belleza y joyería.
+ * Sirve de vista previa y de entrada para el PDF; usa colores planos y SVG en línea (compatibles con html2canvas).
+ * [ACOPLAMIENTO] El backend debe reproducir esta plantilla (HTML/CSS) para generar el PDF adjunto.
+ */
+function reportHTML(){const s=S[st.sel],g=gen(st.sel),a=st.rk.find(x=>x[0]===st.sel)[1],f=st.f,q=GR[st.sel],ms=metalsOf(s),grp=s[2]>.25?'cálidos':s[2]<-.25?'fríos':'neutros',kk=f.k<.34?0:f.k<.67?1:2,
+rs=c=>`<div class="rw"><i style="background:${c.hex}"></i><span>${c.name}</span><small>${c.hex}</small></div>`,
+tk=(n,x,v,A,B,bg)=>`<div class="rt"><div class="rh"><b>${n}</b><span>${x}</span></div><div class="rbar" style="background:${bg}"><i style="left:${Math.round(cl(v)*100)}%"></i></div><div class="rl"><span>${A}</span><span>${B}</span></div></div>`,
+gb=(t,A)=>`<div><div class="rl2">${t}</div><div class="rsw">${A.map(rs).join('')}</div></div>`,
+ic='<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#2a2220" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="15" r="6"/><path d="M9.5 6.5L12 3l2.5 3.5L12 9z"/></svg>',
+mi=m=>`<div class="rm"><i style="background:linear-gradient(135deg,${MT[m][0]},${MT[m][1]})">${ic}</i><b>${m}</b></div>`;
+return `<div class="rp"><div class="rhd"><div class="rph"><img class="rp1" src="${st.url}" style="border-color:${q[0]}"><img class="rp2" src="${st.url}" style="border-color:${g.pal[0].hex}"></div><div class="rtt"><div class="rey">Tu estación cromática</div><h1 style="color:${q[0]}">${s[0]}</h1><div class="rtg">${s[6]}</div><div class="rch">${kw(s).map(t=>`<span>${t}</span>`).join('')}</div></div><div class="rgg"><svg width="96" height="96" viewBox="0 0 120 120"><circle cx="60" cy="60" r="52" fill="none" stroke="#e6ddd3" stroke-width="10"/><circle cx="60" cy="60" r="52" fill="none" stroke="${q[0]}" stroke-width="10" stroke-linecap="round" stroke-dasharray="326.7" stroke-dashoffset="${(326.7*(1-a/100)).toFixed(1)}" transform="rotate(-90 60 60)"/></svg><b>${a}%</b><small>Match bayesiano</small></div></div>
+<h2>Análisis de subtono y perfil</h2><div class="rtk">${tk('Subtono (temperatura)','Eje b*',(f.w+1)/2,'Frío','Cálido','linear-gradient(90deg,#8fb0e0,#e9e1d8 50%,#e9a77a)')}${tk('Brillo (luminosidad)','Eje L*',f.d,'Claro','Profundo','linear-gradient(90deg,#f3e9df,#3a2d28)')}${tk('Croma (saturación)','Ejes a* y b*',f.c,'Suave','Brillante','linear-gradient(90deg,#c9c4be,#e0663f)')}<div class="rt"><div class="rh"><b>Nivel de contraste</b><span>Piel, ojos y cabello</span></div><div class="rsg">${['Bajo','Medio','Alto'].map((t,i)=>`<span class="${kk===i?'on':''}">${t}</span>`).join('')}</div></div></div>
+<h2>Tu paleta recomendada</h2><div class="rl2">Tus mejores colores · acentos</div><div class="rsw">${g.pal.map(rs).join('')}</div><div class="rl2">Neutros base</div><div class="rsw">${g.neu.map(rs).join('')}</div><div class="rl2">Colores a evitar</div><div class="rsw sm">${g.avoid.map(rs).join('')}</div>
+<h2>Guía de belleza y cosmética</h2><div class="rbt">${gb('Base',bsOf(s))}${gb('Rubor',g.blush)}${gb('Sombras',g.shadow)}${gb('Labial',g.lips)}</div><div class="rhr">${gb('Color de cabello',hairSw(s))}<p>${g.hair.join('. ')}.</p></div>
+<h2>Joyería y metales</h2><div class="rjw">${ms.map(mi).join('')}<p>Subtonos ${grp}: ${ms.join(', ')}.</p></div>
+<div class="rft"><b>Prisma</b> · Estimación automática basada en una foto: la luz y la cámara pueden alterarla. Para un diagnóstico definitivo, consulta a un asesor de imagen.</div></div>`}
+/** Abre la vista previa del informe escalada al ancho disponible. */
+function openRv(){$('#rvb').innerHTML=reportHTML();$('#rv').hidden=false;const k=$('#rvw').clientWidth/794;$('#rvb').style.transform='scale('+k+')';$('#rvw').style.height=$('#rvb').offsetHeight*k+'px'}
+// Abrir/cerrar la vista previa del informe.
+$('#dl').onclick=openRv;$('#rvx').onclick=()=>$('#rv').hidden=true;$('#rv').onclick=e=>{if(e.target.id==='rv')$('#rv').hidden=true};
+addEventListener('keydown',e=>{if(e.key==='Escape')$('#rv').hidden=true});
+/**
+ * Genera el PDF en el navegador (html2canvas + jsPDF, ajustado a una hoja A4) y lo guarda con la capacidad 'downloads'.
+ * [ENTORNO] [ACOPLAMIENTO] El PDF oficial lo genera el backend; este botón es una alternativa local.
+ */
+$('#rvd').onclick=async()=>{const d=await use('downloads');if(!d)return toast('La descarga no está disponible en esta vista');const b=$('#rvd');b.disabled=true;b.textContent='Generando PDF…';
+try{const host=document.createElement('div');host.style.cssText='position:fixed;left:-9999px;top:0';host.innerHTML=reportHTML();document.body.appendChild(host);const c=await html2canvas(host.firstChild,{scale:2,backgroundColor:'#fffdfa',useCORS:true});host.remove();
+const r=c.height/c.width,H=Math.min(297,210*r),W=H/r,pdf=new jspdf.jsPDF({unit:'mm',format:'a4'});pdf.addImage(c.toDataURL('image/jpeg',.95),'JPEG',(210-W)/2,0,W,H);
+await d.save({filename:'prisma-informe-'+S[st.sel][0].normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/\W+/g,'-')+'.pdf',data:pdf.output('blob')})}catch(e){toast('No se pudo generar el PDF')}
+b.disabled=false;b.textContent='Descargar PDF'};
+/* ==========================================================================
+   11. VISTA PREVIA ANIMADA DEL INICIO
+   ========================================================================== */
+/** `swp(e,f,d)`: cambia el contenido de `e` con fundido (aplica `f` tras 450 ms, con retraso `d`). */
+let ti=0;const swp=(e,f,d=0)=>{setTimeout(()=>e.classList.add('f'),d);setTimeout(()=>{f();e.classList.remove('f')},d+450)},cell='<div class="sw"><i></i><span><b></b><small></small></span></div>';
+/**
+ * Ciclo de paletas de las 12 estaciones: construye el DOM una vez y después solo actualiza colores y textos con transición escalonada.
+ * `ti` = estación mostrada.
+ */
+function teaser(){const g=gen(ti),c=g.pal,z=$('#tz');
+if(!z.firstChild)z.innerHTML=`<p class="eyebrow" id="tn"></p><div class="strip">${'<i></i>'.repeat(12)}</div><div class="sws">${cell.repeat(4)}</div><div class="blur"><div class="sws">${cell.repeat(4)}</div><p id="tl"></p><p id="tm"></p></div>`;
+swp($('#tn'),()=>$('#tn').textContent=`Vista previa · ejemplo ${S[ti][0]}`);
+
+$$('#tz .strip i').forEach((e,k)=>{e.style.transitionDelay='0s,'+k*45+'ms';e.style.background=c[k].hex;e.title=c[k].name});
+$$('#tz .sw').forEach((e,k)=>{const i=e.firstChild,b=e.querySelector('b'),s=e.querySelector('small');i.style.transitionDelay='0s,'+k*70+'ms';i.style.background=c[k].hex;swp(b,()=>b.textContent=c[k].name,k*70);swp(s,()=>s.textContent=c[k].hex,k*70)});
+swp($('#tl'),()=>$('#tl').innerHTML='<b>Labios:</b> '+g.lips.map(x=>x.name+' '+x.hex).join(', '));
+swp($('#tm'),()=>$('#tm').innerHTML='<b>Metales:</b> '+g.metal+'. <b>Cabello:</b> '+g.hair[0]+'.',120)}
+// Botón "Desbloquea tu paleta completa"; el ciclo avanza cada 5 s y se pausa mientras el cursor está encima.
+$('#unlock').onclick=()=>$('#take').click();let hold=0;$('#teaser').onmouseenter=()=>hold=1;$('#teaser').onmouseleave=()=>hold=0;setInterval(()=>{if(!hold){ti=(ti+1)%12;teaser()}},5000);
+teaser();
+/* ==========================================================================
+   12. ARRANQUE
+   ========================================================================== */
+/** Si la URL trae `#tel-CÓDIGO` abre la vista del celular con ese código; si no, el inicio. */
+const m=location.hash.match(/^#tel-([A-Za-z0-9]{4,8})/);if(m){$('#pc').value=m[1].toUpperCase();show('phone')}else show('home');
+</script></body></html>
