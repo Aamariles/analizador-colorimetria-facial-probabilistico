@@ -1,0 +1,102 @@
+<!doctype html>
+<!--
+  PRISMA · Analizador de Colorimetría Facial Probabilístico — interfaz web (hito 9)
+  ===================================================================================
+  La sirve la API local (src/api/main.py) en https://<IP del PC>:8443 y la abren el PC y el
+  celular. Todo el análisis lo hace el PC: esta página solo captura la foto, la envía a la
+  API y muestra el resultado. Diseño: el del prototipo validado (docs/mockups/prisma-prototipo.html).
+
+  FLUJO DE 4 VENTANAS  (ids de sección → paso de la barra)
+    #v-home   1 Inicio      Presentación, consejos, política de cero almacenamiento y botones de entrada.
+    #v-pair   2 Enlace      Emparejamiento PC-celular (QR + código). Solo aparece al usar el celular.
+    #v-phone  3 Cámara      Captura en vivo con guía y control de luz (también es la vista del celular).
+    #v-result 4 Resultado   Colores medidos, estación, probabilidades, perfil, paletas, maquillaje,
+                            joyería e informe.
+  Las zonas del rostro (piel, cabello, cejas, iris, esclerótica y labios) las mide el PC solo, sin
+  que el usuario intervenga: apenas llega la foto, se analiza y se muestra el resultado.
+
+  Archivos: index.html (estructura), estilos.css (diseño), app.js (lógica y llamadas a la API).
+  Dependencias: qrcodejs (copia local en vendor/, licencia MIT) para el código QR; Google Fonts
+  (si no hay internet, se usan las fuentes del sistema).
+-->
+<html lang="es"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;1,500;1,600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<title>Prisma · Colorimetría por foto</title>
+<link rel="stylesheet" href="estilos.css">
+</head><body>
+<!-- SPRITE de íconos de línea (24×24 y 64×64); se usan con <svg><use href="#i-nombre"/></svg> y heredan color/trazo por CSS. -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.4 1.4M17.6 17.6L19 19M5 19l1.4-1.4M17.6 6.4L19 5"/></symbol><symbol id="i-ban" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M5.6 5.6l12.8 12.8"/></symbol><symbol id="i-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l3 3 5-6"/></symbol><symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 3l10 18H2z"/><path d="M12 10v5M12 18h.01"/></symbol><symbol id="i-star" viewBox="0 0 24 24"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/></symbol><symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></symbol><symbol id="i-ring" viewBox="0 0 24 24"><circle cx="12" cy="15" r="6"/><path d="M9.5 6.5L12 3l2.5 3.5L12 9z"/></symbol><symbol id="i-neck" viewBox="0 0 24 24"><path d="M5 4c0 8 2.5 12 7 12s7-4 7-12"/><circle cx="12" cy="18.5" r="2"/></symbol><symbol id="i-bulb" viewBox="0 0 24 24"><path d="M9 18h6M10 21h4M12 3a6 6 0 00-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0012 3z"/></symbol><symbol id="i-face" viewBox="0 0 24 24"><ellipse cx="12" cy="12" rx="6.5" ry="8.5"/><path d="M9.5 10.5h.01M14.5 10.5h.01M9.5 15c1.5 1.2 3.5 1.2 5 0"/></symbol><symbol id="i-glasses" viewBox="0 0 24 24"><circle cx="6.5" cy="14" r="3.5"/><circle cx="17.5" cy="14" r="3.5"/><path d="M10 14h4M3 14l-1-5M21 14l1-5M3 3l18 18"/></symbol><symbol id="i-cam" viewBox="0 0 24 24"><path d="M4 8h3l1.5-2h7L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></symbol><symbol id="i-phone" viewBox="0 0 24 24"><rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M11 18.5h2"/></symbol><symbol id="i-qr" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3zM20 14v2M17 20h4"/></symbol><symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/></symbol><symbol id="i-mail" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></symbol><symbol id="i-down" viewBox="0 0 24 24"><path d="M12 4v12M7 11l5 5 5-5M5 20h14"/></symbol><symbol id="i-photo" viewBox="0 0 64 64"><path d="M8 20V10h10M46 10h10v10M56 44v10H46M18 54H8V44"/><ellipse cx="32" cy="30" rx="10" ry="13"/><path d="M20 54c2-8 7-10 12-10s10 2 12 10"/></symbol><symbol id="i-scan" viewBox="0 0 64 64"><ellipse cx="32" cy="30" rx="12" ry="16"/><path d="M8 32h48M14 14l-4-4M50 14l4-4M14 50l-4 4M50 50l4 4"/><circle cx="26" cy="26" r="1.2"/><circle cx="38" cy="26" r="1.2"/><circle cx="32" cy="40" r="1.2"/></symbol><symbol id="i-pal" viewBox="0 0 64 64"><path d="M32 8C18 8 8 18 8 31s9 25 21 25c5 0 5-4 3-6-3-4 0-8 5-8h8c6 0 11-4 11-10C56 18 46 8 32 8z"/><circle cx="21" cy="28" r="3"/><circle cx="31" cy="20" r="3"/><circle cx="43" cy="24" r="3"/></symbol></svg>
+<!-- ENCABEZADO: marca, barra de pasos navegable (#steps) y botón "?" de guía rápida (#qm). -->
+<header class="top"><span class="logo">Prisma</span><ol id="steps"><li data-n="1">Inicio</li><li data-n="2">Enlace</li><li data-n="3">Cámara</li><li data-n="4">Resultado</li></ol><button class="qm" id="qm" aria-label="Guía rápida: cómo funciona Prisma" title="Guía rápida">?</button></header>
+<main>
+<!-- VENTANA 1 · INICIO -->
+<section id="v-home">
+<div class="heroart"><div><p class="eyebrow">Analizador de Colorimetría Facial Probabilístico</p><h1>Descubre tu <em>paleta de colores</em> ideal con una sola foto</h1>
+<p class="lead">Un algoritmo de visión por computador mide el tono real de tu piel, tu cabello y tus ojos, y un modelo probabilístico calcula tu estación cromática. En segundos, con un informe listo para descargar o recibir en tu correo.</p></div><div class="orbw" aria-hidden="true"><div class="orb"><span>12<small>estaciones</small></span></div><em>Primavera</em><em>Verano</em><em>Otoño</em><em>Invierno</em></div></div>
+<div class="card"><h3>Cómo asegurar un análisis preciso</h3>
+<ul class="tips"><li><svg class="ic"><use href="#i-bulb"/></svg>Luz lo más neutra posible (ni amarilla ni azulada), sin flash.</li><li><svg class="ic"><use href="#i-face"/></svg>Cara limpia: sin maquillaje ni filtros.</li><li><svg class="ic"><use href="#i-glasses"/></svg>Quítate las gafas y deja el cabello visible: también se mide.</li><li><svg class="ic"><use href="#i-cam"/></svg>Cámara a la altura de los ojos, fondo neutro.</li></ul>
+<!-- PLANTILLA del aviso Habeas Data (Ley 1581 de 2012); se copia al modal #hd antes de usar la cámara o subir una foto. --><template id="hdt"><p class="eyebrow">Habeas Data · Ley 1581 de 2012</p><h2>Tratamiento de tu imagen facial</h2><ul class="hdl"><li><svg class="ic"><use href="#i-ban"/></svg>No guardamos tu foto</li><li><svg class="ic"><use href="#i-lock"/></svg>Solo viaja por la red local</li><li><svg class="ic"><use href="#i-check"/></svg>Solo para calcular tu paleta</li></ul><p>Tu rostro es un dato biométrico sensible. Aplicamos una política de cero almacenamiento: tu foto viaja por la red local hasta el computador principal, se procesa en su memoria y se descarta; no se guarda en ningún disco ni base de datos. Si usas el celular como cámara, la foto espera en la memoria del computador como máximo dos minutos y se borra en cuanto llega a la pantalla. Autorizo este tratamiento únicamente para calcular mi paleta.</p></template>
+<div class="row cta"><button class="btn p" id="take"><svg class="ic"><use href="#i-cam"/></svg>Tomar foto</button><label class="lnk">Subir una imagen<input type="file" accept="image/*" hidden id="f2"></label><button class="btn g" id="phone"><svg class="ic"><use href="#i-phone"/></svg>Usar mi celular como cámara<svg class="ic"><use href="#i-qr"/></svg><span class="tag">Recomendado</span></button></div><p class="lt warn" id="hst" role="alert" hidden></p>
+<div class="badges"><span>Corrección Gray World</span><span>Segmentación MediaPipe</span><span>Conversión CIELAB</span><span>Clustering K-Means</span><span>Clasificador bayesiano</span></div>
+<p class="sm"><svg class="ic s"><use href="#i-lock"/></svg> Tu foto se procesa en el computador principal y no se guarda · <a href="#" id="hascode">Ya tengo un código del celular</a></p></div>
+<div class="card" id="hp" hidden><h3>Conecta tu celular</h3><svg class="hand" viewBox="0 0 240 130" aria-hidden="true"><rect x="10" y="14" width="130" height="84" rx="8"/><path d="M75 98v14M55 112h40"/><rect class="qrb" x="48" y="30" width="54" height="54" rx="4"/><path d="M58 40h14v14H58zM78 40h14v14H78zM58 60h14v14H58zM78 62h6v6h-6zM88 72h4"/><g class="ph"><rect x="168" y="30" width="44" height="84" rx="9"/><circle cx="190" cy="104" r="2"/></g><path class="beam" d="M166 56H104M166 72H104"/></svg>
+<p class="sm">Conecta el celular a la misma red (Wi-Fi o hotspot) que este computador y escanea el código con su cámara, o abre este mismo enlace en el celular y escribe el código.</p>
+<div id="qr"></div><p class="code" id="code"></p>
+<label class="sm" for="lnk">Enlace de esta página (corrígelo si el QR no abre la página correcta)</label><input class="in" id="lnk">
+<div class="live"><i class="pulse"></i><span id="hs"></span></div><button class="btn" id="tc" style="margin-top:12px">Probar conexión</button></div>
+<h2 class="sec">Cómo funciona</h2>
+<ol class="steps3"><li><svg class="il"><use href="#i-photo"/></svg><b>01</b><h3>Toma o sube tu foto</h3><p>Con luz lo más neutra posible y sin filtros.</p></li><li><svg class="il"><use href="#i-scan"/></svg><b>02</b><h3>Analizamos tu rostro</h3><p>El computador corrige la iluminación con Gray World, ubica tu rostro con MediaPipe, mide en CIELAB el color de tu piel, cabello, ojos y labios, y calcula la probabilidad de cada estación con un clasificador bayesiano.</p></li><li><svg class="il"><use href="#i-pal"/></svg><b>03</b><h3>Recibe tu paleta ideal</h3><p>Obtienes tu estación cromática y una paleta en HEX con maquillaje y metales, lista para descargar o enviar a tu correo.</p></li></ol>
+<blockquote class="quote">Descubre los colores que potencian tu imagen<small>12 estaciones · resultado en segundos · tu foto no se guarda</small></blockquote>
+<div class="card teaser" id="teaser"><div id="tz"></div><button class="btn g veil" id="unlock">Descubre tu paleta completa</button></div>
+<div class="priv"><svg class="ic"><use href="#i-lock"/></svg><div><p><b>Política de Cero Almacenamiento · Ley 1581 de 2012</b></p><ul class="hdl"><li><svg class="ic"><use href="#i-ban"/></svg>No guardamos tu foto</li><li><svg class="ic"><use href="#i-lock"/></svg>Se procesa en memoria y se descarta: nada queda almacenado</li><li><svg class="ic"><use href="#i-check"/></svg>Solo se usa para calcular tu paleta</li></ul><span>La foto viaja solo por la red local hasta el computador principal. Únicamente si tú lo autorizas, el informe puede salir por correo electrónico.</span></div></div>
+</section>
+
+<!-- VENTANA 2 · ENLACE (la tarjeta #hp se mueve aquí desde el inicio; ver app.js) -->
+<section id="v-pair" hidden><h1>Empareja tu celular</h1><p class="lead">Escanea este código con tu celular para usarlo como cámara. Tu foto llegará directo a esta pantalla.</p><p class="lt warn" id="perr" role="alert" hidden></p><div class="row"><button class="btn" id="pback">Volver</button></div></section>
+
+<!-- VENTANA 3 · CÁMARA: modo local (cámara del PC, sin código) o modo celular (con código de emparejamiento). -->
+<section id="v-phone" hidden><h1>Tu foto para Prisma</h1>
+<p class="lead">Toma una selfie con luz lo más neutra posible y envíala a la pantalla principal.</p>
+<div class="card"><label class="sm" for="pc">Código de la pantalla</label><input class="in" id="pc" maxlength="8" autocapitalize="characters" autocomplete="off">
+<p class="lt warn" id="cerr" role="alert" hidden></p><div class="cam"><i class="scanln"></i><video id="vid" playsinline muted hidden></video><svg class="gd" viewBox="0 0 100 133"><ellipse cx="50" cy="62" rx="28" ry="38"/><path class="gl" d="M22 54H78M30 82H70M50 20V104"/><text x="80" y="53">OJOS</text><text x="72" y="81">LABIOS</text></svg></div><p class="lt" id="plt" hidden></p><p class="sm" style="text-align:center">Alinea los ojos y los labios con las guías, sin gafas y con la luz de frente.</p>
+<button class="btn p big" id="live">Vista en vivo con guía</button><button class="btn p big" id="snap" hidden disabled>Capturar foto</button><label class="lnk" id="pfl" style="display:block;text-align:center;margin-top:12px">Usar la cámara del sistema<input type="file" accept="image/*" capture="user" hidden id="pf"></label>
+<img id="pp" alt="" hidden><button class="btn p big" id="send" hidden>Enviar a la pantalla</button><p class="sm" id="pst"></p><p class="sm" style="text-align:center"><a href="#" id="cback">Volver al inicio</a></p></div></section>
+
+<!-- VENTANA 4 · RESULTADOS -->
+<section id="v-result" hidden>
+<div class="card hero"><div class="hh"><div class="avw"><img id="avt" alt="Tu foto"><div class="gauge"><svg viewBox="0 0 120 120"><circle class="bg" cx="60" cy="60" r="52"/><circle class="fg" id="gfg" cx="60" cy="60" r="52"/></svg><b id="gv">0%</b></div></div><div class="ht"><small id="af"></small><h1 id="sn"></h1><p class="lead" id="tg"></p><div class="chp" id="chp"></div></div></div><div class="strip" id="strip"></div></div>
+<div class="card"><h3>Tu análisis</h3><p class="sm">El computador midió automáticamente el color de cada zona de tu rostro:</p><div class="chips" id="med"></div><ul class="avs" id="avs"></ul><p class="sm">Así se ubica tu coloración en cada eje, frente a las personas con que se calibró el modelo.</p><div id="az"></div><h3>Probabilidad de cada estación</h3><div class="nbs" id="nb"></div><p class="sm" id="nt"></p><p class="sm"><svg class="ic s"><use href="#i-info"/></svg> Probabilidad posterior de un clasificador bayesiano sobre 13 rasgos medidos en CIELAB (piel, cabello, ojos, labios y contrastes ΔE00). La iluminación se corrige con Gray World y los tonos base se extraen con K-Means.</p><p class="prec" id="prec"></p></div>
+<nav class="tabs"><button class="tab on" data-t="c">Tus mejores colores</button><button class="tab" data-t="a">Colores a evitar</button><button class="tab" data-t="b">Maquillaje</button><button class="tab" data-t="j">Joyería</button></nav>
+<div class="card" id="t-p"><h3>Prueba de colores sobre tu rostro</h3>
+<div class="row" style="margin:0 0 8px"><button class="tab on" data-f="best">Mejores</button><button class="tab" data-f="neu">Neutros</button><button class="tab" data-f="avoid">Evitar</button><button class="tab" data-f="ab">Comparar A/B</button></div>
+<div class="dbox" id="dbox"><img id="dimg" alt="Tu foto"></div><p id="dcap" style="margin:4px 0 10px;font-weight:600"></p><div class="dots" id="dr"></div></div>
+<div class="card" id="t-c"></div><div class="card" id="t-a" hidden></div><div class="card" id="t-b" hidden></div><div class="card" id="t-j" hidden></div>
+<p class="sm">Estimación automática basada en una foto: la luz, la cámara y el maquillaje la alteran. Para un diagnóstico definitivo, consulta a un asesor de imagen.</p>
+<div class="dock"><input class="in" id="em" type="email" placeholder="tu@correo.com" autocomplete="email"><button class="btn p" id="mail"><svg class="ic"><use href="#i-mail"/></svg>Enviar informe a mi correo</button><button class="btn" id="dl"><svg class="ic"><use href="#i-down"/></svg>Descargar informe</button></div>
+<div class="row" style="justify-content:center"><button class="btn" id="again">Probar con otra foto</button></div>
+</section>
+</main>
+<!-- PANTALLA DE CARGA mientras el computador analiza la foto. -->
+<div class="ld" id="ld" hidden><div><canvas id="roi"></canvas><p class="eyebrow">Analizando tu rostro</p><h2 id="lt2"></h2><div class="bar"><i id="lb"></i></div></div></div>
+<!-- MODAL · Informe en PDF: descarga o envío por correo, con sus consentimientos. -->
+<div class="ld" id="rv" hidden role="dialog" aria-modal="true"><div class="hdc rvc"><p class="eyebrow">Tu informe</p><h2 id="rvt">Informe de una página en PDF</h2>
+<p>El computador arma un PDF con tu estación, tus probabilidades, tu perfil y tus paletas en HEX.</p>
+<div id="rvm"><label class="sm" for="rve">Correo</label><input class="in" id="rve" type="email" placeholder="tu@correo.com" autocomplete="email">
+<label class="hab"><input type="checkbox" id="rva"><span><b>Autorizo enviar mis resultados a este correo.</b><small>El informe sale de la red local por internet y queda guardado en tu buzón.</small></span></label></div>
+<label class="hab"><input type="checkbox" id="rvf"><span><b>Incluir mi foto en el informe</b> (opcional)<small>Si no la incluyes, el informe muestra tu tono de piel en lugar de la foto.<span id="rvfm"> Si la incluyes y lo envías por correo, tu foto quedará guardada en tu buzón.</span></small></span></label>
+<p class="est" id="rvs"></p>
+<div class="row"><button class="btn p" id="rvd">Descargar PDF</button><button class="btn p" id="rvsnd" hidden>Enviar a mi correo</button><button class="btn" id="rvx">Cerrar</button></div></div></div>
+<!-- MODAL · Guía rápida: completa (botón "?") o solo la etapa pulsada en un paso bloqueado. -->
+<div class="ld" id="hw" hidden role="dialog" aria-modal="true"><div class="hdc hw"><p class="eyebrow">Guía rápida</p><h2>Conoce cómo funciona Prisma paso a paso</h2><p class="hw-i">Sabemos que tu privacidad y tu imagen son importantes. Por eso diseñamos un proceso seguro, rápido y transparente. Esto es lo que ocurre en cada etapa:</p>
+<ol class="hws"><li data-n="1"><b>1. Inicio (tu punto de partida)</b><p>Te explicamos la tecnología detrás de Prisma y te damos consejos para que tu foto salga bien (luz neutra, rostro despejado, sin maquillaje). También te contamos nuestra política de cero almacenamiento: tu foto se procesa en la memoria del computador principal, nunca se guarda en un disco ni en una base de datos y se descarta al terminar.</p></li>
+<li data-n="2"><b>2. Enlace / Cámara (la captura segura)</b><p>Puedes subir una imagen, tomarte una selfie con la cámara del computador o conectar tu celular con un código QR para usarlo como cámara. El celular y el computador deben estar en la misma red (Wi-Fi o hotspot). En la vista en vivo verás guías para alinear tus ojos y labios, y un aviso si la luz no es adecuada.</p></li>
+<li data-n="3"><b>3. Resultado (tu paleta ideal)</b><p>El computador mide solo el color de tu piel, cabello, cejas, ojos y labios, sin que tengas que marcar nada. Descubre tu estación cromática (Primavera, Verano, Otoño o Invierno), su subtipo entre las 12 estaciones y la probabilidad de cada una. Explora tus mejores colores, los que conviene evitar cerca del rostro, maquillaje y metales. Si quieres, descarga el informe en PDF o recíbelo en tu correo.</p></li></ol>
+<div class="row"><button class="btn p" id="hwgo">Ir al inicio</button><button class="btn" id="hwx">Cerrar</button></div></div></div>
+<!-- MODAL · Consentimiento Habeas Data (contenido tomado de #hdt). -->
+<div class="ld" id="hd" hidden role="dialog" aria-modal="true"><div class="hdc"><div id="hdb"></div><div class="row"><button class="btn p" id="hy">Acepto y continuar</button><button class="btn" id="hn">Cancelar</button></div></div></div>
+<div id="toast" hidden></div>
+<!-- LIBRERÍA: QR del emparejamiento (copia local de qrcodejs, MIT: funciona sin internet en el hotspot). -->
+<script src="vendor/qrcode.min.js"></script>
+<script src="app.js"></script>
+</body></html>

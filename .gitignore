@@ -15,3 +15,6 @@ __pycache__/
 # repositorio público (en data/ground_truth/ solo quedan los CSV)
 data/raw/*
 !data/raw/.gitkeep
+
+# Certificado autofirmado del servidor local (lo crea src/servidor.py)
+certs/
